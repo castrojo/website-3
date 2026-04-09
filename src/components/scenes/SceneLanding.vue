@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Holidaysaurus from '../../assets/img/Holidaysaurus.webp'
 import { LangLandingBluefinImageURLs } from '../../content'
-import { i18n } from '../../locales/schema'
+import { i18n, SUPPORTED_LOCALES } from '../../locales/schema'
 import SceneVisibilityChecker from '../common/SceneVisibilityChecker.vue'
 
 function scrollToUsers() {
@@ -36,7 +36,10 @@ onMounted(() => {
   }, 150)
 })
 
-const lang = ref(i18n.global.locale)
+// Reflect the currently-active locale as a reactive ref for the <select>.
+// i18n.global.locale may be a plain string or a Ref depending on vue-i18n mode.
+const lang = ref<string>((i18n.global as any).locale?.value ?? (i18n.global as any).locale ?? 'en-US')
+
 function redirectToLang(lang: string) {
   // We could utilize zod here to actually assess if the params exist (https://zod.dev/)
   const urlParams = new URLSearchParams(window.location.search)
@@ -81,7 +84,7 @@ const { t } = useI18n<MessageSchema>({
               @change="redirectToLang(lang)"
             >
               <option
-                v-for="key in Object.keys(i18n.global.messages)"
+                v-for="key in SUPPORTED_LOCALES"
                 :key="key"
                 :value="key"
               >

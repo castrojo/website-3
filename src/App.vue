@@ -16,7 +16,8 @@ import SectionPicker from './components/sections/SectionPicker.vue'
 import SectionVideo from './components/sections/SectionVideo.vue'
 import TopNavbar from './components/TopNavbar.vue'
 
-import { i18n } from './locales/schema'
+// Locale is resolved and set before mount by main.ts → initI18n().
+// App.vue no longer needs to re-apply locale logic at component setup time.
 
 const visibleSection = ref<string>('')
 provide('visibleSection', visibleSection)
@@ -48,12 +49,6 @@ onBeforeMount(() => {
     }, 100)
   })
 })
-
-const urlParams = new URLSearchParams(window.location.search)
-const currentLocale = urlParams.get('lang') || window.navigator.language
-if (i18n.global.availableLocales.includes(currentLocale)) {
-  ;(i18n.global as any).locale = currentLocale
-}
 </script>
 
 <template>
