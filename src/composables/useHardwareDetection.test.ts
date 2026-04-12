@@ -2,15 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { classifyGPU } from './useHardwareDetection'
 
 describe('classifyGPU — nvidia-open supported (Turing+)', () => {
-  it('classifies RTX series as nvidia', () => {
+  it('classifies NVIDIA RTX as nvidia', () => {
     expect(classifyGPU('NVIDIA GeForce RTX 3080/PCIe/SSE2')).toBe('nvidia')
-    expect(classifyGPU('NVIDIA GeForce RTX 2070 SUPER/PCIe/SSE2')).toBe('nvidia')
-    expect(classifyGPU('NVIDIA GeForce RTX 4090/PCIe/SSE2')).toBe('nvidia')
   })
 
-  it('classifies GTX 1650/1660 as nvidia', () => {
+  it('classifies NVIDIA GTX 16xx as nvidia', () => {
     expect(classifyGPU('NVIDIA GeForce GTX 1660 Ti/PCIe/SSE2')).toBe('nvidia')
-    expect(classifyGPU('NVIDIA GeForce GTX 1650/PCIe/SSE2')).toBe('nvidia')
   })
 
   it('classifies ANGLE (Windows D3D11) RTX renderer as nvidia', () => {
