@@ -430,7 +430,26 @@ npm run lint:fix             # Lints and fixes issues in the project
 - 🌐 **vue-i18n is in LEGACY mode:** use `(i18n.global as any).locale = x` — NOT `.locale.value = x` (will silently no-op)
 - 📐 **TopNavbar uses `px` not `rem`** — site root font-size is 63.5% (~10 px base); pixel values in Navbar are intentional
 - 🔒 **Dakota page is `noindex` / unlisted** — intentionally hidden from search engines and nav; do not add to sitemap or main nav
+- 🔒 **Knuckle page is `noindex` / unlisted** — same pattern as Dakota; `src/KnuckleApp.vue`, `knuckle/index.html`, components at `src/components/knuckle/`
 - ✅ **Run `node tests/navbar-visual.mjs`** to validate navbar rendering against docs.projectbluefin.io (38 Playwright assertions)
+
+## Git / Fork Workflow
+
+**Remotes (~/src/website):**
+- `origin` → `castrojo/website-3` (fork — push all work here)
+- `upstream` → `projectbluefin/website` (read-only — never push)
+
+**Working branch:** `fix/fork-base-path` tracks `origin/main`. All changes push to `origin`.
+
+**Fork preview:** `https://castrojo.github.io/website-3/` — GitHub Pages enabled, deploy.yml uses `npx vite build --base=/website-3/` for correct asset paths.
+
+**When ready to ship upstream:** provide compare URL to Jorge; never open PRs to `projectbluefin/*` directly.
+
+**Public asset fetches in Vue components** — MUST use `import.meta.env.BASE_URL` prefix, not absolute `/` paths, so fork preview and production both work:
+```ts
+fetch(`${import.meta.env.BASE_URL}knuckle-versions.json`)  // ✅
+fetch('/knuckle-versions.json')                             // ❌ breaks on subpath deploy
+```
 
 ### Attribution Requirements
 
