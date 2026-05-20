@@ -22,7 +22,7 @@ import {
                   </div>
                   <a class="brand-title" href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>
                 </div>
-                <p>Over 8 years of production experience. Flatcar was built for one job — run containers reliably at scale — and it has been doing exactly that since 2016. Unmodified, upstream Flatcar — Knuckle steps aside after first boot and the OS takes care of itself from there.</p>
+                <p>Over 8 years of production experience. Flatcar was built for one job — run containers reliably at scale — and it has been doing exactly that since 2016. Unmodified, upstream Flatcar — Knuckle steps aside after first boot and the OS takes care of itself from there. Forever.</p>
               </div>
 
               <!-- Container-first: top-left -->
