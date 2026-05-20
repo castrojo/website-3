@@ -28,7 +28,8 @@ interface DownloadEntry {
 }
 
 const GITHUB_RELEASES_API = 'https://api.github.com/repos/castrojo/knuckle/releases/latest'
-const GITHUB_RELEASES_PAGE = 'https://github.com/castrojo/knuckle/releases'
+const GITHUB_REPO = 'https://github.com/castrojo/knuckle'
+const GITHUB_RELEASES_PAGE = `${GITHUB_REPO}/releases`
 
 const loading = ref(true)
 const error = ref(false)
@@ -137,7 +138,7 @@ onMounted(async () => {
 
     <a
       class="github-link"
-      :href="GITHUB_RELEASES_PAGE"
+      :href="GITHUB_REPO"
       target="_blank"
       rel="noopener noreferrer"
     >
