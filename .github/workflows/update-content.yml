@@ -38,12 +38,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update Knuckle versions from Flatcar SBOM
+        run: node scripts/update-knuckle-versions.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Save live data to cache
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             public/stream-versions.yml
             public/dakota-versions.json
+            public/knuckle-versions.json
             src/assets/svg/growth_bluefins.svg
           key: website-live-data-${{ github.run_id }}
 
