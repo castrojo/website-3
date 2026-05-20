@@ -126,7 +126,7 @@ npm run lint:fix
 - **Vue 3** with Composition API (`<script setup>` syntax preferred)
 - **TypeScript** for type safety
 - **Vite 7.1.12** for build tooling and development server
-- **Vue i18n** for internationalization (12 languages supported: de-DE, en-US, eo, fr-FR, ja-JP, nl-NL, pt-BR, ru-RU, sk-SK, vi-VN, zh-HK, zh-TW)
+- **Vue i18n** for internationalization (13 languages supported: de-DE, en-US, eo, fr-FR, ja-JP, ko-KR, nl-NL, pt-BR, ru-RU, sk-SK, vi-VN, zh-HK, zh-TW)
 
 ### Styling
 - **TailwindCSS 4.1.16** with @tailwindcss/vite plugin
@@ -149,25 +149,37 @@ npm run lint:fix
 /
 ├── .github/workflows/         # CI/CD pipelines
 │   ├── deploy.yml            # GitHub Pages deployment (on push to main, releases)
-│   ├── images.yml            # Image optimization workflow
-│   └── update-stream-versions.yml  # Version update automation
+│   └── update-content.yml    # Daily auto-update: stream-versions.yml + growth chart SVG
+├── dakota/
+│   └── index.html            # Dakota sub-page entry (noindex, OG tags)
+├── tests/
+│   └── navbar-visual.mjs     # Playwright navbar assertions (38 tests)
 ├── public/                   # Static assets
 │   ├── characters/           # Character artwork (.webp)
 │   ├── brands/              # Brand logos (.svg, .png)
 │   ├── evening/             # Background images
+│   │   └── night-sky.webp   # Dakota background
 │   ├── favicons/            # Site icons
+│   ├── dakota-versions.json  # Version chip data (seeded; CI update TODO)
 │   └── testing.html         # Testing page (also built to dist/public/)
 ├── src/
-│   ├── components/          # Vue components (21 total)
-│   │   ├── scenes/         # Major page sections (4 components)
-│   │   ├── sections/       # Smaller reusable sections (6 components)
-│   │   └── common/         # Shared components (3 components)
-│   ├── locales/            # i18n translation files (12 JSON files)
+│   ├── components/          # Vue components
+│   │   ├── scenes/         # Major page sections (3 components)
+│   │   ├── sections/       # Smaller reusable sections (8 components)
+│   │   ├── common/         # Shared components (4 components)
+│   │   └── dakota/         # Dakota-specific components
+│   │       ├── DakotaScene.vue
+│   │       ├── DakotaHighlights.vue
+│   │       ├── DakotaDownloadCard.vue
+│   │       └── DakotaVersionChips.vue
+│   ├── locales/            # i18n translation files (13 JSON files)
 │   ├── style/              # SCSS styling
 │   │   ├── setup/          # Mixins, variables, fonts, reset
 │   │   └── app/            # Component-specific styles
 │   ├── content.ts          # Main content constants
 │   ├── composables.ts      # Vue composables
+│   ├── DakotaApp.vue       # Dakota page root component
+│   ├── dakota-main.ts      # Dakota app entry point
 │   └── main.ts            # App entry point
 ├── package.json            # Dependencies and scripts
 ├── vite.config.ts         # Vite configuration (multi-page: index.html + testing.html)
@@ -176,7 +188,7 @@ npm run lint:fix
 └── eslint.config.js       # Code formatting rules
 ```
 
-**No test infrastructure exists** - validation is done manually through browser testing.
+**Test infrastructure:** Vitest is configured (`npm test` / `npm run test:run`). Manual browser validation is still required for UI changes.
 
 ## Code Organization
 
@@ -237,10 +249,11 @@ const isVisible = ref(false)
 - Utility components: descriptive names (e.g., `PageLoading.vue`, `Navigation.vue`)
 
 #### Existing Components Reference
-**Scenes (4):** `SceneLanding.vue`, `SceneDevelopers.vue`, `SceneGamers.vue`, `SceneUsers.vue`
-**Sections (6):** `SectionFooter.vue`, `SectionMission.vue`, `SectionNews.vue`, `SectionPicker.vue`, `SectionQuestions.vue`, `SectionVideo.vue`, `ParallaxWrapper.vue`
-**Common (3):** `SceneContent.vue`, `SceneVisibilityChecker.vue`, `TextArrow.vue`
-**Root Components (7):** `Navigation.vue`, `TopNavbar.vue`, `PageLoading.vue`, `FaqItem.vue`, `ImagePicker.vue`, `ImageChooser.vue`, `RssFeed.vue`
+**Scenes (3):** `SceneLanding.vue`, `SceneDevelopers.vue`, `SceneUsers.vue`
+**Sections (8):** `SectionBazaar.vue`, `SectionCommunity.vue`, `SectionFooter.vue`, `SectionMission.vue`, `SectionNews.vue`, `SectionPicker.vue`, `SectionVideo.vue`, `ParallaxWrapper.vue`
+**Common (4):** `SceneContent.vue`, `SceneQuote.vue`, `SceneVisibilityChecker.vue`, `TextArrow.vue`
+**Root Components (5):** `Navigation.vue`, `TopNavbar.vue`, `PageLoading.vue`, `ImageChooser.vue`, `RssFeed.vue`
+**Dakota (4):** `DakotaScene.vue`, `DakotaHighlights.vue`, `DakotaDownloadCard.vue`, `DakotaVersionChips.vue`
 
 ## Content Management
 
@@ -269,13 +282,40 @@ export const LangSectionTitle = 'Default English Text'
 </template>
 ```
 
-**Available languages:** de-DE, en-US, eo, fr-FR, ja-JP, nl-NL, pt-BR, ru-RU, sk-SK, vi-VN, zh-HK, zh-TW (12 total)
+**Available languages:** de-DE, en-US, eo, fr-FR, ja-JP, ko-KR, nl-NL, pt-BR, ru-RU, sk-SK, vi-VN, zh-HK, zh-TW (13 total)
 
 ### Content Guidelines
 - Use markdown support where available (rendered with `marked.parse()`)
 - Support HTML in content when necessary
 - Include proper citations for quotes using `<cite>` tags
 - Maintain consistent voice that reflects Bluefin's mission and character
+
+## Data Pipeline
+
+### Dakota Versions (`public/dakota-versions.json`)
+Fetched client-side by `DakotaVersionChips.vue`. Contains kernel/gnome/freedesktop-sdk/mesa/bootc/nvidia/systemd/podman/pipewire/flatpak/baseline versions. Currently seeded with SBOM data. TODO: wire into CI auto-update via `update-content.yml`.
+
+### Stream Versions (`public/stream-versions.yml`)
+Fetched **client-side at runtime** by `ImageChooser.vue` via `fetch('/stream-versions.yml')`. Contains kernel/gnome/mesa/nvidia/hwe versions for each stream. Updated daily at 08:00 UTC by `update-content.yml` which parses GitHub Release markdown tables from `ublue-os/bluefin` and `ublue-os/bluefin-lts`. Parsing is fragile (format-dependent) — see TODO comment in `scripts/update-stream-versions.js` for the proper SBOM-based fix.
+
+### Growth Chart (`src/assets/svg/growth_bluefins.svg`)
+Fetched from `ublue-os/countme` and dark-theme-patched (white→`#0c1016`, light gray→`#272727`, etc.) by `update-content.yml`.
+
+### Download Flow (ImageChooser.vue)
+Step-by-step wizard:
+1. **Release** — `lts` or `stable`
+2. **Architecture** — `x86_64` or `aarch64` (LTS only for ARM)
+3. **GPU** — AMD/Intel or Nvidia
+4. **Kernel** (LTS + non-Nvidia only) — Regular or HWE
+5. **Download** — generated ISO filename + checksum link
+
+**ISO name format:** `bluefin[-gdx][-nvidia-open]-{stream}[-hwe]-{arch}.iso`
+- LTS + Nvidia → `bluefin-gdx-lts-{arch}.iso`
+- Stable + Nvidia → `bluefin-nvidia-open-stable-{arch}.iso`
+- Stable + AMD/Intel → `bluefin-stable-x86_64.iso`
+- LTS + AMD/Intel + HWE → `bluefin-lts-hwe-x86_64.iso`
+
+**Download base URL:** `https://download.projectbluefin.io/`
 
 ## Styling Guidelines
 
@@ -336,7 +376,7 @@ Common mixins available for use:
 - **Dev server won't start:** Ensure `npm install --include=dev` was run
 - **Server process dies:** Use async mode instead of detached mode
 - **Missing images:** Verify paths relative to `public/` directory
-- **Translation issues:** Ensure locale keys exist in all 12 language files
+- **Translation issues:** Ensure locale keys exist in all 13 language files (de-DE, en-US, eo, fr-FR, ja-JP, ko-KR, nl-NL, pt-BR, ru-RU, sk-SK, vi-VN, zh-HK, zh-TW)
 - **Styling problems:** Check for SCSS syntax errors or missing Tailwind classes
 - **ESLint errors:** Use Prettier instead (ESLint setup incomplete)
 - **Port conflicts:** Vite will auto-select next available port (5174, 5175, etc.)
@@ -344,9 +384,8 @@ Common mixins available for use:
 ## CI/CD Pipeline
 
 **GitHub Actions workflows:**
-- **deploy.yml:** Builds and deploys to GitHub Pages on push to main, releases, and manual trigger
-- **images.yml:** Image optimization workflow
-- **update-stream-versions.yml:** Automated version updates
+- **deploy.yml:** Builds and deploys to GitHub Pages on push to main, releases, merge_group, and manual trigger
+- **update-content.yml:** Daily (08:00 UTC) — fetches growth chart SVG from ublue-os/countme, updates public/stream-versions.yml from GitHub Releases API, opens automated PR via GITHUB_TOKEN (no PAT)
 
 **Deployment process:**
 1. Code pushed to main branch or release published
@@ -379,7 +418,7 @@ npm run lint:fix             # Lints and fixes issues in the project
 - 🚀 **Run dev server in async mode** to keep it alive
 - 🧪 **ALWAYS test manually** after making changes
 - 📱 **Test responsive design** on different screen sizes
-- 🌍 **Consider i18n impact** for all text changes (12 languages supported)
+- 🌍 **Consider i18n impact** for all text changes (13 languages — always update all locale files)
 - 📸 **Take screenshots** of UI changes for review
 - **Always** follow the conventional commits specification when sending pull requests
 - **Always** include screenshots of both desktop and mobile in pull requests
@@ -388,6 +427,10 @@ npm run lint:fix             # Lints and fixes issues in the project
 - **Always** ensure images are compressed appropriately for mobile
 - **Always** do surgical improvements, keep it simple and readable
 - **Always** match conventions that exist, like font sizes and visual style
+- 🌐 **vue-i18n is in LEGACY mode:** use `(i18n.global as any).locale = x` — NOT `.locale.value = x` (will silently no-op)
+- 📐 **TopNavbar uses `px` not `rem`** — site root font-size is 63.5% (~10 px base); pixel values in Navbar are intentional
+- 🔒 **Dakota page is `noindex` / unlisted** — intentionally hidden from search engines and nav; do not add to sitemap or main nav
+- ✅ **Run `node tests/navbar-visual.mjs`** to validate navbar rendering against docs.projectbluefin.io (38 Playwright assertions)
 
 ### Attribution Requirements
 

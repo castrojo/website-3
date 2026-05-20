@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-05-14T12:57:10.591Z",
+  "packages": {
+    "kernel": "6.19.14",
+    "gnome": "50.1",
+    "freedesktop-sdk": "25.08.11",
+    "mesa": "26.0.5",
+    "bootc": "1.15.2",
+    "nvidia": "595.71.05",
+    "systemd": "260.1",
+    "podman": "5.8.2",
+    "pipewire": "1.6.1",
+    "flatpak": "1.16.6",
+    "baseline": "x86-64-v3"
+  }
+}

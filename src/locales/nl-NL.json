@@ -1,4 +1,7 @@
 {
+  "TopBar": {
+    "Reports": "Reports"
+  },
   "Landing": {
     "Title": "De volgende generatie Linux-werkstation, ontworpen voor betrouwbaarheid, prestaties en duurzaamheid.",
     "DiscoverButton": "Ontdekken",

@@ -19,6 +19,7 @@ const leftNavLinks = [
 const rightNavLinks = [
   { name: t('TopBar.Blog'), href: 'https://docs.projectbluefin.io/blog' },
   { name: t('TopBar.Changelog'), href: 'https://docs.projectbluefin.io/changelogs' },
+  { name: t('TopBar.Reports'), href: 'https://docs.projectbluefin.io/reports' },
   {
     name: t('TopBar.Discussions'),
     href: 'https://github.com/ublue-os/bluefin/discussions',
@@ -52,6 +53,7 @@ const rightNavLinks = [
           :key="link.name"
           :href="link.href"
           class="navbar__item navbar__link"
+          :class="{ 'navbar__link--active': link.name === t('TopBar.Docs') }"
           :target="link.external ? '_blank' : undefined"
           :rel="link.external ? 'noopener noreferrer' : undefined"
         >
@@ -80,11 +82,11 @@ const rightNavLinks = [
 .docusaurus-navbar {
   // Infima CSS variables - matching Docusaurus defaults
   --ifm-navbar-background-color: #242526;
-  --ifm-navbar-link-color: rgba(255, 255, 255, 0.9);
-  --ifm-navbar-link-hover-color: #4a69bd;
+  --ifm-navbar-link-color: rgb(227, 227, 227);
+  --ifm-navbar-link-hover-color: rgb(138, 151, 247);
   --ifm-navbar-height: 60px;
-  --ifm-navbar-padding-horizontal: 1rem;
-  --ifm-navbar-padding-vertical: calc((var(--ifm-navbar-height) - var(--ifm-navbar-item-height)) / 2);
+  --ifm-navbar-padding-horizontal: 16px;
+  --ifm-navbar-padding-vertical: 14px;
   --ifm-navbar-item-height: 32px;
   --ifm-navbar-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
   --ifm-transition-fast: 200ms;
@@ -126,7 +128,7 @@ const rightNavLinks = [
   justify-content: space-between;
   max-width: 1440px;
   margin: 0 auto;
-  padding: var(--ifm-navbar-padding-vertical) var(--ifm-navbar-padding-horizontal);
+  padding: 0 16px;
   height: 100%;
 }
 
@@ -141,9 +143,9 @@ const rightNavLinks = [
 .navbar__brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   text-decoration: none;
-  margin-right: 1rem;
+  margin-right: 16px;
   height: var(--ifm-navbar-item-height);
   transition: opacity var(--ifm-transition-fast) var(--ifm-transition-timing-default);
 
@@ -164,7 +166,7 @@ const rightNavLinks = [
   height: 100%;
 
   img {
-    height: 2rem;
+    height: 32px;
     width: auto;
     display: block;
     max-width: none;
@@ -172,7 +174,7 @@ const rightNavLinks = [
 }
 
 .navbar__title {
-  font-size: 1.25rem;
+  font-size: 16px;
   font-weight: 700;
   color: var(--ifm-navbar-link-color);
   line-height: 1;
@@ -192,9 +194,9 @@ const rightNavLinks = [
 .navbar__link {
   color: var(--ifm-navbar-link-color);
   text-decoration: none;
-  font-size: 12pt;
-  font-weight: 400;
-  padding: 0 0.75rem;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 4px 12px;
   line-height: 1.5;
   display: flex;
   align-items: center;
@@ -210,6 +212,11 @@ const rightNavLinks = [
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  &--active {
+    color: rgb(138, 151, 247);
+    font-weight: 500;
+  }
 }
 
 .navbar__items--right {
@@ -220,16 +227,16 @@ const rightNavLinks = [
 // Mobile responsive - matching Docusaurus breakpoints exactly
 @media (max-width: 996px) {
   .docusaurus-navbar {
-    --ifm-navbar-padding-horizontal: 0.5rem;
+    --ifm-navbar-padding-horizontal: 8px;
   }
 
   .navbar__link {
-    font-size: 11pt;
-    padding: 0 0.5rem;
+    font-size: 14px;
+    padding: 4px 8px;
   }
 
   .navbar__brand {
-    margin-right: 0.5rem;
+    margin-right: 8px;
   }
 }
 

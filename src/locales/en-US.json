@@ -4,6 +4,7 @@
     "AskBluefin": "Ask Bluefin",
     "Blog": "Blog",
     "Changelog": "Changelogs",
+    "Reports": "Reports",
     "Discussions": "Discussions",
     "Feedback": "Feedback",
     "Store": "Store (US Only)"
@@ -53,8 +54,8 @@
     "Title": "Mission",
     "Text": {
       "NewBreed": "Bluefin is not just software, she is a new breed of animal, adapted to survive the rigors of an ecosystem dominated by giants while protecting her family.",
-      "Change": "We believe that the desktop experience needs to change. Technology begins with the local computer, the device that you touch, and it should be as essential as the rest of the Linux ecosystem.",
-      "CloudNative": "By introducing cloud-native patterns to the desktop we hope to ignite interest in desktop computing while catering to the next generation of open-source contributors. Bluefin is designed to be the tool you depend on to do what you do best. The current Linux desktop didn't get us there, but we believe that what was made, can be unmade. Let's make it better.",
+      "Change": "Technology begins with the local computer, the device that you touch, and it should be as essential as the rest of the Linux ecosystem.",
+      "CloudNative": "By introducing cloud-native patterns to the desktop we hope to ignite interest in desktop computing while catering to the next generation of open-source contributors. Bluefin is designed to be the tool you depend on to do what you do best. The answer for us is simple, use what the experts in infrastructure use. The current Linux desktop didn't get us there, but we believe that what was made, can be unmade. Let's make it better.",
       "Sustainability": "Bluefin is about sustainability, encompassing the software, the hardware, and the people."
     },
     "CleverGirl": "Or she may disembowel us on the way. Clever Girl.",
@@ -76,7 +77,7 @@
   "Bazaar": {
     "Tag": "Run your favorite",
     "Title": "Applications",
-    "Description": "Bluefin utilizes the <a href=\"https://github.com/kolunmi/bazaar\" target=\"_blank\">Bazaar</a> app store, allowing for easy installation and management of all your favorite applications from <a href=\"https://flathub.org\" target=\"_blank\">Flathub</a> and a curated list of apps we think you'll love.",
+    "Description": "Bluefin utilizes the <a href=\"https://usebazaar.org\" target=\"_blank\">Bazaar</a> app store, allowing for easy installation and management of all your favorite applications from <a href=\"https://flathub.org\" target=\"_blank\">Flathub</a> and a curated list of apps we think you'll love.",
     "Additional": "Additionally, Bluefin provides <a href=\"https://docs.brew.sh/Homebrew-on-Linux\" target=\"_blank\">Homebrew</a> and application container workflows, making running any piece of software a breeze. Since the entire software world comes in containers, using them becomes quick and efficient! <br><br><strong>Bluefin is developed on Bluefin.</strong>",
     "FlathubButton": "View apps on Flathub"
   },
@@ -149,34 +150,6 @@
         "AMDIntelDesc": "Integrated AMD or Intel graphics",
         "NvidiaDesc": "Nvidia RTX/GTX 16xx+ Series, GTX 10xx Series and below are unsupported"
       }
-    },
-    "Detection": {
-      "Button": "Detect my hardware",
-      "Detecting": "Detecting...",
-      "NvidiaDetected": "NVIDIA GPU detected",
-      "AmdIntelDetected": "AMD / Intel GPU detected",
-      "Detected": "Detected",
-      "PrivacyBlocked": "GPU detection is unavailable or blocked. Select your GPU manually below.",
-      "VmWarning": "Software rendering was detected instead of a physical GPU. This can happen in virtual machines, remote sessions, or when GPU acceleration is disabled — results may not reflect your actual hardware.",
-      "HybridNote": "On laptops with dual graphics (NVIDIA Optimus), we may detect the integrated GPU. If you know you have NVIDIA, select it manually.",
-      "MacIntelMessage": "Bluefin does not support macOS on Intel Macs.",
-      "MacIntelRecommendation": "We recommend Ubuntu for Intel Mac users.",
-      "MacIntelButton": "Download Ubuntu",
-      "MacArmMessage": "Bluefin does not support Apple Silicon (ARM) Macs.",
-      "MacIntelContinue": "Continue anyway",
-      "RecommendedForYourHardware": "Recommended for your hardware",
-      "LegacyNvidiaMessage": "Your NVIDIA GPU is not supported by the open-source nvidia-open driver that Bluefin uses.",
-      "LegacyNvidiaRecommendation": "We recommend Bazzite, which includes full support for older NVIDIA cards.",
-      "LegacyNvidiaButton": "Check out Bazzite",
-      "LegacyNvidiaContinue": "Continue with Bluefin anyway"
-    },
-    "Preflight": {
-      "Title": "Before you install",
-      "Bitlocker": "Find your BitLocker recovery key before repartitioning (Windows 11+)",
-      "FastStartup": "Disable Fast Startup in Windows Power Settings before dual-booting",
-      "WindowsArm": "On Windows ARM hardware (Snapdragon X, Surface Pro X, etc.), verify the architecture shown above matches your device — some browsers cannot detect ARM automatically",
-      "SecureBoot": "Bluefin supports Secure Boot — no BIOS change needed for most hardware",
-      "MediaWriter": "Use Fedora Media Writer to create your install USB — Ventoy is unsupported"
     },
     "Download": {
       "IsoDescription": "Installation ISO",

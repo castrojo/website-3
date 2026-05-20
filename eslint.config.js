@@ -6,6 +6,7 @@ const ignores = [
   '.dist',
   'node_modules',
   'public',
+  'tests/**',
 ]
 
 export default antfu({

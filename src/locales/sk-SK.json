@@ -1,4 +1,7 @@
 {
+  "TopBar": {
+    "Reports": "Reports"
+  },
   "Landing": {
     "Title": "Linuxová pracovná stanica novej generácie, vyrobená pre spoľahlivosť, výkon a udržateľnosť.",
     "DiscoverButton": "Objaviť",

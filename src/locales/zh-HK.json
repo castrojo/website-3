@@ -1,4 +1,7 @@
 {
+  "TopBar": {
+    "Reports": "Reports"
+  },
   "Landing": {
     "Title": "次世代 Linux 工作站，講求可靠、高性能、可持續。",
     "DiscoverButton": "瞭解更多",

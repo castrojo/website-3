@@ -1,4 +1,7 @@
 {
+  "TopBar": {
+    "Reports": "Reports"
+  },
   "Landing": {
     "Title": "信頼性、パフォーマンス、持続可能性のために設計された次世代 Linux ワークステーション。",
     "DiscoverButton": "詳しく見る",

@@ -1,18 +1,16 @@
-name: Update Content
+name: Update Live Data
 
 on:
   schedule:
-    # Run daily at 08:00 UTC
-    - cron: '0 8 * * *'
+    # Run daily at 10:00 UTC — after projectbluefin/documentation SBOM
+    # pipeline completes at ~04:00–06:00 UTC so we always get fresh data.
+    - cron: '0 10 * * *'
   workflow_dispatch:
-    # Allow manual triggering
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
-  update-content:
+  update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,76 +30,39 @@ jobs:
           curl https://raw.githubusercontent.com/ublue-os/countme/refs/heads/main/growth_bluefins.svg --output src/assets/svg/growth_bluefins.svg
           sed -i 's/#ffffff/#0c1016/g; s/#cccccc/#272727/g; s/#616161/#bdbdbd/g; s/#77aadd/#4285f4/g; s/id="text_16">/id="text_16" style="fill: #bdbdbd">/' src/assets/svg/growth_bluefins.svg
 
-      - name: Update stream versions
+      - name: Update stream versions from SBOM
         run: node scripts/update-stream-versions.js
+
+      - name: Update Dakota versions from SBOM
+        run: node scripts/update-dakota-versions.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check for changes
-        id: changes
-        run: |
-          if git diff --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes detected"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Changes detected:"
-            git diff --stat
-          fi
+      - name: Update Knuckle versions from Flatcar SBOM
+        run: node scripts/update-knuckle-versions.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Pull Request
-        if: steps.changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@0edc001d28a2959cd7a6b505629f1d82f0a6e67d
+      - name: Save live data to cache
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: |
-            chore: update content from upstream sources
-
-            - Updated Bluefin growth chart from ublue-os/countme
-            - Updated stream versions from latest releases
-            - Automated update via GitHub Actions
-          title: "chore: update content from upstream sources"
-          body: |
-            ## 🤖 Automated Content Update
-
-            This PR contains automated updates from upstream data sources:
-
-            ### Growth Chart
-            - Updated `src/assets/svg/growth_bluefins.svg` with latest data from [ublue-os/countme](https://github.com/ublue-os/countme)
-            - Chart shows Bluefin installation growth metrics
-            - Colors adjusted for dark theme compatibility
-
-            ### Stream Versions
-            - Updated `public/stream-versions.yml` with latest version information
-            - Data sourced from the most recent release changelogs:
-              - `ublue-os/bluefin` (for GTS and Stable streams)
-              - `ublue-os/bluefin-lts` (for LTS stream)
-
-            ### Review Notes
-            - This is an automated daily update
-            - Please verify the data looks correct before merging
-            - Both files are used by the website to display current information
-
-            ---
-            *This PR was automatically created by the `update-content` workflow.*
-          branch: automated/update-content
-          delete-branch: true
-          add-paths: |
-            src/assets/svg/growth_bluefins.svg
+          path: |
             public/stream-versions.yml
+            public/dakota-versions.json
+            public/knuckle-versions.json
+            src/assets/svg/growth_bluefins.svg
+          key: website-live-data-${{ github.run_id }}
 
       - name: Create issue on failure
         if: failure()
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
-            const runUrl = `${context.payload.repository.html_url}/actions/runs/` +
-                           `${context.runId}`;
+            const runUrl = `${context.payload.repository.html_url}/actions/runs/${context.runId}`;
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: 'Failed to update content from upstream sources',
-              body: `The automated content update failed. ` +
-                    `Please check the [workflow run](${runUrl}) for details.`,
+              title: 'Failed to update live data from SBOM sources',
+              body: `The automated data update failed. Please check the [workflow run](${runUrl}) for details.`,
               labels: ['bug', 'automation']
             })
