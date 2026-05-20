@@ -22,7 +22,7 @@ import {
                   </div>
                   <a class="brand-title" href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>
                 </div>
-                <p>Auto-updating Linux built for containers. Ships with Docker, containerd, and Ignition config out of the box. Knuckle steps aside after first boot — you get unmodified, upstream Flatcar that manages its own A/B partition updates forever.</p>
+                <p>Over 8 years of production experience. Flatcar was built for one job — run containers reliably at scale — and it has been doing exactly that since 2016. Unmodified, upstream Flatcar — Knuckle steps aside after first boot and the OS takes care of itself from there.</p>
               </div>
 
               <!-- Container-first: top-left -->
