@@ -33,7 +33,7 @@ const data = ref<KnuckleVersions | null>(null)
 
 onMounted(async () => {
   try {
-    const res = await fetch('/knuckle-versions.json')
+    const res = await fetch(`${import.meta.env.BASE_URL}knuckle-versions.json`)
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`)
     }
