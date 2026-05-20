@@ -278,7 +278,9 @@ onMounted(async () => {
   border: 1px solid var(--color-border-light);
   border-radius: 8px;
   background: rgba(var(--color-bg-rgb), 0.3);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     border-color: var(--color-blue-light);

@@ -64,18 +64,28 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 <style scoped lang="scss">
 .knuckle-page {
   min-height: 100vh;
-  background-image: url('/evening/august-night.webp');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
+  background: none;
   overflow: hidden;
+
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url('/evening/august-night.webp');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    transform: scaleX(-1);
+    z-index: 0;
+  }
 }
 
 .knuckle-layout {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-end;
   padding: 48px 60px 32px;
   gap: 32px;
   min-height: calc(100vh - 60px);
@@ -143,6 +153,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 .col-left {
   @extend %col-glass;
   justify-content: flex-start;
+  align-self: flex-start;
   gap: 12px;
 }
 
