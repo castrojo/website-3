@@ -75,7 +75,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   position: relative;
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: stretch;
   padding: 48px 60px 32px;
   gap: 32px;
   min-height: calc(100vh - 60px);
@@ -143,7 +143,6 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 .col-left {
   @extend %col-glass;
   justify-content: flex-start;
-  align-self: flex-start;
   gap: 12px;
 }
 
