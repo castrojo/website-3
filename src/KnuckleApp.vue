@@ -58,10 +58,26 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         </div>
       </div>
 
-      <!-- Right glass column: streams prominent at top, downloads at bottom -->
-      <div class="col-right">
-        <KnuckleVersionChips />
-        <KnuckleDownloadCard />
+      <!-- Right side: version/download box + mission statement below -->
+      <div class="col-right-stack">
+        <div class="col-right">
+          <KnuckleVersionChips />
+          <KnuckleDownloadCard />
+        </div>
+        <blockquote class="quote-box">
+          <p class="quote-label">Mission:</p>
+          <p>Bring the best of the <a href="https://landscape.cncf.io" target="_blank" rel="noopener noreferrer">CNCF tech stack</a> to enthusiasts. We strive to build a <a href="https://architectures.cncf.io" target="_blank" rel="noopener noreferrer">reference architecture</a> for how best to use this for home projects with the same powerful tools and velocity that the world's <a href="https://www.cncf.io/enduser/" target="_blank" rel="noopener noreferrer">top tier organizations</a> use. Also, there is a 3-ton <em>Amargasaurus cazaui</em> chasing us.<br><br>This is our contribution to training the next generation. Thanks for joining us.</p>
+          <div class="quote-signatories">
+            <a class="signatory" href="https://github.com/clubanderson" target="_blank" rel="noopener noreferrer">
+              <img src="https://github.com/clubanderson.png" alt="Andy Anderson" />
+              <span>Andy Anderson</span>
+            </a>
+            <a class="signatory" href="https://github.com/castrojo" target="_blank" rel="noopener noreferrer">
+              <img src="https://github.com/castrojo.png" alt="Jorge Castro" />
+              <span>Jorge Castro</span>
+            </a>
+          </div>
+        </blockquote>
       </div>
     </div>
   </main>
@@ -154,16 +170,87 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   @extend %col-glass;
 }
 
-// Right column: pushed down so Karl's head shows above it, sticky so it stays visible on scroll
-.col-right {
-  @extend %col-glass;
+// Right side wrapper: sticky, pushed down for dino head effect
+.col-right-stack {
   flex: 0 0 auto;
   width: calc(50% - 8px);
-  justify-content: space-between;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   position: sticky;
   top: 80px;
   margin-top: calc(35vh + 60px);
+}
+
+.col-right {
+  @extend %col-glass;
+  justify-content: space-between;
+  overflow-y: auto;
   max-height: calc(100vh - 96px);
+}
+
+.quote-box {
+  @extend %col-glass;
+  margin: 0;
+  border-left: 3px solid rgba(var(--color-blue-rgb), 0.5);
+  gap: 10px;
+
+  .quote-label {
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text);
+    opacity: 0.5;
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.6;
+    color: var(--color-text-light);
+    opacity: 0.85;
+    font-style: italic;
+
+    a {
+      color: var(--color-text-light);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      opacity: 0.9;
+      &:hover { opacity: 1; }
+    }
+  }
+
+  .quote-signatories {
+    display: flex;
+    gap: 16px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .signatory {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 1; }
+
+    img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(var(--color-blue-rgb), 0.3);
+    }
+
+    span {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--color-text-light);
+    }
+  }
 }
 </style>

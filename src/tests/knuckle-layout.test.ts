@@ -11,11 +11,11 @@ const styleMatch = src.match(/<style[^>]*>([\s\S]*?)<\/style>/)
 const style = styleMatch?.[1] ?? ''
 
 describe('KnuckleApp layout — right column must stay bottom-aligned so the dino head shows above it', () => {
-  it('col-left-stack and col-right are siblings inside knuckle-layout', () => {
-    const stackStart = template.indexOf('col-left-stack')
-    const rightStart = template.indexOf('col-right')
-    expect(stackStart).toBeGreaterThan(0)
-    expect(rightStart).toBeGreaterThan(stackStart)
+  it('col-left-stack and col-right-stack are siblings inside knuckle-layout', () => {
+    const leftStart = template.indexOf('col-left-stack')
+    const rightStart = template.indexOf('col-right-stack')
+    expect(leftStart).toBeGreaterThan(0)
+    expect(rightStart).toBeGreaterThan(leftStart)
   })
 
   it('col-right contains KnuckleVersionChips and KnuckleDownloadCard', () => {
@@ -43,18 +43,18 @@ describe('KnuckleApp layout — right column must stay bottom-aligned so the din
     expect(style).toContain('flex-direction: row')
   })
 
-  it('col-right uses position: sticky so it stays visible while left column scrolls', () => {
-    const rightBlock = style.slice(style.indexOf('.col-right'))
-    expect(rightBlock).toContain('position: sticky')
-  })
-
-  // CRITICAL: margin-top on col-right + karl top offset create the dino head effect.
-  // Karl is at top:64px (below the 60px navbar). col-right margin-top is calc(35vh + 60px)
+  // CRITICAL: col-right-stack owns the sticky + margin-top values that create the dino head effect.
+  // Karl is at top:64px (below the 60px navbar). margin-top is calc(35vh + 60px)
   // so the glass box stays at the same spot on Karl's body.
   // Do NOT change these values without updating this test — this took a long time to get right.
-  it('col-right uses margin-top: calc(35vh + 60px) to create the dino-head-above-column effect', () => {
-    const rightBlock = style.slice(style.indexOf('.col-right'))
-    expect(rightBlock).toContain('margin-top: calc(35vh + 60px)')
+  it('col-right-stack uses position: sticky so it stays visible while left column scrolls', () => {
+    const stackBlock = style.slice(style.indexOf('.col-right-stack'))
+    expect(stackBlock).toContain('position: sticky')
+  })
+
+  it('col-right-stack uses margin-top: calc(35vh + 60px) to create the dino-head-above-column effect', () => {
+    const stackBlock = style.slice(style.indexOf('.col-right-stack'))
+    expect(stackBlock).toContain('margin-top: calc(35vh + 60px)')
   })
 
   it('karl uses top: 64px to clear the navbar so the horns are visible', () => {
