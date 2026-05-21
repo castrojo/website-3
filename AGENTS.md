@@ -447,8 +447,8 @@ npm run lint:fix             # Lints and fixes issues in the project
 
 **Public asset fetches in Vue components** — MUST use `import.meta.env.BASE_URL` prefix, not absolute `/` paths, so fork preview and production both work:
 ```ts
-fetch(`${import.meta.env.BASE_URL}knuckle-versions.json`)  // ✅
-fetch('/knuckle-versions.json')                             // ❌ breaks on subpath deploy
+fetch(`${import.meta.env.BASE_URL}knuckle-versions.json`) // ✅
+fetch('/knuckle-versions.json') // ❌ breaks on subpath deploy
 ```
 
 ### Attribution Requirements

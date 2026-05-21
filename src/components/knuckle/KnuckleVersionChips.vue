@@ -110,27 +110,27 @@ onMounted(async () => {
 }
 
 .streams-header {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text);
   opacity: 0.6;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .streams-subhead {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--color-text);
   opacity: 0.45;
-  margin-bottom: 10px;
-  line-height: 1.4;
+  margin-bottom: 6px;
+  line-height: 1.3;
 }
 
 .streams-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
 }
 
@@ -138,10 +138,10 @@ onMounted(async () => {
   background: rgba(var(--color-bg-rgb), 0.4);
   border: 1px solid var(--color-border-light);
   border-radius: 8px;
-  padding: 14px 16px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 
   &.stream-recommended {

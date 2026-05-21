@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <circle cx="50" cy="50" r="46" stroke="#fff" stroke-width="3" fill="none"/>
+  <polygon points="50,12 58,38 86,38 63,55 71,82 50,66 29,82 37,55 14,38 42,38" fill="#fff" opacity="0.9"/>
+  <circle cx="50" cy="10" r="4" fill="#fff"/>
+  <circle cx="88" cy="40" r="4" fill="#fff"/>
+  <circle cx="74" cy="82" r="4" fill="#fff"/>
+  <circle cx="26" cy="82" r="4" fill="#fff"/>
+  <circle cx="12" cy="40" r="4" fill="#fff"/>
+  <path d="M50 10 Q69 25 88 40" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <path d="M88 40 Q81 61 74 82" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <path d="M74 82 Q50 82 26 82" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <path d="M26 82 Q19 61 12 40" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <path d="M12 40 Q31 25 50 10" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.5"/>
+</svg>

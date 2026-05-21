@@ -86,8 +86,8 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   display: flex;
   flex-direction: row;
   align-items: flex-end;
-  padding: 48px 60px 32px;
-  gap: 32px;
+  padding: 24px 48px 16px;
+  gap: 24px;
   min-height: calc(100vh - 60px);
 
   @media (min-aspect-ratio: 16/10) and (min-width: 1024px) {
@@ -97,13 +97,13 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   @media (max-aspect-ratio: 16/10), (max-width: 1023px) {
     flex-direction: column;
     align-items: stretch;
-    padding: 32px 32px 48px;
-    gap: 24px;
+    padding: 24px 24px 32px;
+    gap: 16px;
   }
 
   @media (max-width: 600px) {
-    padding: 24px 16px 48px;
-    gap: 24px;
+    padding: 16px 12px 32px;
+    gap: 16px;
   }
 }
 
@@ -145,7 +145,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   background: rgba(var(--color-bg-rgb), 0.55);
   backdrop-filter: blur(8px);
   border-radius: 12px;
-  padding: 20px 24px;
+  padding: 12px 16px;
   box-sizing: border-box;
 }
 
@@ -154,7 +154,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   @extend %col-glass;
   justify-content: flex-start;
   align-self: flex-start;
-  gap: 12px;
+  gap: 8px;
 }
 
 // Right: streams at top, download at bottom

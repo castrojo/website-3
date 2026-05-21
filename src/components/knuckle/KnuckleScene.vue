@@ -34,13 +34,6 @@ onMounted(() => {
       — the same foundation as Kubernetes, containerd, and Prometheus.
     </p>
 
-    <p class="hero-desc">
-      Container-optimised Linux with automatic A/B updates, a read-only root filesystem, and no package manager.
-      Ships with Docker, containerd, and <a href="https://coreos.github.io/ignition/" target="_blank" rel="noopener noreferrer">Ignition</a> provisioning.
-      The OS takes care of itself. Your workloads live in containers.
-      Combine with the containers from <a href="https://linuxserver.io" target="_blank" rel="noopener noreferrer">linuxserver.io</a> for a homelab worthy of renown and envy.
-    </p>
-
     <div class="alpha-badge">
       ⚠️ Beta software — take appropriate precautions
     </div>
@@ -77,10 +70,10 @@ onMounted(() => {
 }
 
 .hero-tag {
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 
   strong {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: 400;
     font-family: Inter;
     text-transform: uppercase;
@@ -92,10 +85,10 @@ onMounted(() => {
 .hero-title {
   font-family: Inter;
   font-weight: 700;
-  font-size: 5rem;
+  font-size: 4.2rem;
   text-transform: uppercase;
   color: var(--color-text-light);
-  margin: 0 0 14px 0;
+  margin: 0 0 6px 0;
   line-height: 1;
   padding-top: 0;
   padding-left: 0;
@@ -105,7 +98,7 @@ onMounted(() => {
   font-size: 1.4rem;
   font-weight: 400;
   color: var(--color-text-light);
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   line-height: 1.5;
 }
 
@@ -113,7 +106,7 @@ onMounted(() => {
   font-size: 1.4rem;
   line-height: 1.5;
   color: var(--color-text-light);
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
 
   a {
     color: var(--color-blue-light);
@@ -143,8 +136,8 @@ onMounted(() => {
 .release-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  margin-top: 8px;
+  gap: 6px 14px;
+  margin-top: 4px;
 
   a {
     color: var(--color-blue-light);
@@ -167,7 +160,7 @@ onMounted(() => {
   text-decoration: none;
   font-size: 1.3rem;
   opacity: 0.6;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   transition: opacity 0.2s;
 
   &:hover {
