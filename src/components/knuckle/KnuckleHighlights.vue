@@ -40,7 +40,7 @@ onMounted(async () => {
                   </div>
                   <a class="brand-title" href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>
                 </div>
-                <p>Over 8 years of production experience and community trusted — Knuckle steps aside after first boot and the OS takes care of itself. Forever.</p>
+                <p>Over 8 years of production experience and community trusted — knuckle only runs on the live installer then the OS takes care of itself. Forever.</p>
               </div>
 
               <div class="brand-item brand-nvidia">
@@ -86,8 +86,8 @@ onMounted(async () => {
                   </div>
                   <a class="brand-title" href="https://kubestellar.io" target="_blank" rel="noopener noreferrer">KubeStellar Console UI</a>
                 </div>
-                <p>Kickass web management for your entire homelab. Deploy your own ops mission control center from one beautiful set of control panels.</p>
-                <br><p>One click <a href="https://kubevirt.io" target="_blank" rel="noopener noreferrer">KubeVirt</a> — bring your VMs with you.</p>
+                <p>Kickass web management for your entire homelab. Deploy your own ops mission control center from one beautiful set of control panels. Share your configs with friends, using existing open standards.</p>
+                <br><p>New to containers? One click <a href="https://kubevirt.io" target="_blank" rel="noopener noreferrer">KubeVirt</a> — let's your bring your trusted VMs with you.</p>
               </div>
 
               <div class="brand-item brand-nvidia">
@@ -100,7 +100,7 @@ onMounted(async () => {
                   </div>
                   <span class="brand-title">Flatcar is a CNCF Incubating Project</span>
                 </div>
-                <p>Flatcar Container Linux is part of a diverse ecosystem of community vetted, vendor neutral software for the real world.<br><br>Don't settle for watered-down homelab versions, deploy what the pros use. </p>
+                <p>Part of a diverse ecosystem of community vetted, vendor neutral software for the real world.<br><br>Don't settle for watered-down "homelab versions", deploy what the pros use.</p>
               </div>
 
             </div>
