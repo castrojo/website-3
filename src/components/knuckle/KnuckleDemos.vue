@@ -1,4 +1,17 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const phase = ref<'install' | 'dashboard'>('install')
+let timer: ReturnType<typeof setInterval>
+
+onMounted(() => {
+  // GIF is ~5s at 4x speed, show dashboard for 6s, then loop
+  timer = setInterval(() => {
+    phase.value = phase.value === 'install' ? 'dashboard' : 'install'
+  }, phase.value === 'install' ? 8000 : 6000)
+})
+
+onUnmounted(() => clearInterval(timer))
 </script>
 
 <template>
@@ -8,35 +21,28 @@
         <span class="dot red"></span>
         <span class="dot yellow"></span>
         <span class="dot green"></span>
-        <span class="window-title">knuckle — install</span>
+        <span class="window-title">{{ phase === 'install' ? 'knuckle — install' : 'KubeStellar — dashboard' }}</span>
       </div>
-      <img
-        src="/knuckle-install-demo.gif"
-        alt="Knuckle installer TUI demo showing channel selection, network, sysext app store, and installation progress"
-        loading="lazy"
-      >
-    </div>
-    <div class="demo-window">
-      <div class="window-bar">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
-        <span class="window-title">KubeStellar — dashboard</span>
-      </div>
-      <img
-        src="/kubestellar-dashboard.png"
-        alt="KubeStellar dashboard UI showing multi-cluster workload management"
-        loading="lazy"
-      >
+      <transition name="fade" mode="out-in">
+        <img
+          v-if="phase === 'install'"
+          key="install"
+          src="/knuckle-install-demo.gif"
+          alt="Knuckle installer TUI demo"
+        >
+        <img
+          v-else
+          key="dashboard"
+          src="/kubestellar-dashboard.png"
+          alt="KubeStellar dashboard UI"
+        >
+      </transition>
     </div>
   </section>
 </template>
 
 <style scoped lang="scss">
 .knuckle-demos {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   width: 100%;
 }
 
@@ -79,5 +85,16 @@
   color: #cdd6f4;
   opacity: 0.7;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  transition: opacity 0.3s;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
