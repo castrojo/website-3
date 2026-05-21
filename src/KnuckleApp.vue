@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeMount, provide, ref } from 'vue'
+import KnuckleDemos from './components/knuckle/KnuckleDemos.vue'
 import KnuckleDownloadCard from './components/knuckle/KnuckleDownloadCard.vue'
 import KnuckleFeatures from './components/knuckle/KnuckleFeatures.vue'
 import KnuckleHighlights from './components/knuckle/KnuckleHighlights.vue'
@@ -51,6 +52,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
       <div class="col-left-stack">
         <div class="col-left">
           <KnuckleScene />
+          <KnuckleDemos />
           <KnuckleHighlights />
         </div>
         <div class="col-features">
