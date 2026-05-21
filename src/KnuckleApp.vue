@@ -80,6 +80,17 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
             </a>
           </div>
         </blockquote>
+
+        <div class="why-box">
+          <h2 class="why-title">Why Knuckle?</h2>
+          <ul class="why-list">
+            <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit</li>
+            <li>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</li>
+            <li>Ut enim ad minim veniam, quis nostrud exercitation ullamco</li>
+            <li>Duis aute irure dolor in reprehenderit in voluptate velit</li>
+            <li>Excepteur sint occaecat cupidatat non proident</li>
+          </ul>
+        </div>
       </div>
     </div>
   </main>
@@ -189,6 +200,34 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   justify-content: space-between;
   overflow-y: auto;
   max-height: calc(100vh - 96px);
+}
+
+.why-box {
+  @extend %col-glass;
+  gap: 10px;
+
+  .why-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text);
+    opacity: 0.8;
+    margin: 0;
+  }
+
+  .why-list {
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+
+    li {
+      font-size: 1.4rem;
+      line-height: 1.7;
+      color: var(--color-text-light);
+      opacity: 0.85;
+    }
+  }
 }
 
 .quote-box {
