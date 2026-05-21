@@ -21,11 +21,11 @@
         <span class="dot red"></span>
         <span class="dot yellow"></span>
         <span class="dot green"></span>
-        <span class="window-title">core@flatcar — first boot</span>
+        <span class="window-title">KubeStellar — dashboard</span>
       </div>
       <img
-        src="/knuckle-firstboot-demo.gif"
-        alt="First boot after Knuckle install showing configured hostname, sysexts, and Docker running"
+        src="/kubestellar-dashboard.png"
+        alt="KubeStellar dashboard UI showing multi-cluster workload management"
         loading="lazy"
       >
     </div>
