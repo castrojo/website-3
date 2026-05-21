@@ -90,6 +90,38 @@ function extractVersion(line, prefix) {
   return colonIdx >= 0 ? after.slice(0, colonIdx) : after
 }
 
+// Flatcar ships these NVIDIA driver sysexts for the stable channel.
+// The label follows NVIDIA's official branch classification.
+const NVIDIA_BRANCHES = [
+  { id: '570-open', label: 'Production' },
+  { id: '550-open', label: 'Production' },
+  { id: '535-open', label: 'Long-Term Support' },
+]
+
+function extractNvidiaVersion(contents) {
+  const match = contents.match(/libcuda\.so\.(\d+\.\d+\.\d+)/)
+  return match ? match[1] : null
+}
+
+async function fetchNvidiaDrivers() {
+  const base = 'https://stable.release.flatcar-linux.net/amd64-usr/current'
+  const drivers = []
+  for (const branch of NVIDIA_BRANCHES) {
+    try {
+      const txt = await fetchText(`${base}/flatcar-nvidia-drivers-${branch.id}_contents.txt`)
+      const version = extractNvidiaVersion(txt)
+      if (version) {
+        drivers.push({ label: branch.label, version })
+        console.info(`[nvidia] ${branch.id} → ${version}`)
+      }
+    }
+    catch (e) {
+      console.warn(`[nvidia] ${branch.id} failed:`, e.message)
+    }
+  }
+  return drivers.length > 0 ? drivers : null
+}
+
 function parseSysext(body) {
   const result = {}
   for (const raw of body.split('\n')) {
@@ -177,12 +209,16 @@ async function main() {
   const current = JSON.parse(fs.readFileSync(OUT, 'utf8'))
   const existingStreams = current.streams ?? {}
 
-  // Fetch all channels in parallel
-  const results = await Promise.all(
-    CHANNELS.map(ch => fetchChannel(ch, existingStreams[ch] ?? {})),
-  )
+  // Fetch all channels + NVIDIA drivers in parallel
+  const [results, nvidiaDrivers] = await Promise.all([
+    Promise.all(CHANNELS.map(ch => fetchChannel(ch, existingStreams[ch] ?? {}))),
+    fetchNvidiaDrivers(),
+  ])
 
   current.streams = Object.fromEntries(CHANNELS.map((ch, i) => [ch, results[i]]))
+  if (nvidiaDrivers) {
+    current.nvidiaDrivers = nvidiaDrivers
+  }
 
   // Latest knuckle release tag
   try {

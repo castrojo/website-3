@@ -1,6 +1,11 @@
 {
   "generatedAt": "2026-05-20T20:01:30.388Z",
   "knuckleVersion": "v0.5.1",
+  "nvidiaDrivers": [
+    { "label": "Production", "version": "570.195.03" },
+    { "label": "Production", "version": "550.163.01" },
+    { "label": "Long-Term Support", "version": "535.274.02" }
+  ],
   "streams": {
     "stable": {
       "version": "4593.2.1",

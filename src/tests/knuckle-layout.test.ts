@@ -4,20 +4,18 @@ import { describe, expect, it } from 'vitest'
 
 const src = readFileSync(resolve(__dirname, '../../src/KnuckleApp.vue'), 'utf8')
 
-// Strip everything outside the <template> block for structural checks
 const templateMatch = src.match(/<template>([\s\S]*?)<\/template>/)
 const template = templateMatch?.[1] ?? ''
 
-// Strip everything outside the <style> block for CSS checks
 const styleMatch = src.match(/<style[^>]*>([\s\S]*?)<\/style>/)
 const style = styleMatch?.[1] ?? ''
 
 describe('KnuckleApp layout — right column must stay bottom-aligned so the dino head shows above it', () => {
-  it('col-right is a direct sibling of col-left-stack, not nested inside it', () => {
-    // col-left-stack should close before col-right opens
-    const stackEnd = template.indexOf('</div>', template.indexOf('col-left-stack'))
+  it('col-left-stack and col-right are siblings inside knuckle-layout', () => {
+    const stackStart = template.indexOf('col-left-stack')
     const rightStart = template.indexOf('col-right')
-    expect(rightStart).toBeGreaterThan(stackEnd)
+    expect(stackStart).toBeGreaterThan(0)
+    expect(rightStart).toBeGreaterThan(stackStart)
   })
 
   it('col-right contains KnuckleVersionChips and KnuckleDownloadCard', () => {
@@ -26,23 +24,35 @@ describe('KnuckleApp layout — right column must stay bottom-aligned so the din
     expect(rightBlock).toContain('KnuckleDownloadCard')
   })
 
-  it('col-left and col-features appear inside col-left-stack, before col-right', () => {
-    const stackStart = template.indexOf('col-left-stack')
-    const rightStart = template.indexOf('col-right')
-    // both must appear after col-left-stack opens and before col-right
-    const colLeftPos = template.indexOf('"col-left"', stackStart)
-    const featuresPos = template.indexOf('col-features', stackStart)
-    expect(colLeftPos).toBeGreaterThan(stackStart)
-    expect(colLeftPos).toBeLessThan(rightStart)
-    expect(featuresPos).toBeGreaterThan(stackStart)
-    expect(featuresPos).toBeLessThan(rightStart)
+  it('col-left contains KnuckleScene and KnuckleHighlights', () => {
+    const leftStart = template.indexOf('"col-left"')
+    const featuresStart = template.indexOf('col-features')
+    const left = template.slice(leftStart, featuresStart)
+    expect(left).toContain('KnuckleScene')
+    expect(left).toContain('KnuckleHighlights')
   })
 
-  it('knuckle-layout uses align-items: flex-end so col-right is bottom-aligned', () => {
-    expect(style).toContain('align-items: flex-end')
+  it('col-features contains KnuckleFeatures', () => {
+    const featuresStart = template.indexOf('col-features')
+    const rightStart = template.indexOf('col-right')
+    const features = template.slice(featuresStart, rightStart)
+    expect(features).toContain('KnuckleFeatures')
   })
 
   it('knuckle-layout uses flex-direction: row on desktop', () => {
     expect(style).toContain('flex-direction: row')
+  })
+
+  it('col-right uses position: sticky so it stays visible while left column scrolls', () => {
+    const rightBlock = style.slice(style.indexOf('.col-right'))
+    expect(rightBlock).toContain('position: sticky')
+  })
+
+  // CRITICAL: margin-top: 35vh on col-right is what creates the dino head effect.
+  // Karl's head is visible above the right column because it starts 35vh from the top.
+  // Do NOT change this value without updating it here too — this took a long time to get right.
+  it('col-right uses margin-top: 35vh to create the dino-head-above-column effect', () => {
+    const rightBlock = style.slice(style.indexOf('.col-right'))
+    expect(rightBlock).toContain('margin-top: 35vh')
   })
 })

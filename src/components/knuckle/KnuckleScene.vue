@@ -27,11 +27,9 @@ onMounted(() => {
     </p>
 
     <p class="hero-desc">
-      Knuckle is a guided bare-metal installer for
-      <a href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>,
-      built by the Project Bluefin team. Boot the ISO, pick a disk, done in under a minute.
-      A <a href="https://www.cncf.io/projects/flatcar/" target="_blank" rel="noopener noreferrer">CNCF incubating project</a>
-      — the same foundation as Kubernetes, containerd, and Prometheus.
+      Knuckle is a guided configurator for 
+      <a href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>. Boot the ISO, pick a disk, done in under a minute.
+      Flatcar is a <a href="https://www.cncf.io/projects/flatcar/" target="_blank" rel="noopener noreferrer">CNCF incubating project</a>, we this set of configuration will allow you to take advantage of the entire cloud native ecosystem, at home.
     </p>
 
     <div class="alpha-badge">

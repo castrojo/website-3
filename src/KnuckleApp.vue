@@ -47,7 +47,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         aria-hidden="true"
       >
 
-      <!-- Left stack: two glass boxes stacked -->
+      <!-- Left side: two stacked glass boxes -->
       <div class="col-left-stack">
         <div class="col-left">
           <KnuckleScene />
@@ -58,7 +58,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         </div>
       </div>
 
-      <!-- Right glass column: bottom-aligned so dino head shows above -->
+      <!-- Right glass column: streams prominent at top, downloads at bottom -->
       <div class="col-right">
         <KnuckleVersionChips />
         <KnuckleDownloadCard />
@@ -71,7 +71,6 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 .knuckle-page {
   min-height: 100vh;
   background: none;
-  overflow: hidden;
 
   &::before {
     content: '';
@@ -91,7 +90,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   z-index: 1;
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: flex-start;
   padding: 24px 48px 16px;
   gap: 16px;
 
@@ -116,7 +115,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 
 // Karl: right side, original orientation (faces left, towards content)
 .karl {
-  position: absolute;
+  position: fixed;
   top: 4px;
   right: 0;
   height: 95vh;
@@ -126,22 +125,11 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   user-select: none;
   filter: drop-shadow(0 0 40px rgba(var(--color-blue-rgb), 0.3));
 
-  @media (max-aspect-ratio: 16/10), (max-width: 1023px) {
-    height: 35vw;
-    top: auto;
-    bottom: -5%;
-    right: 0;
-    transform: none;
-    opacity: 0.35;
-    z-index: 0;
-  }
-
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     display: none;
   }
 }
 
-// Both columns share the same glass styling
 %col-glass {
   position: relative;
   z-index: 1;
@@ -156,23 +144,26 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   box-sizing: border-box;
 }
 
-// Left: hero text + feature cards
 .col-left {
   @extend %col-glass;
   justify-content: flex-start;
   gap: 8px;
 }
 
-// Right: streams at top, download at bottom — bottom-aligned, dino head shows above
-.col-right {
-  @extend %col-glass;
-  flex: 1;
-  justify-content: space-between;
-  overflow-y: auto;
-}
-
-// Third box: below col-left in the left stack
 .col-features {
   @extend %col-glass;
+}
+
+// Right column: pushed down so Karl's head shows above it, sticky so it stays visible on scroll
+.col-right {
+  @extend %col-glass;
+  flex: 0 0 auto;
+  width: calc(50% - 8px);
+  justify-content: space-between;
+  overflow-y: auto;
+  position: sticky;
+  top: 80px;
+  margin-top: 35vh;
+  max-height: calc(100vh - 96px);
 }
 </style>

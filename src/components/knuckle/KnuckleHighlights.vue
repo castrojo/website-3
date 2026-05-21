@@ -40,7 +40,7 @@ onMounted(async () => {
                   </div>
                   <a class="brand-title" href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>
                 </div>
-                <p>Over 8 years of production experience. Unmodified upstream Flatcar — Knuckle steps aside after first boot and the OS takes care of itself. Forever.</p>
+                <p>Over 8 years of production experience and community trusted — Knuckle steps aside after first boot and the OS takes care of itself. Forever.</p>
               </div>
 
               <div class="brand-item brand-nvidia">
@@ -52,7 +52,7 @@ onMounted(async () => {
                   </div>
                   <a class="brand-title" href="https://github.com/NVIDIA/go-nvlib" target="_blank" rel="noopener noreferrer">NVIDIA Autodetection</a>
                 </div>
-                <p>Your GPU is detected automatically during install. Choose your preferred driver version and Knuckle handles the rest.</p>
+                <p>GPU automatically detected during install. Choose your preferred driver version and Knuckle handles the rest.</p>
                 <div v-if="nvidiaDrivers" class="nvidia-chips">
                   <span
                     v-for="driver in nvidiaDrivers"
@@ -86,7 +86,7 @@ onMounted(async () => {
                   </div>
                   <a class="brand-title" href="https://kubestellar.io" target="_blank" rel="noopener noreferrer">KubeStellar Console UI</a>
                 </div>
-                <p>A kickass web management for your entire homelab. Manage your entire cluster from one beautiful set of control panels.</p>
+                <p>Kickass web management for your entire homelab. Deploy your own ops mission control center from one beautiful set of control panels.</p>
                 <br><p>One click <a href="https://kubevirt.io" target="_blank" rel="noopener noreferrer">KubeVirt</a> — bring your VMs with you.</p>
               </div>
 
@@ -98,9 +98,9 @@ onMounted(async () => {
                       <path fill="currentColor" d="M208.5 137.3h47.3L184.5 66h77.9V12.6H137.7v53.8l70.8 70.9zm18.4 160l-35.4-35.4h-47.2l59 59.1 12.2 12.2h-77.8v53.4h124.7v-53.8l-35.5-35.5zm106.7-106.6v24.4l-12.2-12.2-59-59v47.2l35.4 35.4 35.4 35.4H387V137.3h-53.4v53.4zm-267.1-6.6l71.2 71.2v-47.2l-70.8-70.8H13v124.6h53.5v-77.8z" />
                     </svg>
                   </div>
-                  <span class="brand-title">Flatcar is CNCF Incubating</span>
+                  <span class="brand-title">Flatcar is a CNCF Incubating Project</span>
                 </div>
-                <p>Flatcar Container Linux meets the same bar Kubernetes met before it graduated — security audits, contributor diversity requirements, and a neutral home that no single company owns.<br><br>Don't settle for watered-down homelab versions, deploy what the pros use. Community vetted, vendor neutral.</p>
+                <p>Flatcar Container Linux is part of a diverse ecosystem of community vetted, vendor neutral software for the real world.<br><br>Don't settle for watered-down homelab versions, deploy what the pros use. </p>
               </div>
 
             </div>
