@@ -29,12 +29,10 @@ onMounted(() => {
     <p class="hero-desc">
       Knuckle is a guided configurator for
       <a href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>, an OS designed for running super efficient Kubernetes clusters.
-      Boot the ISO, pick a disk, done in under a minute.
-      Run your homelab with the same tools trusted by over
+      Boot the ISO, pick a disk, done in under a minute. From there you can can build anything you want on top, the perfect foundation for your dream homelab. Run it with the same tools trusted by over
       <a href="https://www.cncf.io/reports/cncf-annual-survey-2023/" target="_blank" rel="noopener noreferrer">20 million developers</a>
       and infrastructure-leading
-      <a href="https://www.cncf.io/enduser/" target="_blank" rel="noopener noreferrer">end users</a>. Flatcar is a <a href="https://www.cncf.io/projects/flatcar/" target="_blank" rel="noopener noreferrer">CNCF incubating project</a> &mdash;
-      this configuration lets you take advantage of the entire professional ecosystem, at home.
+      <a href="https://www.cncf.io/enduser/" target="_blank" rel="noopener noreferrer">end users</a>. Flatcar is a <a href="https://www.cncf.io/projects/flatcar/" target="_blank" rel="noopener noreferrer">CNCF incubating project</a> with a welcoming and thriving community. When it comes to tech, we've got your back.
     </p>
 
     <p class="hero-desc">
