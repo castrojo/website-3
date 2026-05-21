@@ -1,10 +1,28 @@
 <script setup lang="ts">
-import {
-  IconAutorenew,
-  IconChip,
-  IconCube,
-  IconServerNetwork,
-} from '@iconify-prerendered/vue-mdi'
+import { onMounted, ref } from 'vue'
+import { IconServerNetwork } from '@iconify-prerendered/vue-mdi'
+
+interface NvidiaDriver {
+  label: string
+  version: string
+}
+
+const nvidiaDrivers = ref<NvidiaDriver[] | null>(null)
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}knuckle-versions.json`)
+    if (!res.ok)
+      throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    if (Array.isArray(data.nvidiaDrivers))
+      nvidiaDrivers.value = data.nvidiaDrivers
+  }
+  catch (e) {
+    if (import.meta.env.DEV)
+      console.warn('[KnuckleHighlights] failed to load versions', e)
+  }
+})
 </script>
 
 <template>
@@ -35,22 +53,14 @@ import {
                   <a class="brand-title" href="https://github.com/NVIDIA/go-nvlib" target="_blank" rel="noopener noreferrer">NVIDIA Autodetection</a>
                 </div>
                 <p>Your GPU is detected automatically during install. Choose your preferred driver version and Knuckle handles the rest.</p>
-                <div class="nvidia-chips">
-                  <span class="chip nvidia">
-                    <span class="chip-k">Driver</span>
-                    <span class="chip-v">570-open</span>
-                  </span>
-                  <span class="chip nvidia">
-                    <span class="chip-k">Driver</span>
-                    <span class="chip-v">550-open</span>
-                  </span>
-                  <span class="chip nvidia">
-                    <span class="chip-k">Driver</span>
-                    <span class="chip-v">535-open</span>
-                  </span>
-                  <span class="chip nvidia">
-                    <span class="chip-k">Legacy</span>
-                    <span class="chip-v">460</span>
+                <div v-if="nvidiaDrivers" class="nvidia-chips">
+                  <span
+                    v-for="driver in nvidiaDrivers"
+                    :key="driver.version"
+                    class="chip nvidia"
+                  >
+                    <span class="chip-k">{{ driver.label }}</span>
+                    <span class="chip-v">{{ driver.version }}</span>
                   </span>
                 </div>
               </div>
@@ -76,7 +86,8 @@ import {
                   </div>
                   <a class="brand-title" href="https://kubestellar.io" target="_blank" rel="noopener noreferrer">KubeStellar Console UI</a>
                 </div>
-                <p>Optional multi-cluster Kubernetes control plane — edge, cloud, and homelab.</p>
+                <p>A kickass web management for your entire homelab. Manage your entire cluster from one beautiful set of control panels.</p>
+                <br><p>One click <a href="https://kubevirt.io" target="_blank" rel="noopener noreferrer">KubeVirt</a> — bring your VMs with you.</p>
               </div>
 
               <div class="brand-item brand-nvidia">
@@ -87,41 +98,11 @@ import {
                       <path fill="currentColor" d="M208.5 137.3h47.3L184.5 66h77.9V12.6H137.7v53.8l70.8 70.9zm18.4 160l-35.4-35.4h-47.2l59 59.1 12.2 12.2h-77.8v53.4h124.7v-53.8l-35.5-35.5zm106.7-106.6v24.4l-12.2-12.2-59-59v47.2l35.4 35.4 35.4 35.4H387V137.3h-53.4v53.4zm-267.1-6.6l71.2 71.2v-47.2l-70.8-70.8H13v124.6h53.5v-77.8z" />
                     </svg>
                   </div>
-                  <a class="brand-title" href="https://www.cncf.io/projects/flatcar/" target="_blank" rel="noopener noreferrer">CNCF Incubating</a>
+                  <span class="brand-title">Flatcar is CNCF Incubating</span>
                 </div>
-                <p>Same foundation as Kubernetes, containerd, and Prometheus. Includes <a href="https://kubevirt.io" target="_blank" rel="noopener noreferrer">KubeVirt</a>. Vendor-neutral governance.</p>
+                <p>Flatcar Container Linux meets the same bar Kubernetes met before it graduated — security audits, contributor diversity requirements, and a neutral home that no single company owns.<br><br>Don't settle for watered-down homelab versions, deploy what the pros use. Community vetted, vendor neutral.</p>
               </div>
 
-              <!-- Row 3: Container-First | Updates | amd64+ARM64 (3-col sub-row) -->
-              <div class="brand-item-row">
-                <div class="brand-item">
-                  <div>
-                    <div class="icon-wrap">
-                      <IconCube />
-                    </div>
-                    <span class="brand-title">Container-First</span>
-                  </div>
-                  <p>Docker, containerd, Kubernetes-ready. Ignition provisioning. No package manager.</p>
-                </div>
-                <div class="brand-item">
-                  <div>
-                    <div class="icon-wrap">
-                      <IconAutorenew />
-                    </div>
-                    <a class="brand-title" href="https://www.flatcar.org/docs/latest/setup/releases/update-conf/" target="_blank" rel="noopener noreferrer">Automatic Updates</a>
-                  </div>
-                  <p>A/B partition scheme. Always running a supported, secure release.</p>
-                </div>
-                <div class="brand-item">
-                  <div>
-                    <div class="icon-wrap">
-                      <IconChip />
-                    </div>
-                    <span class="brand-title">amd64 + ARM64</span>
-                  </div>
-                  <p>Bootable ISOs for both architectures. Same install experience everywhere.</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -145,16 +126,17 @@ import {
   }
 
   :deep(.brand-item) {
-    padding: 4px 12px;
+    padding: 20px 20px;
+    border: none !important;
 
     & > div {
-      margin-bottom: 4px;
+      margin-bottom: 10px;
     }
 
     p {
       margin: 0;
       font-size: 1.4rem !important;
-      line-height: 1.4;
+      line-height: 1.5;
     }
   }
 
@@ -163,21 +145,23 @@ import {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    border-top: 1px solid var(--color-border-light);
 
     .brand-item {
-      border-bottom: none;
+      border: none !important;
 
       &:not(:last-child) {
-        border-right: 1px solid var(--color-border-light);
+        border-right: 1px solid var(--color-border-light) !important;
       }
     }
   }
 
-  :deep(.brand-nvidia) {
-    border-left: 1px solid var(--color-border-light);
+  :deep(.brand-grid) {
+    margin-bottom: 0;
+    gap: 0;
+    // strip base borders — spacing does the work
+    border-top: none !important;
+    border-bottom: none !important;
   }
-
 
   :deep(.brand-title) {
     font-size: 1.4rem;
@@ -192,15 +176,133 @@ import {
     }
   }
 
-  :deep(.brand-grid) {
-    margin-bottom: 0;
+  :deep(.brand-grid-lower) {
+    margin-top: 24px;
+  }
+
+  :deep(.brand-extensible) {
+    p {
+      max-width: 60ch;
+    }
+  }
+
+  .cncf-tier {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    & + .cncf-tier {
+      margin-top: 14px;
+    }
+  }
+
+  .cncf-logo-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+  }
+
+  .cncf-logo-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .cncf-logo {
+    display: block;
+    height: 22px;
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .cncf-logo-label {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--color-text-light);
+    white-space: nowrap;
+  }
+
+  .sysext-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin-top: 12px;
+  }
+
+  .sysext-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sysext-group-label {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+
+    &.graduated { color: #4db8a0; }
+    &.incubating { color: #f0a040; }
+    &.sandbox    { color: #8899bb; }
+    &.other      { color: var(--color-text); opacity: 0.45; }
+  }
+
+  .sysext-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .sysext-chip {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    text-decoration: none;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 0.75; }
+
+    &.graduated {
+      background: rgba(77, 184, 160, 0.12);
+      color: #4db8a0;
+      border: 1px solid rgba(77, 184, 160, 0.3);
+    }
+    &.incubating {
+      background: rgba(240, 160, 64, 0.12);
+      color: #f0a040;
+      border: 1px solid rgba(240, 160, 64, 0.3);
+    }
+    &.sandbox {
+      background: rgba(136, 153, 187, 0.12);
+      color: #8899bb;
+      border: 1px solid rgba(136, 153, 187, 0.3);
+    }
+    &.other {
+      background: rgba(var(--color-text-rgb, 255 255 255), 0.05);
+      color: var(--color-text);
+      opacity: 0.55;
+      border: 1px solid var(--color-border-light);
+
+      &:hover { opacity: 0.85; }
+    }
   }
 
   .nvidia-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 4px;
+    gap: 6px;
+    margin-top: 8px;
   }
 
   .chip {
@@ -251,13 +353,7 @@ import {
 
       .brand-item {
         border-right: none !important;
-        border-top: 1px solid var(--color-border-light);
       }
-    }
-
-    :deep(.brand-nvidia) {
-      border-left: none;
-      border-top: 1px solid var(--color-border-light);
     }
   }
 }

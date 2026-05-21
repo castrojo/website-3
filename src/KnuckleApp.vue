@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeMount, provide, ref } from 'vue'
 import KnuckleDownloadCard from './components/knuckle/KnuckleDownloadCard.vue'
+import KnuckleFeatures from './components/knuckle/KnuckleFeatures.vue'
 import KnuckleHighlights from './components/knuckle/KnuckleHighlights.vue'
 import KnuckleScene from './components/knuckle/KnuckleScene.vue'
 import KnuckleVersionChips from './components/knuckle/KnuckleVersionChips.vue'
@@ -46,13 +47,18 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         aria-hidden="true"
       >
 
-      <!-- Left glass column: hero text + feature cards -->
-      <div class="col-left">
-        <KnuckleScene />
-        <KnuckleHighlights />
+      <!-- Left stack: two glass boxes stacked -->
+      <div class="col-left-stack">
+        <div class="col-left">
+          <KnuckleScene />
+          <KnuckleHighlights />
+        </div>
+        <div class="col-features">
+          <KnuckleFeatures />
+        </div>
       </div>
 
-      <!-- Right glass column: streams prominent at top, downloads at bottom -->
+      <!-- Right glass column: bottom-aligned so dino head shows above -->
       <div class="col-right">
         <KnuckleVersionChips />
         <KnuckleDownloadCard />
@@ -87,24 +93,25 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   flex-direction: row;
   align-items: flex-end;
   padding: 24px 48px 16px;
-  gap: 24px;
-  min-height: calc(100vh - 60px);
+  gap: 16px;
 
-  @media (min-aspect-ratio: 16/10) and (min-width: 1024px) {
-    height: calc(100vh - 60px);
-  }
-
-  @media (max-aspect-ratio: 16/10), (max-width: 1023px) {
+  @media (max-width: 1023px) {
     flex-direction: column;
     align-items: stretch;
     padding: 24px 24px 32px;
-    gap: 16px;
   }
 
   @media (max-width: 600px) {
     padding: 16px 12px 32px;
-    gap: 16px;
   }
+}
+
+.col-left-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
 }
 
 // Karl: right side, original orientation (faces left, towards content)
@@ -149,18 +156,23 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   box-sizing: border-box;
 }
 
-// Left: hero text + feature cards, bottom-aligned
+// Left: hero text + feature cards
 .col-left {
   @extend %col-glass;
   justify-content: flex-start;
-  align-self: flex-start;
   gap: 8px;
 }
 
-// Right: streams at top, download at bottom
+// Right: streams at top, download at bottom — bottom-aligned, dino head shows above
 .col-right {
   @extend %col-glass;
+  flex: 1;
   justify-content: space-between;
   overflow-y: auto;
+}
+
+// Third box: below col-left in the left stack
+.col-features {
+  @extend %col-glass;
 }
 </style>
