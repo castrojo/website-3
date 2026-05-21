@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const phase = ref<'install' | 'dashboard'>('install')
+const phase = ref<'channels' | 'update' | 'dashboard'>('channels')
 let timer: ReturnType<typeof setTimeout>
+const sequence: Array<{ phase: 'channels' | 'update' | 'dashboard'; duration: number }> = [
+  { phase: 'channels', duration: 12000 },
+  { phase: 'update', duration: 8000 },
+  { phase: 'dashboard', duration: 10000 },
+]
+let idx = 0
 
 function cycle() {
-  const delay = phase.value === 'install' ? 15000 : 10000
+  const current = sequence[idx]
   timer = setTimeout(() => {
-    phase.value = phase.value === 'install' ? 'dashboard' : 'install'
+    idx = (idx + 1) % sequence.length
+    phase.value = sequence[idx].phase
     cycle()
-  }, delay)
+  }, current.duration)
 }
 
 onMounted(() => cycle())
@@ -23,20 +30,26 @@ onUnmounted(() => clearTimeout(timer))
         <span class="dot red"></span>
         <span class="dot yellow"></span>
         <span class="dot green"></span>
-        <span class="window-title">{{ phase === 'install' ? 'knuckle — install' : 'KubeStellar — dashboard' }}</span>
+        <span class="window-title">{{ phase === 'channels' ? 'knuckle — channels' : phase === 'update' ? 'knuckle — update strategy' : 'KubeStellar — dashboard' }}</span>
       </div>
       <transition name="fade" mode="out-in">
         <img
-          v-if="phase === 'install'"
-          key="install"
-          src="/knuckle-install-demo.gif"
-          alt="Knuckle installer TUI demo"
+          v-if="phase === 'channels'"
+          key="channels"
+          src="/knuckle-channels.gif"
+          alt="Knuckle channel selector showing Stable, LTS, Beta, Alpha"
+        >
+        <img
+          v-else-if="phase === 'update'"
+          key="update"
+          src="/knuckle-update.gif"
+          alt="Knuckle update strategy configuration"
         >
         <img
           v-else
           key="dashboard"
           src="/kubestellar-dashboard.png"
-          alt="KubeStellar dashboard UI"
+          alt="KubeStellar dashboard"
         >
       </transition>
     </div>

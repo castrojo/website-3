@@ -28,20 +28,18 @@ onMounted(() => {
 
     <p class="hero-desc">
       Knuckle is a guided configurator for
-      <a href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>.
+      <a href="https://flatcar.org" target="_blank" rel="noopener noreferrer">Flatcar Container Linux</a>, an OS designed for running super efficient Kubernetes clusters.
       Boot the ISO, pick a disk, done in under a minute.
-      Flatcar is a <a href="https://www.cncf.io/projects/flatcar/" target="_blank" rel="noopener noreferrer">CNCF incubating project</a> &mdash;
-      this configuration lets you take advantage of the entire cloud native ecosystem, at home.
       Run your homelab with the same tools trusted by over
       <a href="https://www.cncf.io/reports/cncf-annual-survey-2023/" target="_blank" rel="noopener noreferrer">20 million developers</a>
       and infrastructure-leading
-      <a href="https://www.cncf.io/enduser/" target="_blank" rel="noopener noreferrer">end users</a>.
+      <a href="https://www.cncf.io/enduser/" target="_blank" rel="noopener noreferrer">end users</a>. Flatcar is a <a href="https://www.cncf.io/projects/flatcar/" target="_blank" rel="noopener noreferrer">CNCF incubating project</a> &mdash;
+      this configuration lets you take advantage of the entire professional ecosystem, at home.
     </p>
 
     <p class="hero-desc">
-      Then accelerate with the included <a href="https://kubestellar.io" target="_blank" rel="noopener noreferrer">KubeStellar</a> dashboard to manage your entire cluster.
-      Build it your way, using the best tools. Need a NAS? A Jellyfin server? Anything you can serve.
-      The perfect homelab OS has arrived &mdash; build your private empire with proven tools.
+      Keept it all vanilla or accelerate with the included <a href="https://kubestellar.io" target="_blank" rel="noopener noreferrer">KubeStellar</a> dashboard to manage your entire cluster.
+      Build it your way, using the best tools. Need a NAS? A Jellyfin server? Anything you can serve, with an awesome dashboard to manage it all. The perfect homelab OS has arrived &mdash; build your private empire with proven tools. 
     </p>
 
     <div class="alpha-badge">
