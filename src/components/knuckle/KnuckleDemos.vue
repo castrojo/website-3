@@ -2,16 +2,18 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const phase = ref<'install' | 'dashboard'>('install')
-let timer: ReturnType<typeof setInterval>
+let timer: ReturnType<typeof setTimeout>
 
-onMounted(() => {
-  // GIF is ~5s at 4x speed, show dashboard for 6s, then loop
-  timer = setInterval(() => {
+function cycle() {
+  const delay = phase.value === 'install' ? 15000 : 10000
+  timer = setTimeout(() => {
     phase.value = phase.value === 'install' ? 'dashboard' : 'install'
-  }, phase.value === 'install' ? 8000 : 6000)
-})
+    cycle()
+  }, delay)
+}
 
-onUnmounted(() => clearInterval(timer))
+onMounted(() => cycle())
+onUnmounted(() => clearTimeout(timer))
 </script>
 
 <template>
@@ -90,7 +92,7 @@ onUnmounted(() => clearInterval(timer))
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s ease;
+  transition: opacity 1s ease;
 }
 
 .fade-enter-from,
