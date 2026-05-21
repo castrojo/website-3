@@ -48,11 +48,17 @@ describe('KnuckleApp layout — right column must stay bottom-aligned so the din
     expect(rightBlock).toContain('position: sticky')
   })
 
-  // CRITICAL: margin-top: 35vh on col-right is what creates the dino head effect.
-  // Karl's head is visible above the right column because it starts 35vh from the top.
-  // Do NOT change this value without updating it here too — this took a long time to get right.
-  it('col-right uses margin-top: 35vh to create the dino-head-above-column effect', () => {
+  // CRITICAL: margin-top on col-right + karl top offset create the dino head effect.
+  // Karl is at top:64px (below the 60px navbar). col-right margin-top is calc(35vh + 60px)
+  // so the glass box stays at the same spot on Karl's body.
+  // Do NOT change these values without updating this test — this took a long time to get right.
+  it('col-right uses margin-top: calc(35vh + 60px) to create the dino-head-above-column effect', () => {
     const rightBlock = style.slice(style.indexOf('.col-right'))
-    expect(rightBlock).toContain('margin-top: 35vh')
+    expect(rightBlock).toContain('margin-top: calc(35vh + 60px)')
+  })
+
+  it('karl uses top: 64px to clear the navbar so the horns are visible', () => {
+    const karlBlock = style.slice(style.indexOf('.karl'))
+    expect(karlBlock).toContain('top: 64px')
   })
 })

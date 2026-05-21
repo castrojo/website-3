@@ -116,7 +116,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 // Karl: right side, original orientation (faces left, towards content)
 .karl {
   position: fixed;
-  top: 4px;
+  top: 64px;
   right: 0;
   height: 95vh;
   width: auto;
@@ -163,7 +163,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   overflow-y: auto;
   position: sticky;
   top: 80px;
-  margin-top: 35vh;
+  margin-top: calc(35vh + 60px);
   max-height: calc(100vh - 96px);
 }
 </style>
