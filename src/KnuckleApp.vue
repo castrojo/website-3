@@ -84,11 +84,11 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         <div class="why-box">
           <h2 class="why-title">Why Knuckle?</h2>
           <ul class="why-list">
-            <li><strong>Zero config files.</strong> No YAML, no JSON, no Ignition by hand. Just answer questions.</li>
-            <li><strong>GPU-ready.</strong> NVIDIA kernel drivers + Container Toolkit configured at install time. Boot and run CUDA.</li>
-            <li><strong>Sysext app store.</strong> Docker, Tailscale, k3s, CRI-O, Falco — toggle on, knuckle wires it up.</li>
-            <li><strong>Immutable by design.</strong> Flatcar auto-updates itself. You never patch. You never break.</li>
-            <li><strong>Cloud-native from day one.</strong> Same CNCF stack that runs at scale — now on your hardware.</li>
+            <li>Sustainability - Reuse as much well maintained technology for our needs</li>
+            <li>Community Driven - CNCF Projects have a proven track record of community interaction and commercial vendors</li>
+            <li>Built by Experts for themselves - This is how we would design our ultimate homelab ourselves, our favorite dinosaur people</li>
+            <li>Common - everthing you learn here is a real world skill. One that is in high demand!</li>
+            <li>Foundational - Keep it simple or build an automation setup totally run by your own self host models. Sky's the limit.</li>
           </ul>
         </div>
       </div>
@@ -204,35 +204,28 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 
 .why-box {
   @extend %col-glass;
-  gap: 12px;
-  border-left: 3px solid rgba(var(--color-blue-rgb), 0.7);
+  gap: 10px;
 
   .why-title {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 700;
-    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text);
+    opacity: 0.8;
     margin: 0;
   }
 
   .why-list {
     margin: 0;
-    padding-left: 0;
-    list-style: none;
+    padding-left: 20px;
+    list-style: disc;
 
     li {
-      font-size: 1.5rem;
-      line-height: 1.8;
+      font-size: 1.4rem;
+      line-height: 1.7;
       color: var(--color-text-light);
-      padding: 4px 0;
-      border-bottom: 1px solid rgba(var(--color-border-rgb, 255, 255, 255), 0.06);
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      strong {
-        color: var(--color-blue-light);
-      }
+      opacity: 0.85;
     }
   }
 }
