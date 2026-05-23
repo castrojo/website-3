@@ -155,6 +155,17 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
     flex-direction: column;
     align-items: stretch;
     padding: 24px 24px 32px;
+
+    .col-right-stack {
+      width: 100%;
+      position: static;
+      margin-top: 0;
+    }
+
+    .col-right {
+      max-height: none;
+      overflow-y: visible;
+    }
   }
 
   @media (max-width: 600px) {

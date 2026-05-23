@@ -295,7 +295,7 @@ onMounted(async () => {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .entry {
     flex-direction: column;
     align-items: flex-start;
