@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 const baseUrl = import.meta.env.BASE_URL
 
-type Phase = 'cluster' | 'cpu' | 'storage'
+type Phase = 'cluster' | 'cpu' | 'storage' | 'features' | 'extensions';
 
 const phase = ref<Phase>('cluster')
 let timer: ReturnType<typeof setTimeout>
@@ -35,6 +35,8 @@ const urlMap: Record<Phase, string> = {
   cluster: 'vanguard.local/cluster',
   cpu: 'vanguard.local/nodes',
   storage: 'vanguard.local/storage',
+  features: 'vanguard.local/features',
+  extensions: 'vanguard.local/extensions',
 }
 </script>
 

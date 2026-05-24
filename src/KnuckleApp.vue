@@ -52,8 +52,10 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
       <div class="col-left-stack">
         <div class="col-left">
           <KnuckleScene />
-          <KnuckleDemos />
           <KnuckleHighlights />
+        </div>
+        <div class="col-demos">
+          <KnuckleDemos />
         </div>
         <div class="col-features">
           <KnuckleFeatures />
