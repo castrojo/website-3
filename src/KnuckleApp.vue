@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { onBeforeMount, provide, ref } from 'vue'
 import KnuckleDemos from './components/knuckle/KnuckleDemos.vue'
-import KnuckleFeatures from './components/knuckle/KnuckleFeatures.vue'
-import KnuckleHighlights from './components/knuckle/KnuckleHighlights.vue'
 import KnuckleScene from './components/knuckle/KnuckleScene.vue'
 import KnuckleVersionChips from './components/knuckle/KnuckleVersionChips.vue'
 import PageLoading from './components/PageLoading.vue'
@@ -66,13 +64,13 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
           <h2 class="why-title" @click="whyBox1Open = !whyBox1Open">
             Why Bluespeed?
           </h2>
-          <ul class="why-list" v-if="whyBox1Open">
-              <li><strong>Sustainability</strong> — Use all of your machines as one cluster, take advantage of everything you own.</li>
-              <li><strong>Community Driven</strong> — CNCF Projects have a proven track record of community interaction and commercial vendors</li>
-              <li><strong>Built by Experts for themselves</strong> — This is how we would design our ultimate homelab ourselves, your favorite dinosaur people</li>
-              <li><strong>Common</strong> — everything you learn here is a real world skill. One that is in high demand!</li>
-              <li><strong>Foundational</strong> — Keep it simple or build an automation setup totally run by your own self host models. Sky's the limit.</li>
-              <li><strong>On Brand</strong> — Working hard to give you Star Trek, it's about useful bling here, we're trying to show off to our friends.</li>
+          <ul v-if="whyBox1Open" class="why-list">
+            <li><strong>Sustainability</strong> — Use all of your machines as one cluster, take advantage of everything you own.</li>
+            <li><strong>Community Driven</strong> — CNCF Projects have a proven track record of community interaction and commercial vendors</li>
+            <li><strong>Built by Experts for themselves</strong> — This is how we would design our ultimate homelab ourselves, your favorite dinosaur people</li>
+            <li><strong>Common</strong> — everything you learn here is a real world skill. One that is in high demand!</li>
+            <li><strong>Foundational</strong> — Keep it simple or build an automation setup totally run by your own self host models. Sky's the limit.</li>
+            <li><strong>On Brand</strong> — Working hard to give you Star Trek, it's about useful bling here, we're trying to show off to our friends.</li>
           </ul>
         </div>
 
@@ -80,13 +78,13 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
           <h2 class="why-title" @click="whyBox2Open = !whyBox2Open">
             One node to start. Scale effortlessly.
           </h2>
-          <ul class="why-list" v-if="whyBox2Open">
-              <li><strong>One config, infinite nodes</strong> — Seamlessly just add nodes, it's all just Kubernetes</li>
-              <li><strong>Automatic networking</strong> — Tailscale joins at first boot. No port forwarding.</li>
-              <li><strong>Self-healing</strong> — OS and sysexts auto-update. You never patch.</li>
-              <li><strong>GPU Support</strong> — NVIDIA configured on your server's GPU, transparently shareable with all of your clients.</li>
-              <li><strong>Dashboard from day one</strong> — KubeStellar gives you visibility across your entire cluster.</li>
-              <li><strong>Reproducible</strong> — Node die? Rebuild on the fly. It's a cluster — redundancy is built in.</li>
+          <ul v-if="whyBox2Open" class="why-list">
+            <li><strong>One config, infinite nodes</strong> — Seamlessly just add nodes, it's all just Kubernetes</li>
+            <li><strong>Automatic networking</strong> — Tailscale joins at first boot. No port forwarding.</li>
+            <li><strong>Self-healing</strong> — OS and sysexts auto-update. You never patch.</li>
+            <li><strong>GPU Support</strong> — NVIDIA configured on your server's GPU, transparently shareable with all of your clients.</li>
+            <li><strong>Dashboard from day one</strong> — KubeStellar gives you visibility across your entire cluster.</li>
+            <li><strong>Reproducible</strong> — Node die? Rebuild on the fly. It's a cluster — redundancy is built in.</li>
           </ul>
         </div>
 

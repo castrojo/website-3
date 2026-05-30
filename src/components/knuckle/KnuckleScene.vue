@@ -15,7 +15,6 @@ onMounted(() => {
 <!-- 4. This is the primary mission of bluespeed - not just a personal lab, but a reference implementation of "CNCF lifestyle homelab" -->
 
 <template>
-
   <div class="knuckle-text" :class="{ 'is-loaded': isLoaded }">
     <div class="hero-tag">
       <strong>Project Bluefin Presents&hellip;</strong>

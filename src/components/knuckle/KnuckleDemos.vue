@@ -24,6 +24,7 @@ let idx = 0
 
 function onHover() {
   isHovered.value = true
+  clearTimeout(timer)
 }
 
 function onUnhover() {
@@ -60,7 +61,9 @@ let dragStartY = 0
 let dragStartScrollTop = 0
 
 function onDragStart(e: MouseEvent) {
-  if (e.button !== 0) { return }
+  if (e.button !== 0) {
+    return
+  }
   isDragging.value = true
   dragStartY = e.clientY
   dragStartScrollTop = innerEl.value?.scrollTop ?? 0
@@ -69,7 +72,9 @@ function onDragStart(e: MouseEvent) {
 }
 
 function onDragMove(e: MouseEvent) {
-  if (!isDragging.value) { return }
+  if (!isDragging.value) {
+    return
+  }
   const dy = e.clientY - dragStartY
   if (innerEl.value) {
     innerEl.value.scrollTop = dragStartScrollTop - dy
@@ -405,8 +410,8 @@ const urlMap: Record<Phase, string> = {
     background:
       linear-gradient(to bottom, #1d1d20 70%, transparent) top / 100% 50px no-repeat local,
       linear-gradient(to top, #1d1d20 70%, transparent) bottom / 100% 50px no-repeat local,
-      linear-gradient(to bottom, rgba(0,0,0,0.4), transparent) top / 100% 30px no-repeat scroll,
-      linear-gradient(to top, rgba(0,0,0,0.4), transparent) bottom / 100% 30px no-repeat scroll;
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.4), transparent) top / 100% 30px no-repeat scroll,
+      linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent) bottom / 100% 30px no-repeat scroll;
   }
 
   img {
