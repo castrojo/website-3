@@ -87,9 +87,9 @@ const { isLoaded } = useFadeInUp()
   text-shadow: 0 2px 8px rgba(var(--color-bg-rgb), 0.6);
 }
 
-@media (max-width: 640px) {
+`@media` (max-width: 640px) {
   .hero-title {
-    font-size: 4.5rem;
+    font-size: 3.2rem;
   }
 }
 </style>
