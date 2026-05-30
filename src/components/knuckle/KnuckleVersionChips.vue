@@ -249,7 +249,8 @@ onMounted(async () => {
   width: 100%;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--color-border-light);
+  background: rgba(var(--color-bg-rgb), 0.55);
+  backdrop-filter: blur(8px);
 }
 
 /* ── Tabs ── */
@@ -407,7 +408,7 @@ onMounted(async () => {
   border-radius: 6px;
   font-size: 1.1rem;
   font-weight: 600;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid transparent;
   background: rgba(var(--color-bg-rgb), 0.4);
   color: var(--color-text);
   cursor: pointer;
