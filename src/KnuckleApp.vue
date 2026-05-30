@@ -135,6 +135,18 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
     transform: scaleX(-1);
     z-index: 0;
   }
+
+  &::after {
+    content: '';
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    height: 400px;
+    background: linear-gradient(to bottom, rgb(var(--color-bg-rgb)), transparent);
+    z-index: 0;
+    pointer-events: none;
+  }
 }
 
 .knuckle-layout {
@@ -205,6 +217,8 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   @extend %col-glass;
   justify-content: flex-start;
   gap: 8px;
+  background: none;
+  backdrop-filter: none;
 }
 
 .col-features {
