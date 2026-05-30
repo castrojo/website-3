@@ -283,7 +283,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   }
 
   .why-list {
-    margin: 0;
+    margin: 0 0 6px 0;
     padding-left: 0;
     list-style: none;
     overflow: hidden;
@@ -291,9 +291,9 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 
     li {
       font-size: 1.6rem;
-      line-height: 1.7;
+      line-height: 1.5;
       color: var(--color-text-light);
-      padding: 7px 10px;
+      padding: 7px 14px;
       border-radius: 6px;
       transition: background 0.2s;
 
@@ -312,7 +312,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   .why-list-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 0px;
 
     @media (max-width: 1023px) {
       grid-template-columns: repeat(2, 1fr);
@@ -363,7 +363,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   transition: background 0.15s;
 
   &:hover {
-    background: var(--color-bg-light);
+    background: var(--color-blue);
   }
   svg {
     width: 1.5rem;
