@@ -55,12 +55,12 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         <div class="col-left">
           <KnuckleTitle />
           <KnuckleDesc />
-          <div class="alpha-badge-row">
-            <div class="alpha-badge"><strong>⚠️ Beta.</strong> Take appropriate precautions.</div>
-          </div>
         </div>
         <div class="col-demos">
           <KnuckleDemos />
+        </div>
+        <div class="alpha-badge-row">
+          <div class="alpha-badge"><strong>⚠️ Beta.</strong> Take appropriate precautions.</div>
         </div>
         <div>
           <KnuckleVersionChips />
