@@ -44,6 +44,60 @@
   flex-direction: $d;
 }
 
+/// Shared `:deep()` overrides for `.brand-*` classes used by both
+/// KnuckleHighlights and KnuckleFeatures. These fight upstream global styles
+/// from the main site and must use `!important`.
+@mixin brand-deep-overrides {
+  :deep(.brand-item) {
+    padding: 20px;
+    border: none !important;
+
+    & > div {
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1.4rem !important;
+      line-height: 1.5;
+    }
+  }
+
+  :deep(.brand-grid) {
+    margin-bottom: 0;
+    gap: 0;
+    border-top: none !important;
+    border-bottom: none !important;
+  }
+
+  :deep(.brand-title) {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    align-self: center;
+    text-decoration: none;
+
+    &[href]:hover {
+      text-decoration: underline;
+      opacity: 0.85;
+    }
+  }
+}
+
+@mixin fade-in-up {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+  box-sizing: border-box;
+
+  &.is-loaded {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @mixin grid($gap: 15px, $columns: 3) {
   display: -ms-grid;
   display: grid;

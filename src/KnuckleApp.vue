@@ -256,17 +256,6 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   backdrop-filter: none;
 }
 
-.col-features {
-  @extend %col-glass;
-}
-
-.col-right {
-  @extend %col-glass;
-  justify-content: space-between;
-  overflow-y: auto;
-  max-height: calc(100vh - 96px);
-}
-
 .why-box {
   @extend %col-glass;
   gap: 12px;

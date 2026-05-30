@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { useFadeInUp } from '../../composables'
 
-const isLoaded = ref(false)
-onMounted(() => {
-  setTimeout(() => {
-    isLoaded.value = true
-  }, 150)
-})
+const { isLoaded } = useFadeInUp()
 </script>
 
 <template>
@@ -32,19 +27,11 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+@use '../../style/setup/mixins';
+
 .knuckle-title {
   width: 100%;
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity 0.6s ease,
-    transform 0.6s ease;
-  box-sizing: border-box;
-
-  &.is-loaded {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  @include mixins.fade-in-up;
 }
 
 .title-inner {
