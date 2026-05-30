@@ -431,9 +431,10 @@ const clients: ClientCard[] = [
     .brand-item {
       border: none !important;
       padding-top: 16px;
+      border-bottom: 1px solid var(--color-border-light);
 
-      &:not(:last-child) {
-        border-right: 1px solid var(--color-border-light) !important;
+      &:last-child {
+        border-bottom: none !important;
       }
     }
   }
@@ -463,7 +464,7 @@ const clients: ClientCard[] = [
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .knuckle-features {
     .app-grid {
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -490,10 +491,6 @@ const clients: ClientCard[] = [
 
     :deep(.brand-item-row) {
       grid-template-columns: 1fr !important;
-
-      .brand-item {
-        border-right: none !important;
-      }
     }
   }
 }

@@ -8,4 +8,6 @@ import './style/index.scss'
 const app = createApp(KnuckleApp)
 app.use(i18n)
 app.use(IframeResizerPlugin)
+app.component('KnuckleFeatures', () => import('./components/knuckle/KnuckleFeatures.vue').then(m => m.default))
+app.component('KnuckleHighlights', () => import('./components/knuckle/KnuckleHighlights.vue').then(m => m.default))
 app.mount('#app')

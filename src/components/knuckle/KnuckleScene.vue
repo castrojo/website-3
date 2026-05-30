@@ -9,7 +9,13 @@ onMounted(() => {
 })
 </script>
 
+<!-- 1. Bluespeed is a CNCF-native homelab factory - any Bluefin contributor can deploy the full stack (Flatcar + observability + homelab platform) on their own hardware. -->
+<!-- 2. Cloud-native best practices - reproducible, GitOps, CNCF tooling throughout -->
+<!-- 3. Justfile-driven - just deploy, just setup-otel, etc. so it's one command -->
+<!-- 4. This is the primary mission of bluespeed - not just a personal lab, but a reference implementation of "CNCF lifestyle homelab" -->
+
 <template>
+
   <div class="knuckle-text" :class="{ 'is-loaded': isLoaded }">
     <div class="hero-tag">
       <strong>Project Bluefin Presents&hellip;</strong>
@@ -156,7 +162,7 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .alpha-badge {
     font-size: 1.1rem;
     padding: 6px 12px;

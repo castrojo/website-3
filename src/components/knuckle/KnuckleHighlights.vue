@@ -31,7 +31,7 @@ onMounted(async () => {
 <template>
   <section class="section-wrap knuckle-highlights">
     <div class="container">
-      <div class="scene-content visible">
+      <div>
         <div>
           <div>
             <div class="brand-grid">
@@ -90,7 +90,7 @@ onMounted(async () => {
                   <a class="brand-title" href="https://kubestellar.io" target="_blank" rel="noopener noreferrer">KubeStellar Console UI</a>
                 </div>
                 <p>Your command center. Unified visibility and control across every node you own. Deploy workloads, investigate with AI, monitor everything — from one dashboard.</p>
-                <br><p>Bring your VMs - <a href="https://kubevirt.io" target="_blank" rel="noopener noreferrer">KubeVirt</a> manages virtual machines as Kubernetes workloads — same cluster, same dashboard, one management layer.</p>
+                <br><p>Bring your VMs - <a href="https://kubevirt.io" target="_blank" rel="noopener noreferrer"><strong>KubeVirt</strong></a> manages virtual machines as Kubernetes workloads — same cluster, same dashboard, one management layer.</p>
               </div>
 
               <div class="brand-item brand-nvidia">
@@ -117,6 +117,12 @@ onMounted(async () => {
 .knuckle-highlights {
   min-height: auto;
   padding: 0;
+
+  :deep(p a) {
+    strong {
+      font-weight: 700;
+    }
+  }
 
   .icon-wrap {
     svg {
@@ -357,7 +363,7 @@ onMounted(async () => {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .knuckle-highlights {
     :deep(.brand-grid) {
       grid-template-columns: 1fr !important;

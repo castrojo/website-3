@@ -594,7 +594,7 @@ onMounted(async () => {
   padding: 24px 18px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .panel {
     grid-template-columns: 1fr;
   }
