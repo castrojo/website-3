@@ -193,9 +193,13 @@ const clients: ClientCard[] = [
 </template>
 
 <style scoped lang="scss">
+@use '../../style/setup/mixins';
+
 .knuckle-features {
   min-height: auto;
   padding: 0;
+
+  @include mixins.brand-deep-overrides;
 
   .container {
     padding: 16px 20px;
@@ -250,24 +254,24 @@ const clients: ClientCard[] = [
     }
 
     &.graduated {
-      border-color: rgba(77, 184, 160, 0.35);
-      background: rgba(77, 184, 160, 0.05);
+      border-color: rgba(var(--color-cncf-graduated-rgb), 0.35);
+      background: rgba(var(--color-cncf-graduated-rgb), 0.05);
       &:hover {
-        background: rgba(77, 184, 160, 0.1);
+        background: rgba(var(--color-cncf-graduated-rgb), 0.1);
       }
     }
     &.incubating {
-      border-color: rgba(240, 160, 64, 0.35);
-      background: rgba(240, 160, 64, 0.05);
+      border-color: rgba(var(--color-cncf-incubating-rgb), 0.35);
+      background: rgba(var(--color-cncf-incubating-rgb), 0.05);
       &:hover {
-        background: rgba(240, 160, 64, 0.1);
+        background: rgba(var(--color-cncf-incubating-rgb), 0.1);
       }
     }
     &.sandbox {
-      border-color: rgba(136, 153, 187, 0.35);
-      background: rgba(136, 153, 187, 0.05);
+      border-color: rgba(var(--color-cncf-sandbox-rgb), 0.35);
+      background: rgba(var(--color-cncf-sandbox-rgb), 0.05);
       &:hover {
-        background: rgba(136, 153, 187, 0.1);
+        background: rgba(var(--color-cncf-sandbox-rgb), 0.1);
       }
     }
   }
@@ -300,16 +304,16 @@ const clients: ClientCard[] = [
     white-space: nowrap;
 
     &.graduated {
-      color: #4db8a0;
-      background: rgba(77, 184, 160, 0.15);
+      color: var(--color-cncf-graduated);
+      background: rgba(var(--color-cncf-graduated-rgb), 0.15);
     }
     &.incubating {
-      color: #f0a040;
-      background: rgba(240, 160, 64, 0.15);
+      color: var(--color-cncf-incubating);
+      background: rgba(var(--color-cncf-incubating-rgb), 0.15);
     }
     &.sandbox {
-      color: #8899bb;
-      background: rgba(136, 153, 187, 0.15);
+      color: var(--color-cncf-sandbox);
+      background: rgba(var(--color-cncf-sandbox-rgb), 0.15);
     }
     // AAIF badge
     &.org-aaif {
@@ -405,22 +409,6 @@ const clients: ClientCard[] = [
     line-height: 1.35;
   }
 
-  // Bottom 3-col feature row
-  :deep(.brand-item) {
-    padding: 20px;
-    border: none !important;
-
-    & > div {
-      margin-bottom: 10px;
-    }
-
-    p {
-      margin: 0;
-      font-size: 1.4rem !important;
-      line-height: 1.5;
-    }
-  }
-
   :deep(.brand-item-row) {
     grid-column: 1 / -1;
     display: grid;
@@ -431,50 +419,46 @@ const clients: ClientCard[] = [
     .brand-item {
       border: none !important;
       padding-top: 16px;
+      border-bottom: 1px solid var(--color-border-light);
 
-      &:not(:last-child) {
-        border-right: 1px solid var(--color-border-light) !important;
+      &:last-child {
+        border-bottom: none !important;
       }
     }
-  }
-
-  :deep(.brand-grid) {
-    margin-bottom: 0;
-    gap: 0;
-    border-top: none !important;
-    border-bottom: none !important;
   }
 
   :deep(.brand-grid-lower) {
     margin-top: 0;
   }
-
-  :deep(.brand-title) {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--color-text-light);
-    align-self: center;
-    text-decoration: none;
-
-    &[href]:hover {
-      text-decoration: underline;
-      opacity: 0.85;
-    }
-  }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .knuckle-features {
     .app-grid {
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 
+    .app-card-top {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 3px;
+
+      .app-icon {
+        order: 2;
+      }
+
+      .app-badge {
+        order: 1;
+        align-self: flex-end;
+        white-space: normal;
+        text-align: right;
+        margin-bottom: 4px;
+      }
+    }
+
     :deep(.brand-item-row) {
       grid-template-columns: 1fr !important;
-
-      .brand-item {
-        border-right: none !important;
-      }
     }
   }
 }

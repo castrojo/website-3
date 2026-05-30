@@ -12,54 +12,43 @@ const template = templateMatch?.[1] ?? ''
 const styleMatch = src.match(/<style[^>]*>([\s\S]*?)<\/style>/)
 const style = styleMatch?.[1] ?? ''
 
-describe('knuckleApp layout — right column must stay bottom-aligned so the dino head shows above it', () => {
-  it('col-left-stack and col-right-stack are siblings inside knuckle-layout', () => {
-    const leftStart = template.indexOf('col-left-stack')
-    const rightStart = template.indexOf('col-right-stack')
-    expect(leftStart).toBeGreaterThan(0)
-    expect(rightStart).toBeGreaterThan(leftStart)
+describe('knuckleApp layout — single-column centered layout with Karl fixed on the right', () => {
+  it('col-left-stack is the main column container', () => {
+    expect(template).toContain('col-left-stack')
   })
 
-  it('col-right contains KnuckleVersionChips', () => {
-    const rightBlock = template.slice(template.indexOf('class="col-right"'))
-    expect(rightBlock).toContain('KnuckleVersionChips')
+  it('col-left contains KnuckleTitle and KnuckleDesc', () => {
+    const leftBlock = template.slice(template.indexOf('col-left'))
+    expect(leftBlock).toContain('KnuckleTitle')
+    expect(leftBlock).toContain('KnuckleDesc')
   })
 
-  it('col-left contains KnuckleScene and KnuckleHighlights', () => {
-    const leftStart = template.indexOf('"col-left"')
-    const featuresStart = template.indexOf('col-features')
-    const left = template.slice(leftStart, featuresStart)
-    expect(left).toContain('KnuckleScene')
-    expect(left).toContain('KnuckleHighlights')
+  it('col-demos contains KnuckleDemos', () => {
+    const demosBlock = template.slice(template.indexOf('col-demos'))
+    expect(demosBlock).toContain('KnuckleDemos')
   })
 
-  it('col-features contains KnuckleFeatures', () => {
-    const featuresStart = template.indexOf('col-features')
-    const rightStart = template.indexOf('col-right')
-    const features = template.slice(featuresStart, rightStart)
-    expect(features).toContain('KnuckleFeatures')
+  it('knuckleVersionChips is inside col-left-stack', () => {
+    const stackBlock = template.slice(template.indexOf('col-left-stack'))
+    expect(stackBlock).toContain('KnuckleVersionChips')
   })
 
-  it('knuckle-layout uses flex-direction: row on desktop', () => {
-    expect(style).toContain('flex-direction: row')
+  it('knuckle-layout uses flex-direction: column on desktop', () => {
+    expect(style).toContain('flex-direction: column')
   })
 
-  // CRITICAL: col-right-stack owns the sticky + margin-top values that create the dino head effect.
-  // Karl is at top:64px (below the 60px navbar). margin-top is calc(35vh + 60px)
-  // so the glass box stays at the same spot on Karl's body.
-  // Do NOT change these values without updating this test — this took a long time to get right.
-  it('col-right-stack uses position: sticky so it stays visible while left column scrolls', () => {
-    const stackBlock = style.slice(style.indexOf('.col-right-stack'))
-    expect(stackBlock).toContain('position: sticky')
+  it('knuckle-layout centers content with align-items: center', () => {
+    const layoutBlock = style.slice(style.indexOf('.knuckle-layout'))
+    expect(layoutBlock).toContain('align-items: center')
   })
 
-  it('col-right-stack uses margin-top: calc(35vh + 60px) to create the dino-head-above-column effect', () => {
-    const stackBlock = style.slice(style.indexOf('.col-right-stack'))
-    expect(stackBlock).toContain('margin-top: calc(35vh + 60px)')
-  })
-
-  it('karl uses top: 64px to clear the navbar so the horns are visible', () => {
+  it('karl uses position: fixed so it stays on the right side while scrolling', () => {
     const karlBlock = style.slice(style.indexOf('.karl'))
-    expect(karlBlock).toContain('top: 64px')
+    expect(karlBlock).toContain('position: fixed')
+  })
+
+  it('karl uses bottom: -10px to anchor to the bottom of the viewport', () => {
+    const karlBlock = style.slice(style.indexOf('.karl'))
+    expect(karlBlock).toContain('bottom: -10px')
   })
 })

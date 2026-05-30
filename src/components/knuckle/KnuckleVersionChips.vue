@@ -249,7 +249,8 @@ onMounted(async () => {
   width: 100%;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--color-border-light);
+  background: rgba(var(--color-bg-rgb), 0.55);
+  backdrop-filter: blur(8px);
 }
 
 /* ── Tabs ── */
@@ -407,7 +408,7 @@ onMounted(async () => {
   border-radius: 6px;
   font-size: 1.1rem;
   font-weight: 600;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid transparent;
   background: rgba(var(--color-bg-rgb), 0.4);
   color: var(--color-text);
   cursor: pointer;
@@ -593,7 +594,7 @@ onMounted(async () => {
   padding: 24px 18px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .panel {
     grid-template-columns: 1fr;
   }
@@ -606,6 +607,27 @@ onMounted(async () => {
   }
   .arch-btn {
     flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .streams-widget {
+    .dl-label,
+    .arch-row,
+    .dl-btn,
+    .verify-link,
+    .info-only,
+    .state-row {
+      display: none;
+    }
+  }
+  .dl-panel {
+    padding: 12px;
+    gap: 0;
+    background: none;
+  }
+  .gh-link {
+    margin: 0;
   }
 }
 </style>
