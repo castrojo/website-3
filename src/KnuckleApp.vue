@@ -51,17 +51,17 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         aria-hidden="true"
       >
 
-      <!-- Left side: two stacked glass boxes -->
+      <!-- Single column: glass boxes stacked vertically -->
       <div class="col-left-stack">
         <div class="col-left">
           <KnuckleScene />
-          <KnuckleHighlights />
         </div>
         <div class="col-demos">
           <KnuckleDemos />
         </div>
-        <div class="col-features">
-          <KnuckleFeatures />
+        <div>
+          <KnuckleVersionChips />
+        </div>
         <div class="why-box">
           <h2 class="why-title" @click="whyBox1Open = !whyBox1Open">
             Why Bluespeed?
@@ -75,7 +75,6 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
               <li><strong>On Brand</strong> — Working hard to give you Star Trek, it's about useful bling here, we're trying to show off to our friends.</li>
           </ul>
         </div>
-      </div>
 
         <div class="why-box">
           <h2 class="why-title" @click="whyBox2Open = !whyBox2Open">
@@ -89,11 +88,8 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
               <li><strong>Dashboard from day one</strong> — KubeStellar gives you visibility across your entire cluster.</li>
               <li><strong>Reproducible</strong> — Node die? Rebuild on the fly. It's a cluster — redundancy is built in.</li>
           </ul>
-      <!-- Right side: version/download box + mission statement below -->
-      <div class="col-right-stack">
-        <div class="col-right">
-          <KnuckleVersionChips />
         </div>
+
         <blockquote class="quote-box">
           <p class="quote-label">
             Mission:
@@ -113,7 +109,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
         </blockquote>
 
         <blockquote class="quote-box">
-          <p>“Little Bluefin has brought many of you to the world of cloud native. Now meet the real giant. Infrastructure. How would cloud native people run their own homelabs? As customizable as you want where it matters, and a fully automated, well tuned machine. Bluefin’s natural companion. The building block to your perfect computing setup, all controlled by you. Help us build it!”</p>
+          <p>"Little Bluefin has brought many of you to the world of cloud native. Now meet the real giant. Infrastructure. How would cloud native people run their own homelabs? As customizable as you want where it matters, and a fully automated, well tuned machine. Bluefin's natural companion. The building block to your perfect computing setup, all controlled by you. Help us build it!"</p>
           <div class="quote-signatories">
             <a class="signatory" href="https://github.com/castrojo" target="_blank" rel="noopener noreferrer">
               <img src="https://github.com/castrojo.png" alt="Jorge Castro" loading="lazy">
@@ -147,26 +143,13 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  padding: 24px 48px 16px;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 32px 16px;
   gap: 16px;
 
   @media (max-width: 1023px) {
-    flex-direction: column;
-    align-items: stretch;
     padding: 24px 24px 32px;
-
-    .col-right-stack {
-      width: 100%;
-      position: static;
-      margin-top: 0;
-    }
-
-    .col-right {
-      max-height: none;
-      overflow-y: visible;
-    }
   }
 
   @media (max-width: 600px) {
@@ -179,7 +162,12 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 75%;
   min-width: 0;
+
+  @media (max-width: 700px) {
+    width: 100%;
+  }
 }
 
 // Karl: right side, original orientation (faces left, towards content)
@@ -221,18 +209,6 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 
 .col-features {
   @extend %col-glass;
-}
-
-// Right side wrapper: sticky, pushed down for dino head effect
-.col-right-stack {
-  flex: 0 0 auto;
-  width: calc(50% - 8px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: sticky;
-  top: 80px;
-  margin-top: calc(35vh + 60px);
 }
 
 .col-right {
