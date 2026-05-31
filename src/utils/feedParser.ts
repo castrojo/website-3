@@ -13,10 +13,7 @@ interface XmlNodeLike {
 }
 
 export interface XmlParser {
-  parseFromString: (xml: string, mimeType: string) => {
-    documentElement?: { nodeName?: string }
-    getElementsByTagName: (tagName: string) => ArrayLike<XmlNodeLike>
-  }
+  parseFromString: (xml: string, mimeType: DOMParserSupportedType) => Document
 }
 
 function getFirstElement(parent: { getElementsByTagName: (tagName: string) => ArrayLike<XmlNodeLike> }, tagName: string) {
