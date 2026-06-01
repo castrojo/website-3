@@ -26,17 +26,6 @@ import {
                 <p>The latest stable release of GNOME, no delays</p>
               </div>
 
-              <!-- Right: uutils-coreutils + sudo-rs -->
-              <div class="brand-item">
-                <div>
-                  <div class="icon-wrap">
-                    <IconShieldCheck />
-                  </div>
-                  <a class="brand-title" href="https://github.com/uutils/coreutils" target="_blank" rel="noopener noreferrer">Modern Userspace</a>
-                </div>
-                <p>bootc, brew, uutils, systemd-boot, container first, and legacy-free</p>
-              </div>
-
               <!-- Left: primary — freedesktop-sdk -->
               <div class="brand-item brand-primary">
                 <div>
@@ -46,6 +35,17 @@ import {
                   <a class="brand-title" href="https://freedesktop-sdk.io" target="_blank" rel="noopener noreferrer">Freedesktop SDK</a>
                 </div>
                 <p>Same battle tested libraries as Flathub. Continuously upgraded, always up to date.</p>
+              </div>
+
+              <!-- Right: uutils-coreutils + sudo-rs -->
+              <div class="brand-item">
+                <div>
+                  <div class="icon-wrap">
+                    <IconShieldCheck />
+                  </div>
+                  <a class="brand-title" href="https://github.com/uutils/coreutils" target="_blank" rel="noopener noreferrer">Modern Userspace</a>
+                </div>
+                <p>bootc, brew, uutils, systemd-boot, container first, and legacy-free</p>
               </div>
 
               <!-- Left: Designed for Contributors -->
@@ -96,8 +96,8 @@ import {
   .icon-wrap {
     svg {
       display: block;
-      height: 24px;
-      width: 24px;
+      height: 32px;
+      width: 32px;
       color: var(--color-text-light);
     }
   }
@@ -121,22 +121,11 @@ import {
     }
 
     p {
-      font-size: 2rem !important;
       font-weight: 400;
     }
   }
 
   :deep(.brand-primary) {
-    .icon-wrap svg {
-      height: 36px;
-      width: 36px;
-    }
-
-    .brand-title,
-    p {
-      font-size: 1.6rem !important;
-    }
-
     p {
       font-weight: 400;
     }
@@ -170,10 +159,44 @@ import {
   }
 }
 
-@media (max-width: 840px) {
+@media (min-width: 957px) {
+  .dakota-highlights {
+    :deep(.brand-gnome) {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      & > div {
+        margin-bottom: 0;
+        flex-shrink: 0;
+      }
+
+      p {
+        margin-left: auto;
+        text-align: right;
+        padding-left: 40px;
+        font-size: 1.6rem !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 956px) {
   .dakota-highlights {
     :deep(.brand-grid) {
       grid-template-columns: 1fr !important;
+    }
+
+    :deep(.brand-gnome) {
+      p {
+        font-size: 1.6rem !important;
+      }
+    }
+
+    :deep(.brand-item) {
+      &:nth-last-child(2) {
+        border-bottom: 1px solid var(--color-border-light);
+      }
     }
   }
 }

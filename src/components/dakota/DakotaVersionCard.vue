@@ -423,6 +423,10 @@ function backToCard() {
   gap: 6px;
   font-size: 1.3rem;
   flex: 1;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .entry-checksum {
@@ -456,13 +460,15 @@ function backToCard() {
 /* ── Responsive ── */
 
 @media (max-width: 700px) {
-  .card-box {
+  .card-box,
+  .download-view {
     height: 350px;
   }
 }
 
 @media (max-width: 500px) {
-  .card-box {
+  .card-box,
+  .download-view {
     height: 300px;
   }
 
