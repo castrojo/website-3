@@ -82,6 +82,8 @@ const chips = computed(() => {
   overflow: hidden;
   font-size: 1.2rem;
   line-height: 1;
+  background: rgba(var(--color-bg-rgb), 0.45);
+  backdrop-filter: blur(8px);
 
   &.chip-feature {
     border-color: rgba(var(--color-green-rgb, 80, 200, 120), 0.5);
