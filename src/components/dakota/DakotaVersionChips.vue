@@ -17,7 +17,7 @@ const LABELS: Record<string, string> = {
   'freedesktop-sdk': 'Freedesktop SDK',
   'mesa': 'Mesa',
   'bootc': 'bootc',
-  'nvidia': 'Nvidia',
+  'nvidia': 'NVIDIA',
   'systemd': 'systemd',
   'podman': 'Podman',
   'pipewire': 'PipeWire',
