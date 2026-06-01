@@ -36,9 +36,31 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
     <TopNavbar v-show="!isLoading" />
 
     <div v-show="!isLoading" class="dakota-layout">
-      <!-- Left: text, highlights -->
+      <!-- Left: text, video, highlights -->
       <div class="col-left">
         <DakotaScene />
+        <div class="video-wrap">
+          <iframe
+            src="https://www.youtube.com/embed/v18c8ipK02A"
+            title="Dakota"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          />
+        </div>
+        <div class="release-links">
+          <span>Read the announcements:</span>
+          <a
+            href="https://docs.projectbluefin.io/blog/making-our-own-fate/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Alpha 2 Release →</a>
+          <a
+            href="https://docs.projectbluefin.io/blog/dakota-alpha-1/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Alpha 1 Release →</a>
+        </div>
         <DakotaHighlights />
       </div>
 
