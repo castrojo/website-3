@@ -132,6 +132,37 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   }
 }
 
+.release-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  font-size: 1.3rem;
+
+  span {
+    color: var(--color-text-light);
+  }
+
+  a {
+    font-weight: 600;
+    text-decoration: none;
+    background: var(--color-blue-light);
+    color: var(--color-text-light);
+    height: 36px;
+    line-height: 36px;
+    padding: 0 20px 0 20px;
+    border-radius: 18px;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+  }
+}
+
 .alpha-badge-row {
   display: flex;
   justify-content: center;
