@@ -120,7 +120,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
   min-width: 0;
 
   @media (min-width: 840px) {
-    width: 38%;
+    width: 35%;
     flex: none;
   }
 }
@@ -128,7 +128,7 @@ if (i18n.global.availableLocales.includes(currentLocale)) {
 .col-right-sticky {
   @media (min-width: 840px) {
     position: sticky;
-    top: calc(50vh - 250px);
+    top: calc(18vh);
   }
 }
 
