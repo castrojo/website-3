@@ -109,7 +109,6 @@ function backToCard() {
             <h3 class="card-title">
               Dakota
             </h3>
-            <span class="card-subtitle">For the brave soul</span>
           </div>
 
           <p class="card-description">
