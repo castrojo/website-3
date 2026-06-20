@@ -11,7 +11,7 @@ permissions: {}
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ghost-runners
     permissions:
       issues: write  # allow github-script to create failure issues
     steps:
