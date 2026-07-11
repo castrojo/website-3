@@ -2,9 +2,11 @@
 README: Bluefin Wolves Teaser Landing Page Component
 ===================================================
 - Page Path: projectbluefin.io/wolves
-- Comic Content: Currently embeds the Stacklet comic (Origin Story) as placeholder.
-  To replace this with the real Bluefin comic book, update the `comicPages` array
-  below with the new image URLs and captions.
+- Comic Content: Renders the real "Color with Bluefin" coloring book PDF
+  (https://download.projectbluefin.io/color-with-bluefin.pdf) page-by-page onto
+  an HTML5 canvas using PDF.js, loaded dynamically from the cdnjs CDN (see
+  `PDFJS_SCRIPT_URL` / `PDFJS_WORKER_URL` below). To point at a different PDF,
+  update `PDF_URL`.
 - Discord Quotes: Sourced from `src/data/bazzite-quotes.json`. Add real/new community
   quotes there with fields: quote, attribution, context, date.
 - Donate QR Code: Pointing to `https://docs.projectbluefin.io/donations`.
@@ -12,94 +14,23 @@ README: Bluefin Wolves Teaser Landing Page Component
 - Playlist ID in use: `PLA78oiE-RGAE` ("Bluefin: Seven Days to the Wolves" on YouTube).
 -->
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import qrDonate from '@/assets/svg/qr-donate.svg'
 import qrStore from '@/assets/svg/qr-store.svg'
 import TopNavbar from './components/TopNavbar.vue'
 import bazziteQuotes from './data/bazzite-quotes.json'
 
-// Comic book pages data structure (Placeholder Stacklet Content)
-interface ComicPage {
-  pageNumber: number
-  imageUrl: string
-  caption: string
-  title: string
-}
+// PDF.js is injected dynamically from CDNJS (see loadPdfJs()) and attaches itself
+// to `window.pdfjsLib`. It ships no first-party types, so we treat it as `any`.
+const PDF_URL = 'https://download.projectbluefin.io/color-with-bluefin.pdf'
+const PDFJS_SCRIPT_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+const PDFJS_WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 
-const comicPages: ComicPage[] = [
-  {
-    pageNumber: 1,
-    imageUrl: 'https://d17lvj5xn8sco6.cloudfront.net/91/38/3E/69/17/2E/AB/97/4F/D3/03/4C/D5/BC/92/9C/001E9171/cover300.jpg',
-    title: 'Cover: Origin Story',
-    caption: 'Cloud Governance as Code Comic - Issue #1: Origin Story. Learn about Cloud Governance as Code, Cloud Custodian, and Stacklet in a fun, visual way.',
-  },
-  {
-    pageNumber: 2,
-    imageUrl: '', // Will render beautiful comic-styled vector card when empty
-    title: 'The Chaos of Manual Governance',
-    caption: 'Our hero, a cloud architect, is drowning in alert fatigue, security reports, and astronomical cloud bills. "There has to be a better way to enforce policies than manual spreadsheets!"',
-  },
-  {
-    pageNumber: 3,
-    imageUrl: '',
-    title: 'Enter Cloud Custodian',
-    caption: 'Discovering Cloud Custodian! An open source rules engine that allows developers and operators to write simple, human-readable YAML policies to audit and remediate resources.',
-  },
-  {
-    pageNumber: 4,
-    imageUrl: '',
-    title: 'Governance as Code',
-    caption: 'Defining policies as standard code. Version-controlled in Git, tested in pipelines, and executed automatically across all environments. Infrastructure compliance is finally automated.',
-  },
-  {
-    pageNumber: 5,
-    imageUrl: '',
-    title: 'The Scaling Hurdle',
-    caption: 'As the organization expands from 5 accounts to 500, orchestrating, deploying, and maintaining thousands of Cloud Custodian policies across multi-cloud environments becomes a monumental challenge.',
-  },
-  {
-    pageNumber: 6,
-    imageUrl: '',
-    title: 'Enter Stacklet Admin',
-    caption: 'Stacklet delivers the unified management, deployment, and intelligence plane to run Cloud Custodian at hyperscale, enabling real-time policy enforcement with ease.',
-  },
-  {
-    pageNumber: 7,
-    imageUrl: '',
-    title: 'Real-time Prevention',
-    caption: 'Shift left with real-time prevention. Automatically intercept misconfigured, insecure, or non-compliant resources at the deployment stage, ensuring a robust security posture from day zero.',
-  },
-  {
-    pageNumber: 8,
-    imageUrl: '',
-    title: 'Continuous Cost Optimization',
-    caption: 'Slashing cloud waste automatically. Terminate idle resources, delete orphaned storage volumes, and enforce strict run-schedules to maximize efficiency and stretch budgets.',
-  },
-  {
-    pageNumber: 9,
-    imageUrl: '',
-    title: 'Collaborative Alignment',
-    caption: 'Security, compliance, and engineering teams are aligned on a single, clear source of truth. Security is guardrails, not a gatekeeper, empowering developers to move rapidly.',
-  },
-  {
-    pageNumber: 10,
-    imageUrl: '',
-    title: 'Burnout Relief',
-    caption: 'No more frantic midnight alerts, urgent remediation requests, or blame games. Automated policies run quietly in the background, keeping the infrastructure safe around the clock.',
-  },
-  {
-    pageNumber: 11,
-    imageUrl: '',
-    title: 'Sovereign Control',
-    caption: 'Complete structural visibility. Comprehensive dashboards show live compliance scores, automated savings, and risk vectors, giving leadership absolute peace of mind.',
-  },
-  {
-    pageNumber: 12,
-    imageUrl: '',
-    title: 'Strategic Triumph',
-    caption: 'The cloud architect is celebrated as a visionary. By letting Stacklet handle the enforcement guardrails, the entire engineering team is freed to focus on shipping actual features.',
-  },
-]
+let pdfjsLib: any = null
+let pdfDocument: any = null
+// Tracks in-flight render tasks per page number so a resize/page-flip can cancel
+// a stale render before starting a new one on the same canvas.
+const renderTasks = new Map<number, any>()
 
 // Soundtrack Widget state
 const playlistId = 'PLA78oiE-RGAE'
@@ -130,8 +61,165 @@ function startSoundtrack() {
 }
 
 // Comic Reader state
-const currentPageIndex = ref(0)
+const totalPages = ref(0)
+const currentPageIndex = ref(0) // 0-based for the UI; PDF.js pages are 1-based
 const readingMode = ref<'flip' | 'scroll'>('flip') // 'flip' = page-by-page, 'scroll' = stacked vertical
+const pdfLoading = ref(true)
+const pdfError = ref('')
+
+// Template refs: the "flip" mode uses a single canvas, the "scroll" mode renders
+// one canvas per page into an array indexed by page number.
+const flipViewport = ref<HTMLElement | null>(null)
+const flipCanvas = ref<HTMLCanvasElement | null>(null)
+const scrollContainer = ref<HTMLElement | null>(null)
+const scrollCanvases = ref<(HTMLCanvasElement | null)[]>([])
+
+let flipResizeObserver: ResizeObserver | null = null
+let scrollResizeObserver: ResizeObserver | null = null
+
+function setScrollCanvasRef(el: Element | null, index: number) {
+  scrollCanvases.value[index] = el as HTMLCanvasElement | null
+}
+
+// Dynamically injects a <script> tag once and resolves when it has loaded.
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve()
+      return
+    }
+    const script = document.createElement('script')
+    script.src = src
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error(`Failed to load script: ${src}`))
+    document.head.appendChild(script)
+  })
+}
+
+// Injects PDF.js from CDNJS and wires up its worker script, caching the global for reuse.
+async function loadPdfJs(): Promise<any> {
+  if (pdfjsLib) {
+    return pdfjsLib
+  }
+  await loadScript(PDFJS_SCRIPT_URL)
+  const lib = (window as any).pdfjsLib
+  if (!lib) {
+    throw new Error('PDF.js failed to initialize')
+  }
+  lib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL
+  pdfjsLib = lib
+  return lib
+}
+
+// Renders a single PDF page onto the given canvas, scaled to fill containerWidth.
+async function renderPageOnCanvas(pageNumber: number, canvas: HTMLCanvasElement, containerWidth: number) {
+  if (!pdfDocument || containerWidth <= 0) {
+    return
+  }
+
+  // Cancel a stale in-flight render for this page before starting a new one.
+  const pending = renderTasks.get(pageNumber)
+  if (pending) {
+    pending.cancel()
+    renderTasks.delete(pageNumber)
+  }
+
+  const page = await pdfDocument.getPage(pageNumber)
+  const baseViewport = page.getViewport({ scale: 1 })
+  const scale = containerWidth / baseViewport.width
+  const viewport = page.getViewport({ scale })
+
+  const context = canvas.getContext('2d')
+  if (!context) {
+    return
+  }
+
+  // Render at native device pixel ratio for crisp output on HiDPI screens.
+  const outputScale = window.devicePixelRatio || 1
+  canvas.width = Math.floor(viewport.width * outputScale)
+  canvas.height = Math.floor(viewport.height * outputScale)
+  canvas.style.width = `${Math.floor(viewport.width)}px`
+  canvas.style.height = `${Math.floor(viewport.height)}px`
+  const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined
+
+  const renderTask = page.render({ canvasContext: context, viewport, transform })
+  renderTasks.set(pageNumber, renderTask)
+  try {
+    await renderTask.promise
+  }
+  catch (err: any) {
+    if (err?.name !== 'RenderingCancelledException') {
+      console.error('[wolves] Failed to render PDF page', pageNumber, err)
+    }
+  }
+  finally {
+    renderTasks.delete(pageNumber)
+  }
+}
+
+function renderFlipPage() {
+  if (!flipCanvas.value || !flipViewport.value) {
+    return
+  }
+  renderPageOnCanvas(currentPageIndex.value + 1, flipCanvas.value, flipViewport.value.clientWidth)
+}
+
+function renderAllScrollPages() {
+  if (!scrollContainer.value) {
+    return
+  }
+  const width = scrollContainer.value.clientWidth
+  for (let i = 0; i < totalPages.value; i++) {
+    const canvas = scrollCanvases.value[i]
+    if (canvas) {
+      renderPageOnCanvas(i + 1, canvas, width)
+    }
+  }
+}
+
+function setupFlipResizeObserver() {
+  flipResizeObserver?.disconnect()
+  if (!flipViewport.value) {
+    return
+  }
+  flipResizeObserver = new ResizeObserver(() => renderFlipPage())
+  flipResizeObserver.observe(flipViewport.value)
+}
+
+function setupScrollResizeObserver() {
+  scrollResizeObserver?.disconnect()
+  if (!scrollContainer.value) {
+    return
+  }
+  scrollResizeObserver = new ResizeObserver(() => renderAllScrollPages())
+  scrollResizeObserver.observe(scrollContainer.value)
+}
+
+async function loadComicPdf() {
+  pdfLoading.value = true
+  pdfError.value = ''
+  try {
+    const lib = await loadPdfJs()
+    pdfDocument = await lib.getDocument(PDF_URL).promise
+    totalPages.value = pdfDocument.numPages
+    pdfLoading.value = false
+    await nextTick()
+    if (readingMode.value === 'flip') {
+      setupFlipResizeObserver()
+      renderFlipPage()
+    }
+    else {
+      setupScrollResizeObserver()
+      renderAllScrollPages()
+    }
+  }
+  catch (err) {
+    console.error('[wolves] Failed to load comic PDF', err)
+    pdfError.value = 'Unable to load the comic book right now. Please try again in a moment.'
+    pdfLoading.value = false
+  }
+}
 
 // Watch scroll position for Soundtrack Widget sticky transition
 function handleScroll() {
@@ -153,7 +241,7 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function nextPage() {
-  if (currentPageIndex.value < comicPages.length - 1) {
+  if (currentPageIndex.value < totalPages.value - 1) {
     currentPageIndex.value++
   }
 }
@@ -165,19 +253,48 @@ function prevPage() {
 }
 
 function jumpToPage(index: number) {
-  if (index >= 0 && index < comicPages.length) {
+  if (index >= 0 && index < totalPages.value) {
     currentPageIndex.value = index
   }
 }
 
+// Re-render the current page whenever it changes in flip mode.
+watch(currentPageIndex, () => {
+  if (readingMode.value === 'flip' && !pdfLoading.value) {
+    renderFlipPage()
+  }
+})
+
+// Swap resize observers and (re)render pages whenever the layout mode toggles.
+watch(readingMode, async (mode) => {
+  if (pdfLoading.value || pdfError.value) {
+    return
+  }
+  await nextTick()
+  if (mode === 'flip') {
+    setupFlipResizeObserver()
+    renderFlipPage()
+  }
+  else {
+    setupScrollResizeObserver()
+    renderAllScrollPages()
+  }
+})
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('keydown', handleKeyDown)
+  loadComicPdf()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('keydown', handleKeyDown)
+  flipResizeObserver?.disconnect()
+  scrollResizeObserver?.disconnect()
+  renderTasks.forEach(task => task.cancel())
+  renderTasks.clear()
+  pdfDocument?.destroy()
 })
 </script>
 
@@ -328,7 +445,7 @@ onBeforeUnmount(() => {
               Comic Reader
             </h2>
             <p class="title-p">
-              Review the technical placeholder comic book below. Ingesting Stacklet original artwork.
+              Read "Color with Bluefin" right in your browser, rendered live from the source PDF.
             </p>
           </div>
 
@@ -351,47 +468,29 @@ onBeforeUnmount(() => {
 
         <!-- Comic Reader Layout: Page by Page (Slideshow) -->
         <div v-if="readingMode === 'flip'" class="page-flip-comic-layout">
-          <div class="comic-viewport">
+          <div ref="flipViewport" class="comic-viewport">
             <!-- Page Contents -->
             <div class="comic-content-area">
-              <!-- If page has actual image, render it, else render beautiful custom comic panel placeholder -->
-              <div v-if="comicPages[currentPageIndex].imageUrl" class="comic-image-wrap">
-                <img
-                  :src="comicPages[currentPageIndex].imageUrl"
-                  :alt="comicPages[currentPageIndex].caption"
-                  loading="eager"
-                >
+              <div v-if="pdfLoading" class="comic-status-wrap">
+                <div class="spinner" />
+                <p>Loading comic pages&hellip;</p>
               </div>
-              <div v-else class="comic-placeholder-wrap">
-                <div class="dots-overlay" />
-                <div class="placeholder-content">
-                  <div class="placeholder-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="36" height="36">
-                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-4v2h4v2h-4v2h4v2H9V7h6v2z" />
-                    </svg>
-                  </div>
-                  <div class="placeholder-tag">
-                    PANEL {{ comicPages[currentPageIndex].pageNumber }} OF {{ comicPages.length }}
-                  </div>
-                  <h3 class="placeholder-title">
-                    {{ comicPages[currentPageIndex].title }}
-                  </h3>
-                  <div class="placeholder-divider" />
-                  <p class="placeholder-desc">
-                    "{{ comicPages[currentPageIndex].caption }}"
-                  </p>
-                </div>
+              <div v-else-if="pdfError" class="comic-status-wrap is-error">
+                <p>{{ pdfError }}</p>
+                <button class="ctrl-btn" @click="loadComicPdf">
+                  Retry
+                </button>
               </div>
-
-              <!-- Page Caption Banner at Bottom -->
-              <div class="comic-caption-bar select-text">
-                {{ comicPages[currentPageIndex].caption }}
-              </div>
+              <canvas
+                v-show="!pdfLoading && !pdfError"
+                ref="flipCanvas"
+                class="pdf-page-canvas"
+              />
             </div>
 
             <!-- Left Navigation Button -->
             <button
-              v-show="currentPageIndex > 0"
+              v-show="!pdfLoading && !pdfError && currentPageIndex > 0"
               class="nav-btn prev"
               aria-label="Previous Page"
               @click="prevPage"
@@ -401,7 +500,7 @@ onBeforeUnmount(() => {
 
             <!-- Right Navigation Button -->
             <button
-              v-show="currentPageIndex < comicPages.length - 1"
+              v-show="!pdfLoading && !pdfError && currentPageIndex < totalPages - 1"
               class="nav-btn next"
               aria-label="Next Page"
               @click="nextPage"
@@ -414,7 +513,7 @@ onBeforeUnmount(() => {
           <div class="reader-controls">
             <button
               class="ctrl-btn"
-              :disabled="currentPageIndex === 0"
+              :disabled="pdfLoading || !!pdfError || currentPageIndex === 0"
               @click="prevPage"
             >
               &larr; Previous
@@ -422,24 +521,25 @@ onBeforeUnmount(() => {
 
             <!-- Keyboard helper -->
             <div class="kbd-hint">
-              Use &larr; &rarr; arrow keys to turn pages
+              Use &larr; &rarr; arrow keys to turn pages &middot; Page {{ currentPageIndex + 1 }} of {{ totalPages || '—' }}
             </div>
 
             <div class="jump-select-wrap">
               <span>Jump to:</span>
               <select
                 :value="currentPageIndex"
+                :disabled="pdfLoading || !!pdfError || !totalPages"
                 @change="jumpToPage(Number(($event.target as HTMLSelectElement).value))"
               >
-                <option v-for="(page, idx) in comicPages" :key="idx" :value="idx">
-                  Page {{ page.pageNumber }}: {{ page.title.slice(0, 25) }}...
+                <option v-for="n in totalPages" :key="n" :value="n - 1">
+                  Page {{ n }}
                 </option>
               </select>
             </div>
 
             <button
               class="ctrl-btn"
-              :disabled="currentPageIndex === comicPages.length - 1"
+              :disabled="pdfLoading || !!pdfError || currentPageIndex === totalPages - 1"
               @click="nextPage"
             >
               Next &rarr;
@@ -448,50 +548,40 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Comic Reader Layout: Continuous Stacked Vertical Scroll -->
-        <div v-else class="scroll-comic-layout">
-          <div
-            v-for="(page, idx) in comicPages"
-            :key="idx"
-            class="scroll-page-card"
-          >
-            <!-- Content -->
-            <div class="comic-viewport">
-              <div class="comic-content-area">
-                <div v-if="page.imageUrl" class="comic-image-wrap">
-                  <img
-                    :src="page.imageUrl"
-                    :alt="page.caption"
-                    loading="lazy"
-                  >
-                </div>
-                <div v-else class="comic-placeholder-wrap">
-                  <div class="dots-overlay" />
-                  <div class="placeholder-content">
-                    <div class="placeholder-icon">
-                      <svg viewBox="0 0 24 24" fill="currentColor" width="36" height="36">
-                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-4v2h4v2h-4v2h4v2H9V7h6v2z" />
-                      </svg>
-                    </div>
-                    <div class="placeholder-tag">
-                      PANEL {{ page.pageNumber }} OF {{ comicPages.length }}
-                    </div>
-                    <h3 class="placeholder-title">
-                      {{ page.title }}
-                    </h3>
-                    <div class="placeholder-divider" />
-                    <p class="placeholder-desc">
-                      "{{ page.caption }}"
-                    </p>
-                  </div>
-                </div>
-
-                <!-- Page Caption Banner at Bottom -->
-                <div class="comic-caption-bar">
-                  {{ page.caption }}
+        <div v-else ref="scrollContainer" class="scroll-comic-layout">
+          <template v-if="pdfLoading">
+            <div class="comic-status-wrap">
+              <div class="spinner" />
+              <p>Loading comic pages&hellip;</p>
+            </div>
+          </template>
+          <template v-else-if="pdfError">
+            <div class="comic-status-wrap is-error">
+              <p>{{ pdfError }}</p>
+              <button class="ctrl-btn" @click="loadComicPdf">
+                Retry
+              </button>
+            </div>
+          </template>
+          <template v-else>
+            <div
+              v-for="n in totalPages"
+              :key="n"
+              class="scroll-page-card"
+            >
+              <div class="comic-viewport">
+                <div class="comic-content-area">
+                  <canvas
+                    :ref="(el) => setScrollCanvasRef(el as Element | null, n - 1)"
+                    class="pdf-page-canvas"
+                  />
                 </div>
               </div>
+              <div class="comic-caption-bar">
+                Page {{ n }} of {{ totalPages }}
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </section>
 
@@ -1185,7 +1275,7 @@ onBeforeUnmount(() => {
 .comic-viewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  min-height: 200px;
   max-width: 640px;
   margin: 0 auto;
   background-color: #10151f;
@@ -1200,107 +1290,9 @@ onBeforeUnmount(() => {
     flex: 1;
     position: relative;
     display: flex;
-    flex-direction: column;
-  }
-
-  .comic-image-wrap {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    display: flex;
     align-items: center;
     justify-content: center;
-
-    img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-  }
-
-  .comic-placeholder-wrap {
-    flex: 1;
-    padding: 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    background: linear-gradient(135deg, #10151f 0%, #080a10 100%);
-    position: relative;
-
-    .dots-overlay {
-      position: absolute;
-      inset: 0;
-      opacity: 0.08;
-      background-image: radial-gradient(var(--color-blue) 1px, transparent 1px);
-      background-size: 16px 16px;
-      pointer-events: none;
-    }
-
-    .placeholder-content {
-      position: relative;
-      z-index: 1;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .placeholder-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      border: 1px solid rgba(var(--color-blue-rgb), 0.5);
-      background-color: rgba(0, 0, 0, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--color-blue);
-    }
-
-    .placeholder-tag {
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: var(--color-blue);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .placeholder-title {
-      font-size: 2rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      color: #ffffff;
-      margin: 0;
-    }
-
-    .placeholder-divider {
-      width: 80px;
-      height: 2px;
-      background: linear-gradient(to right, transparent, var(--color-blue), transparent);
-    }
-
-    .placeholder-desc {
-      font-size: 1.4rem;
-      line-height: 1.6;
-      color: #bdbdbd;
-      font-style: italic;
-      margin: 0;
-    }
-  }
-
-  .comic-caption-bar {
-    background-color: rgba(0, 0, 0, 0.9);
-    padding: 16px 24px;
-    border-top: 1px solid #272727;
-    text-align: center;
-    font-size: 1.3rem;
-    color: #ffffff;
-    font-weight: 500;
-    line-height: 1.5;
+    min-height: 200px;
   }
 
   .nav-btn {
@@ -1334,6 +1326,56 @@ onBeforeUnmount(() => {
       right: 12px;
     }
   }
+}
+
+// Canvas the current PDF page is rendered onto; JS sets explicit pixel
+// dimensions to match the container width at the device pixel ratio.
+.pdf-page-canvas {
+  display: block;
+  max-width: 100%;
+}
+
+// Loading / error states shown while PDF.js fetches and parses the PDF
+.comic-status-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px 32px;
+  text-align: center;
+  color: #bdbdbd;
+  font-size: 1.4rem;
+
+  &.is-error {
+    color: var(--color-blue-light);
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid rgba(var(--color-blue-rgb), 0.25);
+    border-top-color: var(--color-blue);
+    animation: comic-spinner-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes comic-spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.comic-caption-bar {
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 16px 24px;
+  border-top: 1px solid #272727;
+  text-align: center;
+  font-size: 1.3rem;
+  color: #ffffff;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .reader-controls {
