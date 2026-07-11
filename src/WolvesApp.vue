@@ -727,7 +727,7 @@ onBeforeUnmount(() => {
 
 <style scoped lang="scss">
 .wolves-teaser-page {
-  background-image: url('/evening/night-sky.webp');
+  background-image: url('/evening/10-bluefin-night.webp');
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
