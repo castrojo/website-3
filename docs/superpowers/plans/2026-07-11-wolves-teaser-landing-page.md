@@ -4,7 +4,7 @@
 
 **Goal:** Revise the Wolves teaser landing page at `projectbluefin.io/wolves` to use the native Bluefin Blue palette, implement a floating sticky soundtrack widget, construct a highly responsive on-demand HTML5 Canvas PDF reader utilizing PDF.js CDN, and display automatically cycling dispatches from the 77 Discord quotes credited to "John Bazzite".
 
-**Architecture:** 
+**Architecture:**
 The application revisions are contained entirely within `src/WolvesApp.vue`. It integrates the standard `TopNavbar.vue` header, fetches dynamic scripts from the official PDF.js CDN to keep the bundle size small, handles resize observers to fit canvases across viewports, and uses CSS opacity transitions to cyclically fade quotes from `bazzite-quotes.json`.
 
 **Tech Stack:** Vue 3, Vite, Tailwind CSS (for structure/base), Sass/SCSS, PDF.js CDN, and inline SVG assets.
@@ -25,10 +25,10 @@ The application revisions are contained entirely within `src/WolvesApp.vue`. It 
 **Interfaces:**
 - Consumes: Global CSS variables `--color-blue` and `--color-blue-light`.
 
-- [ ] **Step 1: Replace all red/crimson accents with Bluefin Blue**
+- [x] **Step 1: Replace all red/crimson accents with Bluefin Blue**
   Update `src/WolvesApp.vue` styling and templates to replace any reference to `#ef4444` or red borders with `var(--color-blue)` / `#4285f4` or `var(--color-blue-light)` / `#8a97f7`.
 
-- [ ] **Step 2: Commit the color changes**
+- [x] **Step 2: Commit the color changes**
   ```bash
   git add src/WolvesApp.vue
   git commit -m "style(wolves): Re-brand page from red accent to Bluefin Blue"
@@ -41,17 +41,17 @@ The application revisions are contained entirely within `src/WolvesApp.vue`. It 
 **Files:**
 - Modify: `src/WolvesApp.vue`
 
-- [ ] **Step 1: Refactor Soundtrack Widget HTML & SCSS**
+- [x] **Step 1: Refactor Soundtrack Widget HTML & SCSS**
   Update `src/WolvesApp.vue` to make the soundtrack widget floating.
   - **Desktop:** Floating widget on the bottom-right corner (`position: fixed; bottom: 24px; right: 24px; width: 320px;`).
   - **Mobile:** Bottom-pinned, full-width horizontal bar (`position: fixed; bottom: 0; left: 0; right: 0; width: 100%;`).
   - **Z-Index:** High z-index (999) to overlay all content except the navbar.
   - **Styles:** Use a subtle background blur (`backdrop-filter: blur(12px)`) and a thin blue border (`border: 1px solid rgba(66, 133, 244, 0.3)`).
 
-- [ ] **Step 2: Implement Toggle and Dismiss Persistence**
+- [x] **Step 2: Implement Toggle and Dismiss Persistence**
   Add state and functions to show or hide the floating player when dismissed by the user.
 
-- [ ] **Step 3: Commit the player changes**
+- [x] **Step 3: Commit the player changes**
   ```bash
   git add src/WolvesApp.vue
   git commit -m "feat(wolves): Implement floating viewport soundtrack widget"

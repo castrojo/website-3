@@ -110,7 +110,24 @@ const coverArtUrl = 'https://i.ytimg.com/vi/LASru9j0oIc/maxresdefault.jpg'
 
 const isPlaying = ref(false)
 const isSticky = ref(false)
-const isDismissed = ref(false)
+const isDismissed = ref(sessionStorage.getItem('wolves_soundtrack_dismissed') === 'true')
+const isCollapsed = ref(sessionStorage.getItem('wolves_soundtrack_collapsed') === 'true')
+
+function dismissPlayer() {
+  isDismissed.value = true
+  sessionStorage.setItem('wolves_soundtrack_dismissed', 'true')
+}
+
+function toggleCollapse() {
+  isCollapsed.value = !isCollapsed.value
+  sessionStorage.setItem('wolves_soundtrack_collapsed', isCollapsed.value ? 'true' : 'false')
+}
+
+function startSoundtrack() {
+  isPlaying.value = true
+  isDismissed.value = false
+  sessionStorage.setItem('wolves_soundtrack_dismissed', 'false')
+}
 
 // Comic Reader state
 const currentPageIndex = ref(0)
@@ -169,13 +186,30 @@ onBeforeUnmount(() => {
     <!-- Top Global Navigation Bar -->
     <TopNavbar />
 
-    <!-- Sticky Soundtrack Widget (floats right below top navbar which is 60px height) -->
+    <!-- Persistent Floating Soundtrack Widget -->
     <div
-      v-if="!isDismissed && isSticky"
+      v-if="!isDismissed"
       class="sticky-soundtrack-bar"
-      :style="{ top: '60px' }"
+      :class="{
+        'is-hidden': !isSticky && !isPlaying,
+        'is-collapsed': isCollapsed,
+      }"
     >
-      <div class="bar-content">
+      <!-- Collapsed View -->
+      <div v-if="isCollapsed" class="collapsed-pill" @click="toggleCollapse">
+        <span class="music-icon">🎵</span>
+        <span class="collapsed-text">{{ isPlaying ? 'Soundtrack Active' : 'Soundtrack' }}</span>
+        <button
+          class="mini-close-btn"
+          aria-label="Dismiss Player"
+          @click.stop="dismissPlayer"
+        >
+          &times;
+        </button>
+      </div>
+
+      <!-- Expanded View -->
+      <div v-else class="bar-content">
         <div class="bar-info">
           <!-- Album Thumbnail -->
           <div class="bar-thumbnail">
@@ -206,14 +240,26 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <!-- Dismiss button -->
-          <button
-            class="close-btn"
-            aria-label="Dismiss Player"
-            @click="isDismissed = true"
-          >
-            &times;
-          </button>
+          <div class="action-buttons">
+            <!-- Collapse Button -->
+            <button
+              class="collapse-btn"
+              title="Collapse Player"
+              aria-label="Collapse Player"
+              @click="toggleCollapse"
+            >
+              &minus;
+            </button>
+
+            <!-- Dismiss button -->
+            <button
+              class="close-btn"
+              aria-label="Dismiss Player"
+              @click="dismissPlayer"
+            >
+              &times;
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -239,7 +285,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Hero Soundtrack Widget Box -->
-        <div v-if="!isSticky || isDismissed" class="hero-soundtrack-card">
+        <div class="hero-soundtrack-card">
           <div class="soundtrack-header">
             <div class="soundtrack-thumbnail">
               <img :src="coverArtUrl" :alt="playlistTitle">
@@ -253,16 +299,19 @@ onBeforeUnmount(() => {
             {{ playlistDescription }}. Activate playback to lock in the metal atmosphere while scrolling the story panels.
           </p>
           <div class="soundtrack-player-wrapper">
-            <iframe
-              v-if="isPlaying"
-              :src="embedUrl"
-              title="YouTube playlist player"
-              allow="autoplay; encrypted-media"
-            />
+            <div v-if="isPlaying" class="playing-state-overlay">
+              <div class="visualizer-content">
+                <span class="visualizer-icon">🎵</span>
+                <span class="visualizer-text">Soundtrack Active</span>
+                <p class="visualizer-sub">
+                  Enjoy the heavy metal companion soundtrack! You can pause or dismiss it using the floating player in the bottom-right corner.
+                </p>
+              </div>
+            </div>
             <div v-else class="play-overlay">
               <button
                 class="play-btn"
-                @click="isPlaying = true"
+                @click="startSoundtrack"
               >
                 ▶ Start Soundtrack
               </button>
@@ -588,26 +637,75 @@ onBeforeUnmount(() => {
   gap: 60px;
 }
 
-// Sticky Soundtrack Widget (floating/sticky bar)
+// Persistent Floating Soundtrack Widget
 .sticky-soundtrack-bar {
   position: fixed;
-  left: 0;
-  right: 0;
   z-index: 999;
-  background-color: rgba(16, 21, 31, 0.95);
+  background-color: rgba(16, 21, 31, 0.9);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(var(--color-blue-rgb), 0.3);
+  border: 1px solid rgba(66, 133, 244, 0.3);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  .bar-content {
-    max-width: 1012px;
-    margin: 0 auto;
-    padding: 12px 24px;
+  // Desktop layout (Default)
+  bottom: 24px;
+  right: 24px;
+  width: 320px;
+  border-radius: 12px;
+
+  &.is-hidden {
+    opacity: 0;
+    transform: translateY(100px);
+    pointer-events: none;
+  }
+
+  &.is-collapsed {
+    width: auto;
+    border-radius: 30px;
+  }
+
+  .collapsed-pill {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    gap: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    user-select: none;
+
+    .music-icon {
+      font-size: 1.4rem;
+      animation: pulse 2s infinite;
+    }
+
+    .collapsed-text {
+      white-space: nowrap;
+    }
+
+    .mini-close-btn {
+      background: none;
+      border: none;
+      color: #bdbdbd;
+      font-size: 1.8rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+      margin-left: 4px;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #ffffff;
+      }
+    }
+  }
+
+  .bar-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .bar-info {
@@ -618,11 +716,11 @@ onBeforeUnmount(() => {
   }
 
   .bar-thumbnail {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
     overflow: hidden;
-    border: 1px solid rgba(var(--color-blue-rgb), 0.4);
+    border: 1px solid rgba(66, 133, 244, 0.3);
     background-color: #000;
     flex-shrink: 0;
 
@@ -635,11 +733,12 @@ onBeforeUnmount(() => {
 
   .bar-meta {
     min-width: 0;
+    flex: 1;
   }
 
   .bar-label {
     display: block;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -649,10 +748,10 @@ onBeforeUnmount(() => {
 
   .bar-title {
     display: block;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: #ffffff;
-    margin-top: 2px;
+    margin-top: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -661,25 +760,33 @@ onBeforeUnmount(() => {
   .bar-controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
   }
 
   .mini-player {
-    width: 120px;
-    height: 30px;
-    border-radius: 4px;
+    flex: 1;
+    height: 32px;
+    border-radius: 6px;
     overflow: hidden;
     background-color: #000;
     border: 1px solid #272727;
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
   }
 
   .mini-play-btn {
+    width: 100%;
+    height: 100%;
     background-color: var(--color-blue);
     color: #ffffff;
     font-size: 1.1rem;
     font-weight: 700;
-    padding: 6px 16px;
-    border-radius: 20px;
     border: none;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -689,18 +796,88 @@ onBeforeUnmount(() => {
     }
   }
 
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .collapse-btn,
   .close-btn {
     background: none;
     border: none;
     color: #bdbdbd;
-    font-size: 2.2rem;
     cursor: pointer;
-    padding: 4px;
     line-height: 1;
     transition: color 0.2s;
 
     &:hover {
       color: #ffffff;
+    }
+  }
+
+  .collapse-btn {
+    font-size: 1.8rem;
+    padding: 0 4px;
+  }
+
+  .close-btn {
+    font-size: 2.2rem;
+    padding: 0 4px;
+  }
+
+  // Mobile layout
+  @media (max-width: 767px) {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    border-radius: 0;
+    border-top: 1px solid rgba(66, 133, 244, 0.3);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+
+    &.is-collapsed {
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100% !important;
+      border-radius: 0;
+
+      .collapsed-pill {
+        justify-content: center;
+        padding: 10px 16px;
+      }
+    }
+
+    .bar-content {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      gap: 12px;
+    }
+
+    .bar-info {
+      flex: 1;
+    }
+
+    .bar-controls {
+      width: auto;
+      flex-shrink: 0;
+    }
+
+    .mini-player {
+      width: 100px;
+      flex: none;
+    }
+
+    .bar-meta {
+      .bar-title {
+        font-size: 1.1rem;
+        max-width: 150px;
+      }
     }
   }
 }
@@ -853,6 +1030,44 @@ onBeforeUnmount(() => {
     position: relative;
   }
 
+  .playing-state-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #10151f 0%, #0c1016 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .visualizer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .visualizer-icon {
+    font-size: 2.4rem;
+    animation: bounce 1.5s infinite;
+  }
+
+  .visualizer-text {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .visualizer-sub {
+    font-size: 1.1rem;
+    color: #bdbdbd;
+    margin: 0;
+    max-width: 240px;
+  }
+
   .play-overlay {
     position: absolute;
     inset: 0;
@@ -879,6 +1094,31 @@ onBeforeUnmount(() => {
     &:hover {
       background-color: var(--color-blue-light);
       transform: scale(1.05);
+    }
+  }
+
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.8;
     }
   }
 }
