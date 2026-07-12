@@ -107,7 +107,7 @@ const totalProgress = computed(() => {
 
 const currentPairIndex = computed(() => {
   if (!isSoundtrackActive.value) {
-    return 9 // Pair 10 by default
+    return 6 // Start with July (index 6, Month 7) by default
   }
   const wallpaperIndexFloat = totalProgress.value * 12
   return Math.floor(wallpaperIndexFloat) % 12
@@ -115,7 +115,7 @@ const currentPairIndex = computed(() => {
 
 const nightOpacity = computed(() => {
   if (!isSoundtrackActive.value) {
-    return 1.0 // Full night by default
+    return 0.0 // Start with July day (night layer opacity 0) by default
   }
   const wallpaperIndexFloat = totalProgress.value * 12
   const localProgress = wallpaperIndexFloat - Math.floor(wallpaperIndexFloat)
@@ -317,11 +317,11 @@ const nightWallpaperUrl = computed(() => {
 
 <style scoped lang="scss">
 .wallpaper-container {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
@@ -333,9 +333,9 @@ const nightWallpaperUrl = computed(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: 100% auto;
-  background-position: top center;
-  background-repeat: repeat-y;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   transition: background-image 1s ease-in-out;
   pointer-events: none;
 }
