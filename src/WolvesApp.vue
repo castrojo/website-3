@@ -33,6 +33,18 @@ const isPlaying = ref(false)
 const currentPage = ref(1)
 const activeChapter = computed<WolvesChapter | undefined>(() => getChapterForPage(currentPage.value))
 
+function handleTrackChange(index: number) {
+  if (index === 0) {
+    currentPage.value = 1
+  }
+  else if (index === 1) {
+    currentPage.value = 6
+  }
+  else if (index === 6) {
+    currentPage.value = 11
+  }
+}
+
 // Console Email Submission
 const emailInput = ref('')
 const isSubmittingEmail = ref(false)
@@ -97,6 +109,7 @@ function handleEmailSubmit() {
           <WolvesSoundtrack
             v-model:playing="isPlaying"
             :chapter="activeChapter"
+            @track-change="handleTrackChange"
           />
         </div>
 

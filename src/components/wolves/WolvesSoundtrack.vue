@@ -1,13 +1,25 @@
 <script setup lang="ts">
 import type { SoundtrackSource, SoundtrackTrack, WolvesSoundtrackManifest } from '@/data/wolves-soundtrack'
+import type { WolvesChapter } from '@/data/wolves-story'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
+
+const props = defineProps<{
+  chapter?: WolvesChapter
+  playing?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:playing', playing: boolean): void
+  (e: 'trackChange', index: number): void
+}>()
 
 type PlayerStatus = 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'error'
 
 interface YouTubePlayer {
   playVideo?: () => void
   pauseVideo?: () => void
+  playVideoAt?: (index: number) => void
   getPlaylistIndex?: () => number
   destroy?: () => void
 }
@@ -328,6 +340,49 @@ function handlePrimaryAction() {
 }
 
 watch(isStarted, syncRootPlayerClass, { immediate: true })
+
+watch(status, (newStatus) => {
+  emit('update:playing', newStatus === 'playing')
+})
+
+watch(currentTrackIndex, (newIndex) => {
+  emit('trackChange', newIndex)
+})
+
+watch(() => props.chapter, (newChapter) => {
+  if (!newChapter) {
+    return
+  }
+
+  let targetIndex = 0
+  if (newChapter.id === 'pursuit') {
+    targetIndex = 1
+  }
+  else if (newChapter.id === 'awakening') {
+    targetIndex = 6
+  }
+
+  if (currentTrackIndex.value !== targetIndex) {
+    currentTrackIndex.value = targetIndex
+    if (player && typeof player.playVideoAt === 'function' && isPlaying.value) {
+      player.playVideoAt(targetIndex)
+    }
+  }
+})
+
+watch(() => props.playing, (newPlaying) => {
+  if (newPlaying && status.value !== 'playing') {
+    if (status.value === 'idle' || status.value === 'error') {
+      void startSoundtrack()
+    }
+    else {
+      resumePlayback()
+    }
+  }
+  else if (!newPlaying && status.value === 'playing') {
+    pausePlayback()
+  }
+})
 
 onBeforeUnmount(() => {
   syncRootPlayerClass(false)
