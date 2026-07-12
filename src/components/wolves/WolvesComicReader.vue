@@ -104,7 +104,9 @@ const wallpapers = [
   { type: 'single', name: 'showcase-17.png', title: 'Community Showcase by JumpyVi' },
   { type: 'single', name: 'showcase-18.jpg', title: 'Community Showcase by Giklab' },
   { type: 'single', name: 'showcase-19.png', title: 'Community Showcase by CTW' },
-  { type: 'single', name: 'showcase-20.png', title: 'Community Showcase by AlgoCompSynth by znmeb' }
+  { type: 'single', name: 'showcase-20.png', title: 'Community Showcase by AlgoCompSynth by znmeb' },
+  { type: 'single', name: 'kubecon-55164384988.webp', title: 'Maintainer Summit Breakouts - LM 009' },
+  { type: 'single', name: 'kubecon-55168545299.webp', title: 'KubeCon Europe 2026 Daily Highlights - 053' }
 ]
 
 const duskIsNight = ref(false)
