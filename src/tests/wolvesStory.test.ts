@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { interceptedCommunications } from '../components/wolves/lore'
+import { bazziteQuotes } from '../components/wolves/lore'
 import { wolvesRelease } from '../data/wolves-story'
 import { getArtifactsForChapter, getChapterForPage, getNewArtifactIds } from '../utils/wolvesStory'
 
@@ -20,12 +20,7 @@ describe('wolves story manifest', () => {
     expect(getNewArtifactIds('unknown-release')).toEqual(wolvesRelease.artifacts.map(artifact => artifact.id))
   })
 
-  it('has manifest artifacts for all intercepted communication titles', () => {
-    const interceptedTitles = interceptedCommunications.map(comm => comm.title)
-    const artifactTitles = wolvesRelease.artifacts.map(artifact => artifact.title)
-
-    for (const title of interceptedTitles) {
-      expect(artifactTitles).toContain(title)
-    }
+  it('keeps placeholder lore quote data available', () => {
+    expect(bazziteQuotes.length).toBeGreaterThanOrEqual(3)
   })
 })

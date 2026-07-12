@@ -9,10 +9,10 @@ vi.mock('../utils/loreRotation', () => ({
 }))
 
 describe('wolvesLoreColumn.vue', () => {
-  it('renders final-schema quotes without legacy source fields', async () => {
+  it('renders quote-schema entries from bazzite quotes data', async () => {
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        chapter: wolvesRelease.chapters[1],
+        chapter: wolvesRelease.chapters[0],
       },
     })
 
@@ -25,13 +25,13 @@ describe('wolvesLoreColumn.vue', () => {
     expect('sourceTitle' in bazziteQuotes[0]).toBe(false)
   })
 
-  it('renders the QR code component', () => {
+  it('does not render QR codes inside the lore column', () => {
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        chapter: wolvesRelease.chapters[1],
+        chapter: wolvesRelease.chapters[0],
       },
     })
 
-    expect(wrapper.findComponent({ name: 'WolvesQrCodes' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'WolvesQrCodes' }).exists()).toBe(false)
   })
 })

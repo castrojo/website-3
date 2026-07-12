@@ -1,0 +1,29 @@
+{
+  "provider": {
+    "id": "youtube",
+    "playlistId": "PLA78oiE-RGAE",
+    "playlistUrl": "https://www.youtube.com/playlist?list=PLA78oiE-RGAE",
+    "musicUrl": "https://music.youtube.com/playlist?list=PLA78oiE-RGAE",
+    "spotifyUri": ""
+  },
+  "tracks": [
+    {
+      "title": "7 Days to the Wolves",
+      "artist": "Nightwish",
+      "videoId": "",
+      "artwork": "https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg"
+    },
+    {
+      "title": "The Poet and the Pendulum",
+      "artist": "Nightwish",
+      "videoId": "",
+      "artwork": "https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg"
+    },
+    {
+      "title": "Bye Bye Beautiful",
+      "artist": "Nightwish",
+      "videoId": "",
+      "artwork": "https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg"
+    }
+  ]
+}

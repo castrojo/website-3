@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { WolvesChapter } from '@/data/wolves-story'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import playlistData from '@/data/wolves-playlist.json'
 
 const props = defineProps<{
   chapter: WolvesChapter | undefined
@@ -11,134 +12,41 @@ const emit = defineEmits<{
   (e: 'update:playing', playing: boolean): void
 }>()
 
-const playlistUrl = 'https://www.youtube.com/playlist?list=PLA78oiE-RGAE'
-
-function togglePlay() {
-  emit('update:playing', !props.playing)
+interface SoundtrackProviderConfig {
+  id: 'youtube' | 'spotify' | 'other'
+  playlistId: string
+  playlistUrl: string
+  musicUrl: string
+  spotifyUri?: string
 }
 
-interface LyricLine {
-  time: number // in seconds
-  text: string
-}
-
-// Real-world Nightwish Track Metadata, Timed Lyrics & Chapter Commentary
-interface TrackMetadata {
-  song: string
+interface SoundtrackTrack {
+  title: string
   artist: string
-  album: string
+  videoId?: string
   artwork: string
-  playlistIndex: number
-  commentary: string
-  lyrics: LyricLine[]
 }
 
-const trackData: Record<string, TrackMetadata> = {
-  prologue: {
-    song: '7 Days to the Wolves',
-    artist: 'Nightwish',
-    album: 'Dark Passion Play',
-    artwork: 'https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg',
-    playlistIndex: 0,
-    commentary: 'PROLOGUE DOWNLINK: The hunt begins in the frozen territories. The wolves of corporate licensing track open-source nomads under the dark aurora.',
-    lyrics: [
-      { time: 0, text: '[Instrumental Intro // Decrypting Transmission]' },
-      { time: 18, text: 'The core of the sun, the source of the light' },
-      { time: 25, text: 'A night of a thousand lives, a time of a thousand dreams' },
-      { time: 33, text: 'Seven days to the wolves, wet your beds, write your wills' },
-      { time: 41, text: 'The wolves, my friend, they hunt in the dark' },
-      { time: 48, text: 'A prayer for the lost, a song for the brave' },
-      { time: 54, text: 'We are the ones who survived the long winter' },
-      { time: 60, text: 'Write your will, wet your bed, seven days to the wolves' },
-      { time: 72, text: '[Guitar Solo // Telemetry Normalizing]' }
-    ]
-  },
-  pursuit: {
-    song: 'The Poet and the Pendulum',
-    artist: 'Nightwish',
-    album: 'Dark Passion Play',
-    artwork: 'https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg',
-    playlistIndex: 1,
-    commentary: 'PURSUIT DOWNLINK: Deep space Europa escape. A self-sacrifice under the swinging blades of automated compliance, a beautiful story written in frozen nitrogen.',
-    lyrics: [
-      { time: 0, text: '[Orchestral Intro // Dark Passion Play]' },
-      { time: 14, text: 'The white land of the north, a dream before time' },
-      { time: 24, text: 'The poet is writing his final words in the snow' },
-      { time: 33, text: 'Save me, the pendulum is swinging lower' },
-      { time: 42, text: 'The world is a stage, and we are the players' },
-      { time: 51, text: 'A beautiful story, written in fire and steel' },
-      { time: 60, text: 'Find the scientist on Europa, the ice is deep' },
-      { time: 68, text: 'Only the stars remain to guide our escape' }
-    ]
-  },
-  awakening: {
-    song: 'Bye Bye Beautiful',
-    artist: 'Nightwish',
-    album: 'Dark Passion Play',
-    artwork: 'https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg',
-    playlistIndex: 2,
-    commentary: 'AWAKENING DOWNLINK: Retribution and rebirth. The nomad fleet breaks the blockade, setting the stage for 2027\'s final transmission.',
-    lyrics: [
-      { time: 0, text: '[Synthesizer Intro // Retribution]' },
-      { time: 11, text: 'It\'s the end of an era, a final farewell' },
-      { time: 18, text: 'Did you ever hear what I had to say?' },
-      { time: 24, text: 'Bye bye beautiful, we are moving on' },
-      { time: 30, text: 'Open Source fights back under the iron sky' },
-      { time: 36, text: 'The garden before time is blooming once more' },
-      { time: 42, text: 'No player can predict where the shape will land' },
-      { time: 48, text: 'Choose freedom, choose complexity, choose the future' }
-    ]
-  }
-}
+const provider = playlistData.provider as SoundtrackProviderConfig
+const tracks = playlistData.tracks as SoundtrackTrack[]
+const currentTrackIndex = ref(0)
+const activeTrack = computed(() => tracks[currentTrackIndex.value] ?? tracks[0])
 
-const activeTrack = computed(() => {
-  const chapterId = props.chapter?.id || 'prologue'
-  return trackData[chapterId] || trackData.prologue
-})
-
-const currentLyricIndex = ref(0)
-const currentLyricText = computed(() => {
-  const lines = activeTrack.value.lyrics
-  return lines[currentLyricIndex.value]?.text || ''
-})
-const typedLyric = ref('')
 const mobileBreakpointQuery = '(max-width: 767px)'
 const isMobileViewport = ref(false)
 const isCompactMobilePlayer = computed(() => props.playing && isMobileViewport.value)
-let typewriterTimer: ReturnType<typeof setInterval> | null = null
 let viewportMediaQuery: MediaQueryList | null = null
 let removeViewportListener: (() => void) | null = null
 
-function runLyricTypewriter() {
-  if (typewriterTimer) {
-    clearInterval(typewriterTimer)
-  }
-  typedLyric.value = ''
-  const text = currentLyricText.value
-  let idx = 0
-  typewriterTimer = setInterval(() => {
-    if (idx < text.length) {
-      typedLyric.value += text[idx]
-      idx++
-    }
-    else {
-      clearInterval(typewriterTimer!)
-      typewriterTimer = null
-    }
-  }, 40) // Snappy typewriter speed
-}
-
-// YouTube Player API State & Logic
 let player: any = null
+const hasInitializedPlayer = ref(false)
 const isPlayerReady = ref(false)
-let timePollTimer: ReturnType<typeof setInterval> | null = null
-const lyricsContainer = ref<HTMLElement | null>(null)
+const isLoadingPlayer = ref(false)
 
 function loadYtApi(): Promise<void> {
   return new Promise((resolve) => {
-    // Mock YT player for Vitest / non-browser test environment
     if (typeof window === 'undefined' || (typeof process !== 'undefined' && process.env.NODE_ENV === 'test')) {
-      (window as any).YT = {
+      ;(window as any).YT = {
         Player: class {
           constructor(_id: string, config: any) {
             setTimeout(() => {
@@ -148,97 +56,65 @@ function loadYtApi(): Promise<void> {
             }, 0)
           }
 
-          setVolume() {}
           playVideo() {}
           pauseVideo() {}
-          playVideoAt() {}
           getPlaylistIndex() { return 0 }
-          getCurrentTime() { return 0 }
           destroy() {}
-        }
+        },
       }
       resolve()
       return
     }
 
-    if ((window as any).YT && (window as any).YT.Player) {
+    if ((window as any).YT?.Player) {
       resolve()
       return
     }
+
     const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]')
     if (existing) {
-      const prevCallback = (window as any).onYouTubeIframeAPIReady;
-      (window as any).onYouTubeIframeAPIReady = () => {
-        if (prevCallback) {
-          prevCallback()
-        }
+      const prevReady = (window as any).onYouTubeIframeAPIReady
+      ;(window as any).onYouTubeIframeAPIReady = () => {
+        prevReady?.()
         resolve()
       }
       return
     }
+
     const script = document.createElement('script')
     script.src = 'https://www.youtube.com/iframe_api'
     document.head.appendChild(script)
 
-    const prevOnReady = (window as any).onYouTubeIframeAPIReady;
-    (window as any).onYouTubeIframeAPIReady = () => {
-      if (prevOnReady) {
-        prevOnReady()
-      }
+    const prevReady = (window as any).onYouTubeIframeAPIReady
+    ;(window as any).onYouTubeIframeAPIReady = () => {
+      prevReady?.()
       resolve()
     }
   })
 }
 
-function updateLyricsForTime(time: number) {
-  const lines = activeTrack.value.lyrics
-  let matchedIndex = 0
-  for (let i = 0; i < lines.length; i++) {
-    if (time >= lines[i].time) {
-      matchedIndex = i
-    }
-    else {
-      break
-    }
-  }
-
-  if (matchedIndex !== currentLyricIndex.value) {
-    currentLyricIndex.value = matchedIndex
-    runLyricTypewriter()
-  }
-}
-
-function startTimePolling() {
-  stopTimePolling()
-  timePollTimer = setInterval(() => {
-    if (player && typeof player.getCurrentTime === 'function') {
-      const currentTime = player.getCurrentTime()
-      updateLyricsForTime(currentTime)
-    }
-  }, 250)
-}
-
-function stopTimePolling() {
-  if (timePollTimer) {
-    clearInterval(timePollTimer)
-    timePollTimer = null
-  }
-}
-
-function updateViewportState(matches?: boolean) {
-  if (typeof window === 'undefined') {
+function syncCurrentTrackIndex() {
+  if (!player || typeof player.getPlaylistIndex !== 'function') {
     return
   }
-
-  isMobileViewport.value = matches ?? viewportMediaQuery?.matches ?? window.innerWidth <= 767
+  const index = player.getPlaylistIndex()
+  if (typeof index === 'number' && index >= 0 && index < tracks.length) {
+    currentTrackIndex.value = index
+  }
 }
 
 function syncFloatingPlayerState() {
   if (typeof document === 'undefined') {
     return
   }
-
   document.body.classList.toggle('wolves-player-active', isCompactMobilePlayer.value)
+}
+
+function updateViewportState(matches?: boolean) {
+  if (typeof window === 'undefined') {
+    return
+  }
+  isMobileViewport.value = matches ?? viewportMediaQuery?.matches ?? window.innerWidth <= 767
 }
 
 function initViewportObserver() {
@@ -250,130 +126,99 @@ function initViewportObserver() {
     viewportMediaQuery = window.matchMedia(mobileBreakpointQuery)
     const handleChange = (event: MediaQueryListEvent) => updateViewportState(event.matches)
     updateViewportState(viewportMediaQuery.matches)
-
     if (typeof viewportMediaQuery.addEventListener === 'function') {
       viewportMediaQuery.addEventListener('change', handleChange)
       removeViewportListener = () => viewportMediaQuery?.removeEventListener('change', handleChange)
+      return
     }
-    else {
-      viewportMediaQuery.addListener(handleChange)
-      removeViewportListener = () => viewportMediaQuery?.removeListener(handleChange)
-    }
+    viewportMediaQuery.addListener(handleChange)
+    removeViewportListener = () => viewportMediaQuery?.removeListener(handleChange)
     return
   }
 
   const handleResize = () => updateViewportState()
-  updateViewportState()
   window.addEventListener('resize', handleResize)
   removeViewportListener = () => window.removeEventListener('resize', handleResize)
 }
 
-function initPlayer() {
-  if (player) {
+async function ensurePlayerInitialized() {
+  if (hasInitializedPlayer.value || isLoadingPlayer.value) {
     return
   }
 
+  isLoadingPlayer.value = true
+  await loadYtApi()
+
   player = new (window as any).YT.Player('wolves-yt-player', {
-    height: '100%',
-    width: '100%',
-    videoId: '', // Will load playlist instead
+    height: '200',
+    width: '200',
+    videoId: '',
     playerVars: {
       listType: 'playlist',
-      list: 'PLA78oiE-RGAE',
-      autoplay: props.playing ? 1 : 0,
+      list: provider.playlistId,
+      autoplay: 1,
       controls: 0,
       disablekb: 1,
       fs: 0,
       rel: 0,
-      showinfo: 0,
-      iv_load_policy: 3
+      iv_load_policy: 3,
     },
     events: {
       onReady: () => {
+        hasInitializedPlayer.value = true
+        isLoadingPlayer.value = false
         isPlayerReady.value = true
-        if (player && typeof player.setVolume === 'function') {
-          player.setVolume(50)
+        if (props.playing && typeof player.playVideo === 'function') {
+          player.playVideo()
         }
-        syncPlayerState()
+        syncCurrentTrackIndex()
       },
       onStateChange: (event: any) => {
         if (event.data === 1) {
-          startTimePolling()
           if (!props.playing) {
             emit('update:playing', true)
           }
+          syncCurrentTrackIndex()
+          return
         }
-        else {
-          stopTimePolling()
-          if (props.playing && (event.data === 2 || event.data === 0)) {
-            emit('update:playing', false)
-          }
+        if (props.playing && (event.data === 2 || event.data === 0)) {
+          emit('update:playing', false)
         }
-      }
-    }
+        syncCurrentTrackIndex()
+      },
+    },
   })
 }
 
-function syncPlayerState() {
-  if (!player || !isPlayerReady.value) {
-    return
-  }
+async function togglePlay() {
+  const nextPlaying = !props.playing
+  emit('update:playing', nextPlaying)
 
-  const index = activeTrack.value.playlistIndex
-
-  if (props.playing) {
-    if (typeof player.getPlaylistIndex === 'function' && player.getPlaylistIndex() !== index) {
-      if (typeof player.playVideoAt === 'function') {
-        player.playVideoAt(index)
-      }
-    }
-    else {
-      if (typeof player.playVideo === 'function') {
-        player.playVideo()
-      }
-    }
-    startTimePolling()
-  }
-  else {
-    if (typeof player.pauseVideo === 'function') {
-      player.pauseVideo()
-    }
-    stopTimePolling()
+  if (nextPlaying) {
+    await ensurePlayerInitialized()
   }
 }
 
-// Watchers
-watch(() => props.playing, () => {
-  syncPlayerState()
-})
+watch(() => props.playing, async (playing) => {
+  if (playing) {
+    await ensurePlayerInitialized()
+    if (player && isPlayerReady.value && typeof player.playVideo === 'function') {
+      player.playVideo()
+    }
+    return
+  }
 
-watch(activeTrack, () => {
-  syncPlayerState()
+  if (player && isPlayerReady.value && typeof player.pauseVideo === 'function') {
+    player.pauseVideo()
+  }
 })
 
 watch(isCompactMobilePlayer, () => {
   syncFloatingPlayerState()
 }, { immediate: true })
 
-watch(currentLyricIndex, async (newIdx) => {
-  await nextTick()
-  if (lyricsContainer.value) {
-    const lines = lyricsContainer.value.querySelectorAll('.lyrics-line-item')
-    const activeLine = lines[newIdx] as HTMLElement | null
-    if (activeLine) {
-      lyricsContainer.value.scrollTo({
-        top: activeLine.offsetTop - lyricsContainer.value.clientHeight / 2 + activeLine.clientHeight / 2,
-        behavior: 'smooth'
-      })
-    }
-  }
-})
-
-onMounted(async () => {
+onMounted(() => {
   initViewportObserver()
-  await loadYtApi()
-  initPlayer()
-  runLyricTypewriter()
 })
 
 onBeforeUnmount(() => {
@@ -381,10 +226,6 @@ onBeforeUnmount(() => {
   removeViewportListener = null
   viewportMediaQuery = null
   document.body.classList.remove('wolves-player-active')
-  stopTimePolling()
-  if (typewriterTimer) {
-    clearInterval(typewriterTimer)
-  }
   if (player && typeof player.destroy === 'function') {
     player.destroy()
     player = null
@@ -395,35 +236,31 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="sidebar-soundtrack-card now-playing-bar"
-    :class="{ 'has-lyrics': playing, 'is-mobile-compact': isCompactMobilePlayer }"
+    :class="{ 'is-mobile-compact': isCompactMobilePlayer }"
   >
     <div class="meta-panel-grid">
-      <!-- Left Column: Audio and Chapter Commentary -->
       <div class="meta-panel-left">
         <div class="player-top-row">
           <div class="thumbnail-wrapper" :class="{ 'is-playing-pulse': playing }">
             <img
               :src="activeTrack.artwork"
               class="artwork-img"
-              :alt="`${activeTrack.song} Album Artwork`"
+              :alt="`${activeTrack.title} artwork`"
             >
           </div>
 
           <div class="info-zone">
             <span class="label font-mono">RELEASE SOUNDTRACK TO HUNT BY</span>
             <a
-              :href="playlistUrl"
+              :href="provider.playlistUrl"
               target="_blank"
               rel="noopener noreferrer"
               class="playlist-title"
             >
-              {{ activeTrack.song }}
+              {{ activeTrack.title }}
             </a>
             <div class="active-track font-mono text-gray">
               Artist: <span class="track-name text-cyan">{{ activeTrack.artist }}</span>
-            </div>
-            <div class="active-album font-mono text-gray">
-              Album: <span class="album-name">{{ activeTrack.album }}</span>
             </div>
           </div>
 
@@ -447,47 +284,25 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <!-- Telemetry Commentary Panel -->
         <div class="telemetry-commentary font-mono">
           <div class="telemetry-header">
-            <span class="telemetry-label text-cyan">METADATA_DOWNLINK //</span> COMM_ESTABLISHED
+            <span class="telemetry-label text-cyan">PLAYBACK_APPROACH //</span> YOUTUBE_MUSIC_READY
           </div>
           <p class="telemetry-text">
-            Chapter {{ props.chapter ? props.chapter.id.toUpperCase() : 'PROLOGUE' }}: {{ props.chapter ? props.chapter.title : 'The Signal' }} &mdash; {{ props.chapter ? props.chapter.description : 'The archive opens.' }}
+            Sign in to YouTube Music before playback to use your account context. Ad-free playback depends on YouTube Premium.
           </p>
-        </div>
-      </div>
-
-      <!-- Right Column: Rolling timed lyrics -->
-      <div class="meta-panel-right">
-        <div class="lyrics-downlink font-mono animate-fade">
-          <div class="lyrics-header text-cyan">
-            <span class="pulse-dot" /> LIVE_LYRICS_DOWNLINK //
-          </div>
-          <div v-if="playing" ref="lyricsContainer" class="lyrics-scroll-panel">
-            <div
-              v-for="(line, idx) in activeTrack.lyrics"
-              :key="idx"
-              class="lyrics-line-item"
-              :class="{
-                'is-active': idx === currentLyricIndex,
-                'is-past': idx < currentLyricIndex,
-                'is-future': idx > currentLyricIndex,
-              }"
-            >
-              <span v-if="idx === currentLyricIndex" class="cursor-arrow">&gt; </span>
-              {{ idx === currentLyricIndex ? typedLyric : line.text }}
-              <span v-if="idx === currentLyricIndex" class="cursor" />
-            </div>
-          </div>
-          <div v-else class="lyrics-standby text-gray">
-            &gt; STANDBY // Click PLAY to establish real-time lyrics downlink...
-          </div>
+          <a
+            class="youtube-music-link"
+            :href="provider.musicUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open in YouTube Music
+          </a>
         </div>
       </div>
     </div>
 
-    <!-- Hidden container loads YouTube player API container -->
     <div class="hidden-player-container">
       <div id="wolves-yt-player" />
     </div>
@@ -518,23 +333,12 @@ onBeforeUnmount(() => {
   grid-template-columns: 1fr;
   gap: 16px;
   width: 100%;
-
-  @media (min-width: 768px) {
-    grid-template-columns: 1.2fr 1fr;
-    gap: 16px;
-  }
 }
 
 .meta-panel-left {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-
-.meta-panel-right {
-  display: flex;
-  flex-direction: column;
-  justify-content: stretch;
 }
 
 .player-top-row {
@@ -599,18 +403,13 @@ onBeforeUnmount(() => {
     }
   }
 
-  .active-track,
-  .active-album {
+  .active-track {
     font-size: 0.75rem;
     color: #888888;
 
     .track-name {
       font-weight: bold;
-      color: #38bdf8; /* cyan */
-    }
-
-    .album-name {
-      color: #9ca3af;
+      color: #38bdf8;
     }
   }
 }
@@ -625,15 +424,13 @@ onBeforeUnmount(() => {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   color: #94a3b8;
-  height: 80px;
-  overflow-y: auto;
 
   .telemetry-header {
     font-weight: 700;
     font-size: 0.68rem;
-    color: #38bdf8; /* cyan */
+    color: #38bdf8;
   }
 
   .telemetry-text {
@@ -641,134 +438,15 @@ onBeforeUnmount(() => {
   }
 }
 
-.lyrics-downlink {
-  background-color: #090d16;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: #e2e8f0;
-  height: 170px;
-
-  .lyrics-header {
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    font-size: 0.7rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #38bdf8; /* cyan */
-  }
-
-  .lyrics-scroll-panel {
-    max-height: 130px;
-    overflow-y: auto;
-    padding-right: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    scroll-behavior: smooth;
-
-    scrollbar-width: thin;
-    &::-webkit-scrollbar {
-      width: 3px;
-    }
-    &::-webkit-scrollbar-thumb {
-      background-color: #1e293b;
-      border-radius: 2px;
-    }
-  }
-
-  .lyrics-line-item {
-    font-size: 0.74rem;
-    line-height: 1.4;
-    transition: all 0.3s ease;
-    word-break: break-word;
-
-    &.is-active {
-      color: #38bdf8; /* cyan */
-      font-weight: 700;
-      opacity: 1;
-      transform: scale(1.01);
-    }
-
-    &.is-past {
-      color: #64748b;
-      opacity: 0.45;
-    }
-
-    &.is-future {
-      color: #475569;
-      opacity: 0.25;
-    }
-  }
-
-  .lyrics-standby {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    min-height: 110px;
-    font-size: 0.72rem;
-    text-align: center;
-    color: #64748b;
-  }
-
-  .cursor {
-    display: inline-block;
-    width: 6px;
-    height: 12px;
-    background-color: #38bdf8;
-    margin-left: 2px;
-    vertical-align: middle;
-    animation: blink 0.8s infinite;
-  }
+.youtube-music-link {
+  color: var(--color-blue-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  width: fit-content;
 }
 
-.pulse-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #38bdf8;
-  box-shadow: 0 0 8px #38bdf8;
-  animation: pulse 1.5s infinite ease-in-out;
-}
-
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-  }
-}
-
-@keyframes thumb-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
-  }
-  50% {
-    transform: scale(1.03);
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-  }
+.youtube-music-link:hover {
+  color: #ffffff;
 }
 
 .font-mono {
@@ -825,17 +503,25 @@ onBeforeUnmount(() => {
 }
 
 .hidden-player-container {
-  width: 0;
-  height: 0;
+  position: absolute;
+  width: 200px;
+  height: 200px;
   opacity: 0;
   pointer-events: none;
   overflow: hidden;
-  position: absolute;
+  top: -9999px;
+  left: -9999px;
+}
 
-  iframe {
-    width: 1px;
-    height: 1px;
-    border: none;
+@keyframes thumb-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
   }
 }
 
@@ -849,10 +535,6 @@ onBeforeUnmount(() => {
     padding: 12px;
     border-radius: 14px;
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
-
-    .meta-panel-grid {
-      display: block;
-    }
 
     .player-top-row {
       gap: 12px;
@@ -873,14 +555,9 @@ onBeforeUnmount(() => {
       .playlist-title {
         font-size: 0.9rem;
       }
-
-      .active-album {
-        display: none;
-      }
     }
 
-    .telemetry-commentary,
-    .meta-panel-right {
+    .telemetry-commentary {
       display: none;
     }
   }

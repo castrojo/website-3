@@ -62,7 +62,9 @@ The Wolves soundtrack metadata is refreshed locally with:
 npm run update:wolves-playlist
 ```
 
-This workflow requires [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to read the public YouTube playlist, writes the checked-in manifest to `public/wolves-playlist.json`, and stores the downloaded artwork under local `public/wolves-artwork/` assets. The site serves those checked-in files at build time, so no YouTube Data API key is exposed to browsers or required in the frontend bundle.
+This workflow requires [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to read the public YouTube playlist and writes the checked-in manifest to `src/data/wolves-playlist.json`. The frontend consumes that checked-in file directly, so no YouTube Data API key is exposed to browsers.
+
+The `/wolves` player starts only after a visitor clicks the control. Its YouTube iframe is retained as a hidden 200x200 audio player because the IFrame API requires that minimum viewport; do not replace it with a visible video widget or shrink it to 1px. The visible panel includes a YouTube Music deep link and sign-in/Premium guidance.
 
 ## Contributing
 

@@ -2,7 +2,6 @@
 import type { WolvesChapter } from '../../data/wolves-story'
 import type { WolvesLoreEntry } from './lore'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import WolvesQrCodes from './WolvesQrCodes.vue'
 import { formatQuoteSource, getLoreEntriesForChapter } from './lore'
 
 const props = defineProps<{
@@ -14,7 +13,6 @@ const currentLoreIndex = ref(0)
 const currentLoreEntry = computed<WolvesLoreEntry | null>(() => filteredLoreEntries.value[currentLoreIndex.value] ?? null)
 
 const typedQuoteText = ref('')
-const typedMessagesText = ref<string[]>([])
 let loreTimer: ReturnType<typeof setInterval> | null = null
 let typewriterTimer: ReturnType<typeof setInterval> | null = null
 
@@ -34,76 +32,35 @@ function runTypewriter() {
   const entry = currentLoreEntry.value
   if (!entry) {
     typedQuoteText.value = ''
-    typedMessagesText.value = []
     return
   }
 
-  if (entry.type === 'quote') {
-    typedQuoteText.value = ''
-    typedMessagesText.value = []
-    const targetText = entry.data.quote
-    let index = 0
-    const step = Math.max(1, Math.ceil(targetText.length / 30))
-
-    typewriterTimer = setInterval(() => {
-      index += step
-      if (index >= targetText.length) {
-        typedQuoteText.value = targetText
-        clearTypewriter()
-      }
-      else {
-        const cyberChars = '01#$@&%<>_+'
-        const randChar = cyberChars[Math.floor(Math.random() * cyberChars.length)]
-        typedQuoteText.value = targetText.slice(0, index) + randChar
-      }
-    }, 20)
-    return
-  }
-
+  const targetText = entry.data.quote
   typedQuoteText.value = ''
-  typedMessagesText.value = entry.data.messages.map(() => '')
-  let frame = 0
+  let index = 0
+  const step = Math.max(1, Math.ceil(targetText.length / 30))
 
   typewriterTimer = setInterval(() => {
-    frame++
-    let allDone = true
-
-    for (let index = 0; index < entry.data.messages.length; index++) {
-      const targetText = entry.data.messages[index].text
-      const step = Math.max(1, Math.ceil(targetText.length / 30))
-      const currentLength = frame * step
-      if (currentLength < targetText.length) {
-        const cyberChars = '01#$@&%<>_+'
-        const randChar = cyberChars[Math.floor(Math.random() * cyberChars.length)]
-        typedMessagesText.value[index] = targetText.slice(0, currentLength) + randChar
-        allDone = false
-      }
-      else {
-        typedMessagesText.value[index] = targetText
-      }
-    }
-
-    if (allDone) {
+    index += step
+    if (index >= targetText.length) {
+      typedQuoteText.value = targetText
       clearTypewriter()
+    }
+    else {
+      const cyberChars = '01#$@&%<>_+'
+      const randChar = cyberChars[Math.floor(Math.random() * cyberChars.length)]
+      typedQuoteText.value = targetText.slice(0, index) + randChar
     }
   }, 20)
 }
 
 function skipTypewriter() {
   clearTypewriter()
-
   const entry = currentLoreEntry.value
   if (!entry) {
     return
   }
-
-  if (entry.type === 'quote') {
-    typedQuoteText.value = entry.data.quote
-    typedMessagesText.value = []
-    return
-  }
-
-  typedMessagesText.value = entry.data.messages.map(message => message.text)
+  typedQuoteText.value = entry.data.quote
 }
 
 function stopLoreTimer() {
@@ -153,23 +110,7 @@ function shareLore() {
   }
 
   const pageUrl = window.location.href.split('#')[0]
-  let shareText = ''
-
-  if (entry.type === 'quote') {
-    shareText = `[Bluefin Archive Quote]
-"${entry.data.quote}"
-— ${entry.data.attribution}${entry.data.context ? ` (${entry.data.context})` : ''}${entry.data.date ? `\n${entry.data.date}` : ''}
-${pageUrl}`
-  }
-  else {
-    const messages = entry.data.messages
-      .map(message => `${message.speaker}: ${message.text}`)
-      .join('\n')
-    shareText = `[Bluefin Archive Intercept - ${entry.data.title}]
-Channel: ${entry.data.channel} | Date: ${entry.data.date}
-${messages}
-${pageUrl}`
-  }
+  const shareText = `[Bluefin Quote]\n"${entry.data.quote}"\n— ${entry.data.attribution}${entry.data.context ? ` (${entry.data.context})` : ''}${entry.data.date ? `\n${entry.data.date}` : ''}\n${pageUrl}`
 
   if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
     void navigator.clipboard.writeText(shareText).then(() => {
@@ -181,15 +122,6 @@ ${pageUrl}`
         isCopied.value = false
       }, 2000)
     })
-  }
-  else {
-    isCopied.value = true
-    if (copyTimeout) {
-      clearTimeout(copyTimeout)
-    }
-    copyTimeout = setTimeout(() => {
-      isCopied.value = false
-    }, 2000)
   }
 
   restartLoreTimer()
@@ -224,7 +156,7 @@ onBeforeUnmount(() => {
         <div class="quote-nav">
           <button
             class="quote-nav-btn share-btn font-mono"
-            :aria-label="isCopied ? 'Transcript copied' : 'Share transcript'"
+            :aria-label="isCopied ? 'Quote copied' : 'Share quote'"
             type="button"
             @click="shareLore"
           >
@@ -232,7 +164,7 @@ onBeforeUnmount(() => {
           </button>
           <button
             class="quote-nav-btn prev"
-            aria-label="Previous transcript"
+            aria-label="Previous quote"
             type="button"
             @click="prevLore"
           >
@@ -240,7 +172,7 @@ onBeforeUnmount(() => {
           </button>
           <button
             class="quote-nav-btn next"
-            aria-label="Next transcript"
+            aria-label="Next quote"
             type="button"
             @click="nextLore"
           >
@@ -250,65 +182,21 @@ onBeforeUnmount(() => {
 
         <div class="dispatch-plan-content">
           <p class="dispatch-plan-command">
-            nimbinatus@blue-universal:~$ monitor --archive
+            nimbinatus@blue-universal:~$ monitor --quotes
           </p>
           <h2 class="title-h2">
-            Recovered Transmissions
+            Recovered Quotes
           </h2>
           <p class="title-p">
-            Signal: Captured
-            <br>Source: Quotes + Intercepts
-            <br>Rotation: Randomized on load
+            Source: Bazzite Discord quotes
+            <br>Rotation: Time-based
           </p>
         </div>
 
         <div class="quote-viewport" @click="skipTypewriter">
           <Transition name="quote-fade">
-            <div
-              v-if="currentLoreEntry"
-              :key="currentLoreIndex"
-              class="conversation-rotator"
-            >
-              <div v-if="currentLoreEntry.type === 'conversation'" class="conversation-heading">
-                <span>{{ currentLoreEntry.data.channel }}</span>
-                <time :datetime="currentLoreEntry.data.date">{{ currentLoreEntry.data.date }}</time>
-              </div>
-              <h3 v-if="currentLoreEntry.type === 'conversation'" class="conversation-title">
-                {{ currentLoreEntry.data.title }}
-              </h3>
-              <ol v-if="currentLoreEntry.type === 'conversation'" class="conversation-messages">
-                <li
-                  v-for="(message, index) in currentLoreEntry.data.messages"
-                  :key="`${currentLoreIndex}-${index}`"
-                  class="conversation-message"
-                >
-                  <div class="conversation-message-header">
-                    <span class="conversation-speaker">{{ message.speaker }}</span>
-                    <time v-if="message.timestamp">{{ message.timestamp }}</time>
-                  </div>
-                  <p>{{ typedMessagesText[index] ?? '' }}</p>
-                </li>
-              </ol>
-              <div
-                v-if="currentLoreEntry.type === 'conversation' && currentLoreEntry.data.sourceTitle"
-                class="conversation-source"
-              >
-                <span>{{ currentLoreEntry.data.attribution ?? 'ARCHIVE REFERENCE' }}</span>
-                <a
-                  v-if="currentLoreEntry.data.sourceUrl"
-                  :href="currentLoreEntry.data.sourceUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {{ currentLoreEntry.data.sourceCollection ?? 'SOURCE' }}:
-                  {{ currentLoreEntry.data.sourceTitle }}
-                </a>
-                <span v-else>
-                  {{ currentLoreEntry.data.sourceCollection ?? 'SOURCE' }}:
-                  {{ currentLoreEntry.data.sourceTitle }}
-                </span>
-              </div>
-              <div v-else-if="currentLoreEntry.type === 'quote'" class="lore-quote">
+            <div v-if="currentLoreEntry" :key="currentLoreIndex" class="quote-rotator">
+              <div class="lore-quote">
                 <div class="lore-quote-mark">
                   &ldquo;
                 </div>
@@ -330,8 +218,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </section>
-
-    <WolvesQrCodes />
   </div>
 </template>
 
@@ -386,10 +272,6 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   padding: 12px 14px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-
-  @media (min-width: 480px) {
-    padding-right: 192px;
-  }
 }
 
 .dispatch-plan-command {
@@ -415,97 +297,10 @@ onBeforeUnmount(() => {
 
 .quote-viewport {
   position: relative;
-
-  @media (min-width: 1024px) {
-    flex: 1;
-  }
 }
 
-.conversation-rotator {
+.quote-rotator {
   position: relative;
-  padding-top: 4px;
-  padding-right: 4px;
-}
-
-.conversation-heading {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid rgba(var(--color-blue-rgb), 0.25);
-  padding-bottom: 8px;
-  color: var(--color-blue-light);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
-}
-
-.conversation-title {
-  margin: 16px 0 20px;
-  color: #ffffff;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 1.35rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.conversation-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.conversation-message {
-  border-left: 2px solid rgba(var(--color-blue-rgb), 0.45);
-  padding-left: 16px;
-}
-
-.conversation-message-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--color-blue);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 0.95rem;
-  letter-spacing: 0.06em;
-}
-
-.conversation-message-header time {
-  color: rgba(189, 189, 189, 0.65);
-}
-
-.conversation-message p {
-  margin: 6px 0 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 1.15rem;
-  line-height: 1.65;
-}
-
-.conversation-source {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border-top: 1px solid rgba(var(--color-blue-rgb), 0.25);
-  margin-top: 20px;
-  padding-top: 12px;
-  color: rgba(189, 189, 189, 0.62);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.conversation-source a {
-  color: var(--color-blue);
-  text-decoration: underline;
-  text-decoration-color: rgba(var(--color-blue-rgb), 0.4);
-  text-underline-offset: 3px;
-}
-
-.conversation-source a:hover {
-  color: var(--color-blue-light);
 }
 
 .lore-quote {

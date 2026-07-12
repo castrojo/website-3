@@ -11,7 +11,8 @@
     "lint:fix": "eslint --fix",
     "test": "vitest",
     "test:run": "vitest run",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "update:wolves-playlist": "node scripts/update-wolves-playlist.js"
   },
   "dependencies": {
     "@iconify-prerendered/vue-mdi": "^0.28.1737398331",

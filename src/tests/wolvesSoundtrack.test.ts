@@ -41,8 +41,21 @@ describe('wolves soundtrack (nowPlayingBar design)', () => {
     expect(wrapper.text()).toContain('RELEASE SOUNDTRACK TO HUNT BY')
     expect(wrapper.text()).toContain('7 Days to the Wolves')
     expect(wrapper.text()).toContain('Nightwish')
-    expect(wrapper.text()).toContain('Dark Passion Play')
     expect(wrapper.find('iframe').exists()).toBe(false)
+  })
+
+  it('renders YouTube Music sign-in guidance and deep link', () => {
+    const wrapper = mount(WolvesSoundtrack, {
+      props: {
+        chapter: undefined,
+        playing: false,
+      },
+    })
+
+    expect(wrapper.text()).toContain('Sign in to YouTube Music')
+    const ytmLink = wrapper.find('a.youtube-music-link')
+    expect(ytmLink.exists()).toBe(true)
+    expect(ytmLink.attributes('href')).toContain('music.youtube.com')
   })
 
   it('renders player container when playing is true', () => {
