@@ -636,14 +636,14 @@ onBeforeUnmount(() => {
 .content-grid {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 16px;
   width: 100%;
 
   @media (min-width: 1024px) {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
     align-items: start;
-    gap: 28px;
+    gap: 16px;
   }
 }
 
@@ -651,7 +651,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 
   // Left-align the comic reader within its column instead of the
   // page-wide auto-centering used when the reader is the sole column.
@@ -670,13 +670,12 @@ onBeforeUnmount(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 16px;
 
   @media (min-width: 1024px) {
     position: sticky;
-    top: auto;
-    bottom: 24px;
-    align-self: end;
+    top: 24px;
+    align-self: start;
     height: max-content;
   }
 }

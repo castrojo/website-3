@@ -461,7 +461,7 @@ onBeforeUnmount(() => {
 
   @media (min-width: 768px) {
     grid-template-columns: 1.2fr 1fr;
-    gap: 24px;
+    gap: 16px;
   }
 }
 
