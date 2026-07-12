@@ -7,6 +7,14 @@ import { defineConfig } from 'vite'
 // https://vitejs.dev/config/
 export default defineConfig({
   test: {
+    environment: 'happy-dom',
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/.worktrees/**',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
@@ -29,6 +37,7 @@ export default defineConfig({
         testing: resolve(__dirname, 'public/testing.html'),
         dakota: resolve(__dirname, 'dakota/index.html'),
         server: resolve(__dirname, 'server/index.html'),
+        wolves: resolve(__dirname, 'wolves/index.html'),
       },
       output: {
         manualChunks: (id: string) => {
