@@ -15,7 +15,10 @@ Emits
 import type { WolvesChapter } from '@/data/wolves-story'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-const props = defineProps<{ chapters: WolvesChapter[] }>()
+const props = defineProps<{
+  chapters: WolvesChapter[]
+  autoplay?: boolean
+}>()
 
 const emit = defineEmits<{
   (e: 'update:page', page: number): void
@@ -213,16 +216,62 @@ async function loadComicPdf() {
   }
 }
 
+// Autoplay / Autoscroll Timer
+let autoplayTimer: ReturnType<typeof setInterval> | null = null
+
+function stopAutoplayTimer() {
+  if (autoplayTimer) {
+    clearInterval(autoplayTimer)
+    autoplayTimer = null
+  }
+}
+
+function startAutoplayTimer() {
+  if (autoplayTimer) {
+    return
+  }
+  autoplayTimer = setInterval(() => {
+    if (page.value < totalPages.value) {
+      setPage(page.value + 1)
+    }
+    else {
+      // Loop back to page 1 at the end
+      setPage(1)
+    }
+  }, 10000) // Paced at 10 seconds per page
+}
+
+watch(() => props.autoplay, (val) => {
+  if (val) {
+    startAutoplayTimer()
+  }
+  else {
+    stopAutoplayTimer()
+  }
+}, { immediate: true })
+
 // Navigation ───────────────────────────────────────────────────────────────
 function setPage(n: number) {
   page.value = n
   emit('update:page', n)
+  if (props.autoplay) {
+    stopAutoplayTimer()
+    startAutoplayTimer()
+  }
 }
 
 // Watchers ─────────────────────────────────────────────────────────────────
-watch(page, () => {
-  if (readingMode.value === 'paged' && !pdfLoading.value) {
-    renderFlipPage()
+watch(page, (n) => {
+  if (readingMode.value === 'paged') {
+    if (!pdfLoading.value) {
+      renderFlipPage()
+    }
+  }
+  else {
+    const card = scrollCards.value[n - 1]
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 })
 
@@ -303,6 +352,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  stopAutoplayTimer()
   window.removeEventListener('keydown', handleKeyDown)
   flipResizeObserver?.disconnect()
   intersectionObserver?.disconnect()

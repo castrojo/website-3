@@ -1,42 +1,44 @@
 import { mount } from '@vue/test-utils'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import WolvesSoundtrack from '../components/wolves/WolvesSoundtrack.vue'
 
-describe('wolves soundtrack', () => {
-  beforeEach(() => {
-    sessionStorage.clear()
-  })
+describe('wolves soundtrack (nowPlayingBar design)', () => {
+  it('renders playlist title and metadata when standby', () => {
+    const wrapper = mount(WolvesSoundtrack, {
+      props: {
+        chapter: undefined,
+        playing: false,
+      },
+    })
 
-  afterEach(() => {
-    sessionStorage.clear()
-    document.documentElement.classList.remove('wolves-player-active')
-  })
-
-  it('does not create the player until the visitor starts the soundtrack', async () => {
-    const wrapper = mount(WolvesSoundtrack, { props: { chapter: undefined } })
-
+    expect(wrapper.text()).toContain('RELEASE SOUNDTRACK TO HUNT BY')
+    expect(wrapper.text()).toContain('Bluefin: Seven Days to the Wolves')
     expect(wrapper.find('iframe').exists()).toBe(false)
-    await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
+  })
+
+  it('renders iframe when playing is true', () => {
+    const wrapper = mount(WolvesSoundtrack, {
+      props: {
+        chapter: undefined,
+        playing: true,
+      },
+    })
+
+    expect(wrapper.find('iframe').exists()).toBe(true)
     expect(wrapper.find('iframe').attributes('src')).toContain('youtube.com/embed/videoseries')
+    expect(wrapper.find('iframe').attributes('src')).toContain('list=PLA78oiE-RGAE')
   })
 
-  it('mute control does not exist (would restart iframe player)', () => {
-    const wrapper = mount(WolvesSoundtrack, { props: { chapter: undefined } })
-    expect(wrapper.find('button[aria-label="Toggle mute"]').exists()).toBe(false)
-  })
+  it('emits update:playing event when clicking the play button', async () => {
+    const wrapper = mount(WolvesSoundtrack, {
+      props: {
+        chapter: undefined,
+        playing: false,
+      },
+    })
 
-  it('no persisted start state hides the entry gate', () => {
-    // Clear storage, mount, assert start button visible
-    sessionStorage.clear()
-    const wrapper = mount(WolvesSoundtrack, { props: { chapter: undefined } })
-    expect(wrapper.find('button[aria-label="Start soundtrack"]').exists()).toBe(true)
-    expect(wrapper.find('iframe').exists()).toBe(false)
-  })
-
-  it('skips entry gate on reload only after explicit dismiss', () => {
-    sessionStorage.setItem('wolves_soundtrack_dismissed', 'true')
-    const wrapper = mount(WolvesSoundtrack, { props: { chapter: undefined } })
-    expect(wrapper.find('button[aria-label="Start soundtrack"]').exists()).toBe(false)
-    expect(wrapper.find('iframe').exists()).toBe(false)
+    await wrapper.find('.play-button').trigger('click')
+    expect(wrapper.emitted('update:playing')).toBeTruthy()
+    expect(wrapper.emitted('update:playing')?.[0]).toEqual([true])
   })
 })

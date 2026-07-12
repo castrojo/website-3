@@ -1,343 +1,222 @@
 <script setup lang="ts">
 import type { WolvesChapter } from '@/data/wolves-story'
-import { onUnmounted, ref, watch } from 'vue'
 
-defineProps<{ chapter: WolvesChapter | undefined }>()
-const emit = defineEmits<{ entered: [] }>()
+const props = defineProps<{
+  chapter: WolvesChapter | undefined
+  playing: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:playing', playing: boolean): void
+}>()
 
 const playlistUrl = 'https://www.youtube.com/playlist?list=PLA78oiE-RGAE'
 const embedUrl = 'https://www.youtube.com/embed/videoseries?list=PLA78oiE-RGAE&autoplay=1&rel=0'
 
-const hasStarted = ref(false)
-const playerLoaded = ref(false)
-const isCollapsed = ref(false)
-// Only skip the gate if the user explicitly dismissed; "started" alone does not auto-start on reload.
-const isDismissed = ref(sessionStorage.getItem('wolves_soundtrack_dismissed') === 'true')
-const hasEntered = ref(isDismissed.value)
-
-function start() {
-  hasStarted.value = true
-  hasEntered.value = true
-  emit('entered')
+function togglePlay() {
+  emit('update:playing', !props.playing)
 }
-
-function readSilently() {
-  hasEntered.value = true
-  isDismissed.value = true
-  sessionStorage.setItem('wolves_soundtrack_dismissed', 'true')
-  emit('entered')
-}
-
-function dismiss() {
-  isDismissed.value = true
-  sessionStorage.setItem('wolves_soundtrack_dismissed', 'true')
-}
-
-function toggleCollapse() {
-  isCollapsed.value = !isCollapsed.value
-}
-
-// Manage mobile document padding so content isn't hidden behind the fixed player bar.
-// Only applied when the player bar is actually visible on screen.
-watch(
-  () => hasStarted.value && !isDismissed.value,
-  (active) => {
-    document.documentElement.classList.toggle('wolves-player-active', active)
-  },
-  { immediate: true },
-)
-
-onUnmounted(() => {
-  document.documentElement.classList.remove('wolves-player-active')
-})
 </script>
 
 <template>
-  <!-- Above-fold entry choice: shown until the visitor makes a pick -->
-  <div v-if="!hasEntered" class="wolves-soundtrack-entry">
-    <p class="entry-label">
-      This story has a soundtrack.
-    </p>
-    <div class="entry-actions">
-      <button
-        class="entry-btn primary"
-        type="button"
-        aria-label="Start soundtrack"
-        @click="start"
-      >
-        🎵 Enter With Soundtrack
-      </button>
-      <button
-        class="entry-btn secondary"
-        type="button"
-        aria-label="Read silently"
-        @click="readSilently"
-      >
-        Read Silently
-      </button>
-    </div>
-    <a
-      :href="playlistUrl"
-      class="playlist-link"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      View full playlist ↗
-    </a>
-  </div>
-
-  <!-- Persistent fixed player bar: shown after soundtrack started, until dismissed -->
-  <div
-    v-if="hasStarted && !isDismissed"
-    class="wolves-soundtrack-bar"
-    :class="{ 'is-collapsed': isCollapsed }"
-  >
-    <div v-if="isCollapsed" class="collapsed-pill">
-      <span class="music-icon">🎵</span>
-      <button
-        class="pill-expand-btn"
-        type="button"
-        aria-label="Expand player"
-        @click="toggleCollapse"
-      >
-        {{ playerLoaded ? 'Soundtrack' : 'Starting soundtrack…' }}
-      </button>
-      <button
-        class="pill-close-btn"
-        type="button"
-        aria-label="Dismiss player"
-        @click="dismiss"
-      >
-        &times;
-      </button>
-    </div>
-
-    <div v-else class="bar-content">
-      <div class="bar-status">
-        {{ playerLoaded ? 'Soundtrack Playing' : 'Starting soundtrack…' }}
+  <div class="sidebar-soundtrack-card now-playing-bar">
+    <div class="thumbnail-wrapper">
+      <div class="thumbnail-placeholder">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="music-icon">
+          <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" />
+        </svg>
       </div>
+    </div>
 
-      <!-- Hidden iframe loads audio; visible once playerLoaded -->
+    <div class="info-zone">
+      <span class="label font-mono">RELEASE SOUNDTRACK TO HUNT BY</span>
+      <a
+        :href="playlistUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="playlist-title"
+      >
+        Bluefin: Seven Days to the Wolves
+      </a>
+      <div class="active-track font-mono text-gray">
+        Track: <span class="track-name text-cyan">{{ chapter ? chapter.soundtrackLabel : 'Seven Days to the Wolves' }}</span>
+      </div>
+    </div>
+
+    <div class="video-wrapper">
+      <button
+        class="play-button"
+        :class="{ 'is-playing': playing }"
+        :aria-label="playing ? 'Pause soundtrack' : 'Play soundtrack'"
+        type="button"
+        @click="togglePlay"
+      >
+        <span class="play-icon">
+          <svg v-if="playing" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </span>
+      </button>
+    </div>
+
+    <!-- Hidden iframe loads YouTube video series when playing is true -->
+    <div v-if="playing" class="hidden-player-container">
       <iframe
         :src="embedUrl"
         title="Wolves soundtrack player"
         allow="autoplay; encrypted-media"
-        @load="playerLoaded = true"
       />
-
-      <div class="bar-controls">
-        <button
-          type="button"
-          aria-label="Collapse player"
-          @click="toggleCollapse"
-        >
-          &minus;
-        </button>
-        <button
-          type="button"
-          aria-label="Dismiss player"
-          @click="dismiss"
-        >
-          &times;
-        </button>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-// Above-fold entry section
-.wolves-soundtrack-entry {
+.sidebar-soundtrack-card.now-playing-bar {
+  background-color: #10151f;
+  border: 1px solid #272727;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  padding: 16px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 28px 24px;
-  border: 1px solid rgba(66, 133, 244, 0.25);
-  border-radius: 12px;
-  background-color: rgba(12, 17, 27, 0.7);
-  backdrop-filter: blur(8px);
-  text-align: center;
-  margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
 
-  .entry-label {
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.8);
-    margin: 0;
+  &:hover {
+    border-color: rgba(66, 133, 244, 0.4);
+  }
+}
+
+.thumbnail-wrapper {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  background-color: #0c1016;
+  border: 1px solid #272727;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888888;
+}
+
+.music-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.info-zone {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  .label {
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    color: var(--color-blue, #4285f4);
+    text-transform: uppercase;
   }
 
-  .entry-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .entry-btn {
-    padding: 12px 28px;
-    min-height: 44px;
-    border-radius: 8px;
-    font-size: 1rem;
+  .playlist-title {
+    font-size: 0.95rem;
     font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: opacity 0.2s;
+    color: #ffffff;
+    text-decoration: none;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &:hover {
-      opacity: 0.85;
-    }
-
-    &.primary {
-      background-color: var(--color-blue, #4285f4);
-      color: #fff;
-    }
-
-    &.secondary {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--color-blue-light, #66b3ff);
     }
   }
 
-  .playlist-link {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.45);
-    text-decoration: none;
+  .active-track {
+    font-size: 0.75rem;
+    color: #888888;
+    margin-top: 2px;
 
-    &:hover {
-      color: rgba(255, 255, 255, 0.75);
+    .track-name {
+      font-weight: bold;
+      color: var(--color-blue-light, #66b3ff);
     }
   }
 }
 
-// Persistent fixed player bar (post-entry)
-.wolves-soundtrack-bar {
-  position: fixed;
-  z-index: 999;
-  bottom: 24px;
-  right: 24px;
-  width: 260px;
-  border-radius: 10px;
-  background-color: rgba(16, 21, 31, 0.92);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(66, 133, 244, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  padding-bottom: env(safe-area-inset-bottom);
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
 
-  &.is-collapsed {
-    width: auto;
-    border-radius: 30px;
+.text-gray {
+  color: #888888;
+}
+
+.video-wrapper {
+  flex-shrink: 0;
+}
+
+.play-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--color-blue, #4285f4);
+  background-color: transparent;
+  color: var(--color-blue-light, #66b3ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(66, 133, 244, 0.2);
+  padding: 0;
+
+  &:hover {
+    background-color: var(--color-blue, #4285f4);
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(66, 133, 244, 0.4);
+    transform: scale(1.05);
   }
 
-  .collapsed-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
+  &.is-playing {
+    border-color: #27c93f;
+    color: #27c93f;
+    box-shadow: 0 0 10px rgba(39, 201, 63, 0.2);
 
-    .music-icon {
-      font-size: 1.2rem;
-    }
-
-    .pill-expand-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      min-height: 44px;
-      padding: 0 4px;
-    }
-
-    .pill-close-btn {
-      background: none;
-      border: none;
-      color: #bdbdbd;
-      font-size: 1.5rem;
-      cursor: pointer;
-      line-height: 1;
-      min-height: 44px;
-      min-width: 44px;
-
-      &:hover {
-        color: #fff;
-      }
+    &:hover {
+      background-color: #27c93f;
+      color: #0c1016;
+      box-shadow: 0 0 16px rgba(39, 201, 63, 0.4);
     }
   }
+}
 
-  .bar-content {
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .bar-status {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--color-blue, #4285f4);
-    }
+.hidden-player-container {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  position: absolute;
 
-    iframe {
-      width: 100%;
-      height: 28px;
-      border: none;
-      border-radius: 4px;
-    }
-
-    .bar-controls {
-      display: flex;
-      gap: 4px;
-      justify-content: flex-end;
-
-      button {
-        background: none;
-        border: none;
-        color: #bdbdbd;
-        cursor: pointer;
-        font-size: 1.1rem;
-        line-height: 1;
-        min-height: 44px;
-        min-width: 44px;
-        transition: color 0.2s;
-
-        &:hover {
-          color: #fff;
-        }
-      }
-    }
-  }
-
-  // Mobile: full-width bar at the bottom
-  @media (max-width: 767px) {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100% !important;
-    border-radius: 0;
-    border-top: 1px solid rgba(66, 133, 244, 0.3);
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-
-    &.is-collapsed {
-      border-radius: 0;
-      width: 100% !important;
-
-      .collapsed-pill {
-        justify-content: center;
-        padding: 8px 12px;
-      }
-    }
-
-    .bar-content {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-    }
+  iframe {
+    width: 1px;
+    height: 1px;
+    border: none;
   }
 }
 </style>

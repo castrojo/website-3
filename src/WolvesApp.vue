@@ -12,9 +12,7 @@ README: Bluefin Wolves Teaser Landing Page Component
 -->
 <script setup lang="ts">
 import type { WolvesChapter } from './data/wolves-story'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import qrDonate from '@/assets/svg/qr-donate.svg'
-import qrStore from '@/assets/svg/qr-store.svg'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import TopNavbar from './components/TopNavbar.vue'
 import WolvesComicReader from './components/wolves/WolvesComicReader.vue'
 import WolvesSoundtrack from './components/wolves/WolvesSoundtrack.vue'
@@ -62,16 +60,40 @@ const loreEntries = shuffleLoreEntries([
   ...conversations.map(data => ({ type: 'conversation' as const, data })),
 ])
 
-// Soundtrack / entry state (component-owned detail lives in WolvesSoundtrack)
-const hasEntered = ref(false)
+// Soundtrack playback and comic autoplay state
+const isPlaying = ref(false)
 
 // Current page (1-based) tracked here so the chapter can be passed to WolvesSoundtrack.
 const currentPage = ref(1)
 const activeChapter = computed<WolvesChapter | undefined>(() => getChapterForPage(currentPage.value))
 
+// Helper to map quotes and conversations to their respective chapter IDs
+function getChapterIdForLore(entry: LoreEntry): string {
+  if (entry.type === 'quote') {
+    return 'pursuit'
+  }
+  const title = entry.data.title
+  if (title === 'Forbidden Factory' || title === 'Maintenance Window') {
+    return 'prologue'
+  }
+  if (title === 'Do Not Reply' || title === 'Childhood\'s End Wager') {
+    return 'pursuit'
+  }
+  return 'awakening'
+}
+
+// Filter lore entries that belong to the active chapter, preserving shuffled order
+const filteredLoreEntries = computed(() => {
+  const chapterId = activeChapter.value?.id
+  if (!chapterId) {
+    return []
+  }
+  return loreEntries.filter(entry => getChapterIdForLore(entry) === chapterId)
+})
+
 // Mixed lore cycling state. The source arrays are shuffled once per page load.
 const currentLoreIndex = ref(0)
-const currentLoreEntry = computed<LoreEntry | null>(() => loreEntries[currentLoreIndex.value] ?? null)
+const currentLoreEntry = computed<LoreEntry | null>(() => filteredLoreEntries.value[currentLoreIndex.value] ?? null)
 let loreTimer: ReturnType<typeof setInterval> | null = null
 
 function stopLoreTimer() {
@@ -82,11 +104,12 @@ function stopLoreTimer() {
 }
 
 function startLoreTimer() {
-  if (loreEntries.length <= 1 || loreTimer) {
+  const len = filteredLoreEntries.value.length
+  if (len <= 1 || loreTimer) {
     return
   }
   loreTimer = setInterval(() => {
-    currentLoreIndex.value = (currentLoreIndex.value + 1) % loreEntries.length
+    currentLoreIndex.value = (currentLoreIndex.value + 1) % len
   }, 15000)
 }
 
@@ -95,20 +118,30 @@ function restartLoreTimer() {
   startLoreTimer()
 }
 
-function loreNext() {
-  if (loreEntries.length <= 1) {
-    return
-  }
-  currentLoreIndex.value = (currentLoreIndex.value + 1) % loreEntries.length
+// Reset index and timer when active chapter changes
+watch(activeChapter, () => {
+  currentLoreIndex.value = 0
   restartLoreTimer()
-}
+})
 
-function lorePrev() {
-  if (loreEntries.length <= 1) {
+// Console Email Submission
+const emailInput = ref('')
+const isSubmittingEmail = ref(false)
+const emailSubmitted = ref(false)
+const emailFeedback = ref('')
+
+function handleEmailSubmit() {
+  if (!emailInput.value || !emailInput.value.includes('@')) {
+    emailFeedback.value = 'Error from server (BadRequest): invalid email coordinate'
     return
   }
-  currentLoreIndex.value = (currentLoreIndex.value - 1 + loreEntries.length) % loreEntries.length
-  restartLoreTimer()
+  isSubmittingEmail.value = true
+  emailFeedback.value = 'kubectl rollout status deployment/comms-relay-agent -n bazzite'
+  setTimeout(() => {
+    isSubmittingEmail.value = false
+    emailSubmitted.value = true
+    emailFeedback.value = 'deployment "comms-relay-agent" successfully rolled out // CONNECTION SECURED.'
+  }, 1500)
 }
 
 onMounted(() => {
@@ -145,12 +178,6 @@ onBeforeUnmount(() => {
             Coming 2027
           </div>
         </div>
-
-        <!-- Soundtrack entry gate: lets the visitor choose before the story begins -->
-        <WolvesSoundtrack
-          :chapter="activeChapter"
-          @entered="hasEntered = true"
-        />
       </header>
 
       <!-- Two-column desktop layout: Comic Reader on the left, a pinned
@@ -161,11 +188,18 @@ onBeforeUnmount(() => {
           <!-- SECTION 2: COMIC READER -->
           <WolvesComicReader
             :chapters="wolvesRelease.chapters"
+            :autoplay="isPlaying"
             @update:page="currentPage = $event"
           />
         </div>
 
         <div class="col-right">
+          <!-- Soundtrack Control Sidebar Widget -->
+          <WolvesSoundtrack
+            v-model:playing="isPlaying"
+            :chapter="activeChapter"
+          />
+
           <!-- SECTION 3: INTERCEPTED COMMUNICATIONS -->
           <section id="intercepted-communications" class="comic-reader-section dispatch-quote-section">
             <div class="dispatch-quote-card">
@@ -181,23 +215,6 @@ onBeforeUnmount(() => {
                   <br>Source: Quotes + Intercepts
                   <br>Rotation: Randomized on load
                 </p>
-              </div>
-
-              <div class="quote-nav">
-                <button
-                  class="quote-nav-btn"
-                  aria-label="Previous transmission"
-                  @click="lorePrev"
-                >
-                  &larr;
-                </button>
-                <button
-                  class="quote-nav-btn"
-                  aria-label="Next transmission"
-                  @click="loreNext"
-                >
-                  &rarr;
-                </button>
               </div>
 
               <div class="quote-viewport">
@@ -269,62 +286,114 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </section>
+
+          <!-- Decryption Status Meter -->
+          <div class="decryption-meter-card">
+            <div class="meter-header">
+              <span class="meter-title font-mono">DECRYPTION_STATUS // CHAPTER_02</span>
+              <span class="meter-percentage font-mono">84%</span>
+            </div>
+            <div class="meter-bar-container">
+              <div class="meter-bar-fill" style="width: 84%" />
+            </div>
+            <p class="meter-details font-mono">
+              Operatives active: 1,337 // Decoding node: PROMETHEUS-7
+            </p>
+          </div>
         </div>
       </div>
 
-      <!-- SECTION 4: QR CODES SECTION (full-width, below the two-column grid) -->
+      <!-- SECTION 4: COMMUNITY & CONVERSION (Console + Discord) -->
       <section id="wolves-support" class="comic-reader-section">
         <div class="support-wrap">
           <h2 class="title-h2">
-            Support the Mission
+            Establish Secure Channel
           </h2>
           <p class="title-p">
-            Secure official gear or donate directly to fuel next-generation Linux workstation research, hardware enablement, and future comic releases.
+            Subscribe to receive decrypted transmissions and critical notifications when Chapter 1 launches. Or connect to the operative mesh directly on Discord.
           </p>
         </div>
 
-        <div class="qr-grid">
-          <!-- QR Card 1: Official Store -->
-          <div class="qr-card">
-            <h3 class="qr-title">
-              Official Store
-            </h3>
-            <div class="qr-image-box">
-              <img :src="qrStore" alt="QR Code linking to Store">
+        <div class="community-console-grid">
+          <!-- Terminal Newsletter Console -->
+          <div class="terminal-console-card">
+            <div class="console-header">
+              <span class="console-title font-mono">nimbinatus@blue-universal:~</span>
+              <div class="gnome-window-controls">
+                <button class="gnome-control-btn minimize" aria-label="Minimize" tabindex="-1" type="button">
+                  <svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="5.5" width="8" height="1" fill="currentColor" /></svg>
+                </button>
+                <button class="gnome-control-btn maximize" aria-label="Maximize" tabindex="-1" type="button">
+                  <svg width="12" height="12" viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="0.5" fill="none" stroke="currentColor" stroke-width="1" /></svg>
+                </button>
+                <button class="gnome-control-btn close" aria-label="Close" tabindex="-1" type="button">
+                  <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" /></svg>
+                </button>
+              </div>
             </div>
-            <div class="qr-action-wrap">
-              <a
-                href="https://store.projectbluefin.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="qr-btn blue"
-              >
-                Go to Store &rarr;
-              </a>
-              <span class="qr-domain">store.projectbluefin.io</span>
+            <div class="console-body">
+              <p class="console-text font-mono text-cyan">
+                nimbinatus@blue-universal:~$ kubectl apply -f bazzite-comms.yaml
+              </p>
+              <p class="console-text font-mono text-green">
+                configmap/bazzite-comms-config created
+                <br>deployment.apps/comms-relay-agent created
+              </p>
+              <p class="console-text font-mono text-gray">
+                [SYSTEM] Enter operative email to launch deployment:
+              </p>
+
+              <form v-if="!emailSubmitted" class="console-form" @submit.prevent="handleEmailSubmit">
+                <span class="console-prompt font-mono">&gt;</span>
+                <input
+                  v-model="emailInput"
+                  type="email"
+                  placeholder="operative@domain.xyz"
+                  class="console-input font-mono"
+                  :disabled="isSubmittingEmail"
+                  required
+                >
+                <button
+                  type="submit"
+                  class="console-submit-btn font-mono"
+                  :disabled="isSubmittingEmail"
+                >
+                  [ APPLY ]
+                </button>
+              </form>
+
+              <div v-if="emailFeedback" class="console-feedback font-mono" :class="{ success: emailSubmitted }">
+                {{ emailFeedback }}
+              </div>
             </div>
           </div>
 
-          <!-- QR Card 2: Donate to Project -->
-          <div class="qr-card">
-            <h3 class="qr-title">
-              Donate to Bluefin
+          <!-- Encrypted Discord Invite Card -->
+          <div class="discord-invite-card">
+            <h3 class="discord-title font-mono">
+              [ SECURE_MESH_LINK ]
             </h3>
-            <div class="qr-image-box">
-              <img :src="qrDonate" alt="QR Code to Donate">
-            </div>
-            <div class="qr-action-wrap">
+            <p class="discord-desc">
+              Connect to the live mesh. Chat with core maintainers, coordinate Linux workstation factory builds, and decrypt incoming lore with the community.
+            </p>
+            <div class="discord-action-wrap">
               <a
-                href="https://docs.projectbluefin.io/donations"
+                href="https://discord.gg/projectbluefin"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="qr-btn dark"
+                class="discord-btn"
               >
-                Donate Now &rarr;
+                JOIN THE MESH (DISCORD) &rarr;
               </a>
-              <span class="qr-domain">docs.projectbluefin.io/donations</span>
+              <span class="discord-coords font-mono">COORDS: 42.109 / -83.045 // MESH_ACTIVE</span>
             </div>
           </div>
+        </div>
+
+        <div class="support-links font-mono">
+          <a href="https://store.projectbluefin.io" target="_blank" rel="noopener noreferrer">STORE_ACCESS</a>
+          <span class="separator">|</span>
+          <a href="https://docs.projectbluefin.io/donations" target="_blank" rel="noopener noreferrer">DONATE_FUNDS</a>
         </div>
       </section>
     </div>
@@ -829,6 +898,320 @@ onBeforeUnmount(() => {
   .qr-domain {
     font-size: 1.1rem;
     color: #616161;
+  }
+}
+
+/* Share Button */
+.quote-nav-btn.share-btn {
+  width: auto;
+  min-width: 68px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-weight: bold;
+}
+
+/* Helper Utilities */
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+.text-cyan {
+  color: var(--color-blue-light);
+}
+.text-gray {
+  color: #888888;
+}
+
+/* Decryption Status Meter */
+.decryption-meter-card {
+  background-color: #10151f;
+  border: 1px solid #272727;
+  padding: 20px;
+  border-radius: 16px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  .meter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+  }
+
+  .meter-title {
+    color: #888888;
+  }
+
+  .meter-percentage {
+    color: var(--color-blue-light);
+    font-weight: bold;
+  }
+
+  .meter-bar-container {
+    height: 6px;
+    background-color: #0c1016;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid #1e1e1e;
+  }
+
+  .meter-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-blue), var(--color-blue-light));
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(var(--color-blue-rgb), 0.5);
+  }
+
+  .meter-details {
+    font-size: 0.75rem;
+    color: #616161;
+    margin: 0;
+  }
+}
+
+/* Community & Conversion Section */
+.community-console-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+  margin: 32px auto 0;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+}
+
+.terminal-console-card,
+.discord-invite-card {
+  flex: 1;
+  background-color: #10151f;
+  border: 1px solid #272727;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+/* Terminal Console Styling */
+.terminal-console-card {
+  display: flex;
+  flex-direction: column;
+
+  .console-header {
+    background-color: #0c1016;
+    border-bottom: 1px solid #272727;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .gnome-window-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .gnome-control-btn {
+    background: transparent;
+    border: none;
+    color: #5d5d5d;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #eeeeee;
+    }
+
+    &.close:hover {
+      background-color: #e81123;
+      color: #ffffff;
+    }
+  }
+
+  .console-title {
+    font-size: 0.8rem;
+    color: #888888;
+    text-align: left;
+    flex-grow: 1;
+  }
+
+  .console-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+  }
+
+  .console-text {
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .console-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    background-color: #0c1016;
+    border: 1px solid #272727;
+    border-radius: 8px;
+    padding: 6px 12px;
+
+    &:focus-within {
+      border-color: var(--color-blue);
+      box-shadow: 0 0 8px rgba(var(--color-blue-rgb), 0.25);
+    }
+  }
+
+  .console-prompt {
+    color: var(--color-blue);
+    font-weight: bold;
+    user-select: none;
+  }
+
+  .console-input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-size: 0.9rem;
+    width: 100%;
+
+    &::placeholder {
+      color: #424242;
+    }
+  }
+
+  .console-submit-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-blue-light);
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(var(--color-blue-rgb), 0.15);
+      color: #ffffff;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .console-feedback {
+    font-size: 0.85rem;
+    color: var(--color-blue-light);
+    margin-top: 6px;
+
+    &.success {
+      color: #27c93f;
+    }
+  }
+}
+
+/* Discord Invite Node Styling */
+.discord-invite-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+
+  .discord-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--color-blue-light);
+    margin: 0;
+  }
+
+  .discord-desc {
+    font-size: 0.95rem;
+    color: #bdbdbd;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .discord-action-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .discord-btn {
+    display: block;
+    text-align: center;
+    background: linear-gradient(135deg, #5865f2, #4752c4);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+
+    &:hover {
+      background: linear-gradient(135deg, #6c79ff, #5865f2);
+      box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
+      transform: translateY(-1px);
+    }
+  }
+
+  .discord-coords {
+    font-size: 0.75rem;
+    color: #616161;
+    text-align: center;
+  }
+}
+
+/* Support Sub-footer Links */
+.support-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  font-size: 0.9rem;
+
+  a {
+    color: #888888;
+    text-decoration: none;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--color-blue-light);
+    }
+  }
+
+  .separator {
+    color: #424242;
+    user-select: none;
   }
 }
 </style>
