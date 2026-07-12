@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { WolvesChapter } from '@/data/wolves-story'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
   chapter: WolvesChapter | undefined
@@ -12,10 +12,14 @@ const emit = defineEmits<{
 }>()
 
 const playlistUrl = 'https://www.youtube.com/playlist?list=PLA78oiE-RGAE'
-const embedUrl = 'https://www.youtube.com/embed/videoseries?list=PLA78oiE-RGAE&autoplay=1&rel=0'
 
 function togglePlay() {
   emit('update:playing', !props.playing)
+}
+
+interface LyricLine {
+  time: number // in seconds
+  text: string
 }
 
 // Real-world Nightwish Track Metadata & Lyrics Timed List
@@ -24,7 +28,8 @@ interface TrackMetadata {
   artist: string
   album: string
   artwork: string
-  lyrics: string[]
+  playlistIndex: number
+  lyrics: LyricLine[]
 }
 
 const trackData: Record<string, TrackMetadata> = {
@@ -33,14 +38,17 @@ const trackData: Record<string, TrackMetadata> = {
     artist: 'Nightwish',
     album: 'Dark Passion Play',
     artwork: 'https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg',
+    playlistIndex: 0,
     lyrics: [
-      'The core of the sun, the source of the light',
-      'A night of a thousand lives, a time of a thousand dreams',
-      'Seven days to the wolves, wet your beds, write your wills',
-      'The wolves, my friend, they hunt in the dark',
-      'A prayer for the lost, a song for the brave',
-      'We are the ones who survived the long winter',
-      'Write your will, wet your bed, seven days to the wolves...'
+      { time: 0, text: '[Instrumental Intro // Decrypting Transmission]' },
+      { time: 18, text: 'The core of the sun, the source of the light' },
+      { time: 25, text: 'A night of a thousand lives, a time of a thousand dreams' },
+      { time: 33, text: 'Seven days to the wolves, wet your beds, write your wills' },
+      { time: 41, text: 'The wolves, my friend, they hunt in the dark' },
+      { time: 48, text: 'A prayer for the lost, a song for the brave' },
+      { time: 54, text: 'We are the ones who survived the long winter' },
+      { time: 60, text: 'Write your will, wet your bed, seven days to the wolves' },
+      { time: 72, text: '[Guitar Solo // Telemetry Normalizing]' }
     ]
   },
   pursuit: {
@@ -48,14 +56,16 @@ const trackData: Record<string, TrackMetadata> = {
     artist: 'Nightwish',
     album: 'Dark Passion Play',
     artwork: 'https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg',
+    playlistIndex: 1,
     lyrics: [
-      'The white land of the north, a dream before time',
-      'The poet is writing his final words in the snow',
-      'Save me, the pendulum is swinging lower',
-      'The world is a stage, and we are the players',
-      'A beautiful story, written in fire and steel',
-      'Find the scientist on Europa, the ice is deep',
-      'Only the stars remain to guide our escape...'
+      { time: 0, text: '[Orchestral Intro // Dark Passion Play]' },
+      { time: 14, text: 'The white land of the north, a dream before time' },
+      { time: 24, text: 'The poet is writing his final words in the snow' },
+      { time: 33, text: 'Save me, the pendulum is swinging lower' },
+      { time: 42, text: 'The world is a stage, and we are the players' },
+      { time: 51, text: 'A beautiful story, written in fire and steel' },
+      { time: 60, text: 'Find the scientist on Europa, the ice is deep' },
+      { time: 68, text: 'Only the stars remain to guide our escape' }
     ]
   },
   awakening: {
@@ -63,14 +73,16 @@ const trackData: Record<string, TrackMetadata> = {
     artist: 'Nightwish',
     album: 'Dark Passion Play',
     artwork: 'https://upload.wikimedia.org/wikipedia/en/c/ca/Nightwish_-_Dark_Passion_Play.jpg',
+    playlistIndex: 2,
     lyrics: [
-      'It\'s the end of an era, a final farewell',
-      'Did you ever hear what I had to say?',
-      'Bye bye beautiful, we are moving on',
-      'Open Source fights back under the iron sky',
-      'The garden before time is blooming once more',
-      'No player can predict where the shape will land',
-      'Choose freedom, choose complexity, choose the future...'
+      { time: 0, text: '[Synthesizer Intro // Retribution]' },
+      { time: 11, text: 'It\'s the end of an era, a final farewell' },
+      { time: 18, text: 'Did you ever hear what I had to say?' },
+      { time: 24, text: 'Bye bye beautiful, we are moving on' },
+      { time: 30, text: 'Open Source fights back under the iron sky' },
+      { time: 36, text: 'The garden before time is blooming once more' },
+      { time: 42, text: 'No player can predict where the shape will land' },
+      { time: 48, text: 'Choose freedom, choose complexity, choose the future' }
     ]
   }
 }
@@ -81,9 +93,11 @@ const activeTrack = computed(() => {
 })
 
 const currentLyricIndex = ref(0)
-const currentLyricText = computed(() => activeTrack.value.lyrics[currentLyricIndex.value] || '')
+const currentLyricText = computed(() => {
+  const lines = activeTrack.value.lyrics
+  return lines[currentLyricIndex.value]?.text || ''
+})
 const typedLyric = ref('')
-let lyricTimer: ReturnType<typeof setInterval> | null = null
 let typewriterTimer: ReturnType<typeof setInterval> | null = null
 
 function runLyricTypewriter() {
@@ -102,51 +116,203 @@ function runLyricTypewriter() {
       clearInterval(typewriterTimer!)
       typewriterTimer = null
     }
-  }, 40) // Snappy and highly readable typewriter reveal speed
+  }, 40) // Snappy typewriter speed
 }
 
-function startLyricsLoop() {
-  stopLyricsLoop()
-  currentLyricIndex.value = 0
-  runLyricTypewriter()
+// YouTube Player API State & Logic
+let player: any = null
+const isPlayerReady = ref(false)
+let timePollTimer: ReturnType<typeof setInterval> | null = null
 
-  lyricTimer = setInterval(() => {
-    const totalLyrics = activeTrack.value.lyrics.length
-    currentLyricIndex.value = (currentLyricIndex.value + 1) % totalLyrics
+function loadYtApi(): Promise<void> {
+  return new Promise((resolve) => {
+    // Mock YT player for Vitest / non-browser test environment
+    if (typeof window === 'undefined' || (typeof process !== 'undefined' && process.env.NODE_ENV === 'test')) {
+      (window as any).YT = {
+        Player: class {
+          constructor(_id: string, config: any) {
+            setTimeout(() => {
+              if (config.events && typeof config.events.onReady === 'function') {
+                config.events.onReady()
+              }
+            }, 0)
+          }
+
+          setVolume() {}
+          playVideo() {}
+          pauseVideo() {}
+          playVideoAt() {}
+          getPlaylistIndex() { return 0 }
+          getCurrentTime() { return 0 }
+          destroy() {}
+        }
+      }
+      resolve()
+      return
+    }
+
+    if ((window as any).YT && (window as any).YT.Player) {
+      resolve()
+      return
+    }
+    const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]')
+    if (existing) {
+      const prevCallback = (window as any).onYouTubeIframeAPIReady;
+      (window as any).onYouTubeIframeAPIReady = () => {
+        if (prevCallback) {
+          prevCallback()
+        }
+        resolve()
+      }
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://www.youtube.com/iframe_api'
+    document.head.appendChild(script)
+
+    const prevOnReady = (window as any).onYouTubeIframeAPIReady;
+    (window as any).onYouTubeIframeAPIReady = () => {
+      if (prevOnReady) {
+        prevOnReady()
+      }
+      resolve()
+    }
+  })
+}
+
+function updateLyricsForTime(time: number) {
+  const lines = activeTrack.value.lyrics
+  let matchedIndex = 0
+  for (let i = 0; i < lines.length; i++) {
+    if (time >= lines[i].time) {
+      matchedIndex = i
+    }
+    else {
+      break
+    }
+  }
+
+  if (matchedIndex !== currentLyricIndex.value) {
+    currentLyricIndex.value = matchedIndex
     runLyricTypewriter()
-  }, 12000) // Advance lyric lines every 12 seconds
+  }
 }
 
-function stopLyricsLoop() {
-  if (lyricTimer) {
-    clearInterval(lyricTimer)
-    lyricTimer = null
+function startTimePolling() {
+  stopTimePolling()
+  timePollTimer = setInterval(() => {
+    if (player && typeof player.getCurrentTime === 'function') {
+      const currentTime = player.getCurrentTime()
+      updateLyricsForTime(currentTime)
+    }
+  }, 250)
+}
+
+function stopTimePolling() {
+  if (timePollTimer) {
+    clearInterval(timePollTimer)
+    timePollTimer = null
   }
-  if (typewriterTimer) {
-    clearInterval(typewriterTimer)
-    typewriterTimer = null
+}
+
+function initPlayer() {
+  if (player) {
+    return
   }
-  typedLyric.value = ''
+
+  player = new (window as any).YT.Player('wolves-yt-player', {
+    height: '100%',
+    width: '100%',
+    videoId: '', // Will load playlist instead
+    playerVars: {
+      listType: 'playlist',
+      list: 'PLA78oiE-RGAE',
+      autoplay: props.playing ? 1 : 0,
+      controls: 0,
+      disablekb: 1,
+      fs: 0,
+      rel: 0,
+      showinfo: 0,
+      iv_load_policy: 3
+    },
+    events: {
+      onReady: () => {
+        isPlayerReady.value = true
+        if (player && typeof player.setVolume === 'function') {
+          player.setVolume(50)
+        }
+        syncPlayerState()
+      },
+      onStateChange: (event: any) => {
+        if (event.data === 1) {
+          startTimePolling()
+          if (!props.playing) {
+            emit('update:playing', true)
+          }
+        }
+        else {
+          stopTimePolling()
+          if (props.playing && (event.data === 2 || event.data === 0)) {
+            emit('update:playing', false)
+          }
+        }
+      }
+    }
+  })
+}
+
+function syncPlayerState() {
+  if (!player || !isPlayerReady.value) {
+    return
+  }
+
+  const index = activeTrack.value.playlistIndex
+
+  if (props.playing) {
+    if (typeof player.getPlaylistIndex === 'function' && player.getPlaylistIndex() !== index) {
+      if (typeof player.playVideoAt === 'function') {
+        player.playVideoAt(index)
+      }
+    }
+    else {
+      if (typeof player.playVideo === 'function') {
+        player.playVideo()
+      }
+    }
+    startTimePolling()
+  }
+  else {
+    if (typeof player.pauseVideo === 'function') {
+      player.pauseVideo()
+    }
+    stopTimePolling()
+  }
 }
 
 // Watchers
-watch(() => props.playing, (isPlaying) => {
-  if (isPlaying) {
-    startLyricsLoop()
-  }
-  else {
-    stopLyricsLoop()
-  }
-}, { immediate: true })
+watch(() => props.playing, () => {
+  syncPlayerState()
+})
 
 watch(activeTrack, () => {
-  if (props.playing) {
-    startLyricsLoop()
-  }
+  syncPlayerState()
+})
+
+onMounted(async () => {
+  await loadYtApi()
+  initPlayer()
+  runLyricTypewriter()
 })
 
 onBeforeUnmount(() => {
-  stopLyricsLoop()
+  stopTimePolling()
+  if (typewriterTimer) {
+    clearInterval(typewriterTimer)
+  }
+  if (player && typeof player.destroy === 'function') {
+    player.destroy()
+    player = null
+  }
 })
 </script>
 
@@ -209,13 +375,9 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Hidden iframe loads YouTube video series when playing is true -->
-    <div v-if="playing" class="hidden-player-container">
-      <iframe
-        :src="embedUrl"
-        title="Wolves soundtrack player"
-        allow="autoplay; encrypted-media"
-      />
+    <!-- Hidden container loads YouTube player API container -->
+    <div class="hidden-player-container">
+      <div id="wolves-yt-player" />
     </div>
   </div>
 </template>

@@ -18,7 +18,7 @@ describe('wolves soundtrack (nowPlayingBar design)', () => {
     expect(wrapper.find('iframe').exists()).toBe(false)
   })
 
-  it('renders iframe when playing is true', () => {
+  it('renders player container when playing is true', () => {
     const wrapper = mount(WolvesSoundtrack, {
       props: {
         chapter: undefined,
@@ -26,9 +26,8 @@ describe('wolves soundtrack (nowPlayingBar design)', () => {
       },
     })
 
-    expect(wrapper.find('iframe').exists()).toBe(true)
-    expect(wrapper.find('iframe').attributes('src')).toContain('youtube.com/embed/videoseries')
-    expect(wrapper.find('iframe').attributes('src')).toContain('list=PLA78oiE-RGAE')
+    expect(wrapper.find('.hidden-player-container').exists()).toBe(true)
+    expect(wrapper.find('#wolves-yt-player').exists()).toBe(true)
   })
 
   it('emits update:playing event when clicking the play button', async () => {
