@@ -62,12 +62,7 @@ const wallpapers = [
   { type: 'single', name: 'bluefin-xe_red_tulip.webp', title: 'Red Tulip' },
   { type: 'single', name: 'bluefin-xe_foothills.webp', title: 'Foothills' },
   { type: 'single', name: 'bluefin-xe_clouds.webp', title: 'Clouds' },
-  { type: 'daynight', name: 'bluefin-tenacious', dayName: 'bluefin-tenacious-day.webp', nightName: 'bluefin-tenacious-night.webp', title: 'Tenacious Pterosaur (Day & Night)' },
-  { type: 'single', name: 'aurora-xe_sunset.webp', title: 'Aurora Sunset' },
-  { type: 'single', name: 'aurora-xe_space_needle.webp', title: 'Aurora Space Needle' },
-  { type: 'single', name: 'aurora-xe_foothills.webp', title: 'Aurora Foothills' },
-  { type: 'single', name: 'aurora-xe_clouds.webp', title: 'Aurora Clouds' },
-  { type: 'single', name: 'aurora-jonatan-pie-aurora.webp', title: 'Jonatan Pie' }
+  { type: 'daynight', name: 'bluefin-tenacious', dayName: 'bluefin-tenacious-day.webp', nightName: 'bluefin-tenacious-night.webp', title: 'Tenacious Pterosaur (Day & Night)' }
 ]
 
 // Programmatically append randomized Maintainer Summit Europe 2026 slides

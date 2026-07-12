@@ -17,13 +17,15 @@ README: Bluefin Wolves Teaser Landing Page Component
 -->
 <script setup lang="ts">
 import type { WolvesChapter } from './data/wolves-story'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import TopNavbar from './components/TopNavbar.vue'
 import WolvesComicReader from './components/wolves/WolvesComicReader.vue'
 import WolvesLoreColumn from './components/wolves/WolvesLoreColumn.vue'
 import WolvesQrCodes from './components/wolves/WolvesQrCodes.vue'
 import WolvesSoundtrack from './components/wolves/WolvesSoundtrack.vue'
+import { LangLandingBluefinImageURLs } from './content'
 import { wolvesRelease } from './data/wolves-story'
+
 import { getChapterForPage } from './utils/wolvesStory'
 
 // Soundtrack playback and comic autoplay state
@@ -122,14 +124,116 @@ const nightOpacity = computed(() => {
   return Math.sin(localProgress * Math.PI)
 })
 
-const dayWallpaperUrl = computed(() => {
-  const pairStr = String(currentPairIndex.value + 1).padStart(2, '0')
+const activeMonth = ref(6)
+const previousMonth = ref<number | null>(null)
+const isTransitioning = ref(false)
+
+watch(currentPairIndex, (newVal, oldVal) => {
+  if (oldVal !== undefined && newVal !== oldVal) {
+    previousMonth.value = oldVal
+    activeMonth.value = newVal
+    isTransitioning.value = true
+    setTimeout(() => {
+      previousMonth.value = null
+      isTransitioning.value = false
+    }, 1500)
+  }
+  else {
+    activeMonth.value = newVal
+  }
+}, { immediate: true })
+
+function getDayWallpaperUrl(monthIndex: number) {
+  const pairStr = String(monthIndex + 1).padStart(2, '0')
   return `url('${import.meta.env.BASE_URL}img/wallpapers/bluefin-${pairStr}-day.webp')`
+}
+
+function getNightWallpaperUrl(monthIndex: number) {
+  const pairStr = String(monthIndex + 1).padStart(2, '0')
+  return `url('${import.meta.env.BASE_URL}img/wallpapers/bluefin-${pairStr}-night.webp')`
+}
+
+const isImmersive = ref(false)
+const baseUrl = import.meta.env.BASE_URL
+
+const filteredMascots = computed(() => {
+  return LangLandingBluefinImageURLs.filter((url) => {
+    const filename = url.split('/').pop() || ''
+    return !filename.startsWith('aurora') && !filename.includes('jonatan')
+  })
 })
 
-const nightWallpaperUrl = computed(() => {
-  const pairStr = String(currentPairIndex.value + 1).padStart(2, '0')
-  return `url('${import.meta.env.BASE_URL}img/wallpapers/bluefin-${pairStr}-night.webp')`
+const mascotIndex = ref(0)
+const nextMascotIndex = ref<number | null>(null)
+const isMascotTransitioning = ref(false)
+
+let mascotTimer: ReturnType<typeof setInterval> | null = null
+
+function startMascotRotation() {
+  if (mascotTimer) {
+    return
+  }
+  mascotTimer = setInterval(() => {
+    if (filteredMascots.value.length === 0) {
+      return
+    }
+    const nextIdx = (mascotIndex.value + 1) % filteredMascots.value.length
+    nextMascotIndex.value = nextIdx
+    isMascotTransitioning.value = true
+    setTimeout(() => {
+      mascotIndex.value = nextIdx
+      nextMascotIndex.value = null
+      isMascotTransitioning.value = false
+    }, 1000)
+  }, 6000)
+}
+
+function stopMascotRotation() {
+  if (mascotTimer) {
+    clearInterval(mascotTimer)
+    mascotTimer = null
+  }
+}
+
+watch(isImmersive, (active) => {
+  if (active) {
+    startMascotRotation()
+  }
+  else {
+    stopMascotRotation()
+  }
+})
+
+function enterImmersiveExperience() {
+  isImmersive.value = true
+  isPlaying.value = true
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch((err) => {
+      console.warn('Could not enter fullscreen:', err)
+    })
+  }
+}
+
+function exitImmersiveExperience() {
+  isImmersive.value = false
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch((err) => {
+      console.warn('Could not exit fullscreen:', err)
+    })
+  }
+}
+
+function handleFullscreenChange() {
+  isImmersive.value = !!document.fullscreenElement
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  stopMascotRotation()
 })
 </script>
 
@@ -137,15 +241,24 @@ const nightWallpaperUrl = computed(() => {
   <div class="wolves-teaser-page">
     <!-- Dynamic Wallpaper Background Layers -->
     <div class="wallpaper-container">
-      <div class="wallpaper-layer day-layer" :style="{ backgroundImage: dayWallpaperUrl }" />
-      <div class="wallpaper-layer night-layer" :style="{ backgroundImage: nightWallpaperUrl, opacity: nightOpacity }" />
+      <!-- Previous Month Buffer (fading out) -->
+      <div v-if="previousMonth !== null" class="wallpaper-buffer-layer fading-out">
+        <div class="wallpaper-layer day-layer" :style="{ backgroundImage: getDayWallpaperUrl(previousMonth) }" />
+        <div class="wallpaper-layer night-layer" :style="{ backgroundImage: getNightWallpaperUrl(previousMonth), opacity: nightOpacity }" />
+      </div>
+
+      <!-- Active Month Buffer (fading in) -->
+      <div class="wallpaper-buffer-layer" :class="{ 'is-transitioning': isTransitioning }">
+        <div class="wallpaper-layer day-layer" :style="{ backgroundImage: getDayWallpaperUrl(activeMonth) }" />
+        <div class="wallpaper-layer night-layer" :style="{ backgroundImage: getNightWallpaperUrl(activeMonth), opacity: nightOpacity }" />
+      </div>
     </div>
 
     <!-- Top Global Navigation Bar -->
-    <TopNavbar />
+    <TopNavbar v-if="!isImmersive" />
 
     <!-- Main Outer Container -->
-    <div class="wolves-layout">
+    <div v-if="!isImmersive" class="wolves-layout">
       <!-- SECTION 1: HERO SECTION -->
       <header class="wolves-hero">
         <div class="hero-text">
@@ -160,6 +273,16 @@ const nightWallpaperUrl = computed(() => {
 
             <br><br>A fundraising effort to immortalize contributors in legend. Issue sponsorships available.
           </p>
+
+          <div class="experience-cta-wrap">
+            <button class="experience-cta-btn font-mono" @click="enterImmersiveExperience">
+              [ EXPERIENCE SEVEN DAYS TO THE WOLVES ]
+            </button>
+            <div class="experience-cta-sub font-mono">
+              RECOMMENDED: HEADPHONES ON // VOLUME UP
+            </div>
+          </div>
+
           <div class="hero-footnote">
             Coming 2027
           </div>
@@ -312,6 +435,99 @@ const nightWallpaperUrl = computed(() => {
         <WolvesQrCodes />
       </section>
     </div>
+
+    <!-- Immersive Fullscreen Theater Experience -->
+    <div v-else class="immersive-layout">
+      <!-- TOP STATUS BAR HUD -->
+      <header class="immersive-hud-header">
+        <div class="hud-left font-mono">
+          <span class="hud-indicator-dot animate-pulse-fast" />
+          COGNITIVE_CHANNEL_SECURED // SEVEN DAYS TO THE WOLVES
+        </div>
+        <button class="hud-exit-btn font-mono" @click="exitImmersiveExperience">
+          [ EXIT EXPERIENCE ]
+        </button>
+      </header>
+
+      <!-- MIDDLE CONTENT AREA (WIDESCREEN SPLIT 2fr 1fr) -->
+      <div class="immersive-content-grid">
+        <div class="immersive-col-left">
+          <WolvesComicReader
+            :chapters="wolvesRelease.chapters"
+            :autoplay="isPlaying"
+            @update:page="currentPage = $event"
+          />
+        </div>
+
+        <div class="immersive-col-right">
+          <WolvesLoreColumn
+            ref="loreColumnRef"
+            :chapter="activeChapter"
+            @copied-status="handleCopiedStatus"
+          />
+        </div>
+      </div>
+
+      <!-- BOTTOM CONTROLS HUD -->
+      <footer class="immersive-hud-footer">
+        <!-- Mascot Rotating Console (circular node) -->
+        <div class="mascot-console-hud">
+          <div class="mascot-console-ring">
+            <div class="mascot-display-area">
+              <template v-if="filteredMascots.length > 0">
+                <img
+                  v-if="nextMascotIndex !== null"
+                  :src="`${baseUrl}${filteredMascots[nextMascotIndex].replace('./', '')}`"
+                  class="mascot-avatar fading-in"
+                  alt="Telemetry Avatar Next"
+                >
+                <img
+                  :src="`${baseUrl}${filteredMascots[mascotIndex].replace('./', '')}`"
+                  class="mascot-avatar"
+                  :class="{ 'fading-out': isMascotTransitioning }"
+                  alt="Telemetry Avatar"
+                >
+              </template>
+            </div>
+            <div class="hud-ring-overlay" />
+          </div>
+          <div class="mascot-telemetry-text font-mono">
+            <span>OPERATIVE_CORE</span>
+            <span class="text-cyan">FEED: ACTIVE</span>
+          </div>
+        </div>
+
+        <!-- Soundtrack Dock -->
+        <div class="immersive-soundtrack-dock">
+          <WolvesSoundtrack
+            v-model:playing="isPlaying"
+            :chapter="activeChapter"
+            :lore-copied="isLoreCopied"
+            @track-change="handleTrackChange"
+            @prev-lore="handlePrevLore"
+            @next-lore="handleNextLore"
+            @share-lore="handleShareLore"
+            @progress="handleProgress"
+          />
+        </div>
+
+        <!-- Right telemetry HUD details -->
+        <div class="hud-right-telemetry font-mono">
+          <div class="decryption-mini-meter">
+            <div class="meter-header-mini">
+              <span>DECRYPTION // NODE_07</span>
+              <span class="text-cyan">7%</span>
+            </div>
+            <div class="meter-bar-mini">
+              <div class="meter-fill-mini" />
+            </div>
+          </div>
+          <div class="hud-telemetry-coords">
+            LAT: 42.109 // LON: -83.045
+          </div>
+        </div>
+      </footer>
+    </div>
   </div>
 </template>
 
@@ -327,6 +543,44 @@ const nightWallpaperUrl = computed(() => {
   z-index: 0;
 }
 
+.wallpaper-buffer-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  pointer-events: none;
+
+  &.fading-out {
+    animation: fadeOutBuffer 1.5s ease-in-out forwards;
+    z-index: 1;
+  }
+
+  &.is-transitioning {
+    z-index: 2;
+    animation: fadeInBuffer 1.5s ease-in-out forwards;
+  }
+}
+
+@keyframes fadeInBuffer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutBuffer {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 .wallpaper-layer {
   position: absolute;
   top: 0;
@@ -336,7 +590,6 @@ const nightWallpaperUrl = computed(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transition: background-image 1s ease-in-out;
   pointer-events: none;
 }
 
@@ -346,9 +599,7 @@ const nightWallpaperUrl = computed(() => {
 
 .night-layer {
   z-index: 2;
-  transition:
-    background-image 1s ease-in-out,
-    opacity 0.5s ease-in-out;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .wolves-teaser-page {
@@ -1179,6 +1430,490 @@ const nightWallpaperUrl = computed(() => {
   .separator {
     color: #424242;
     user-select: none;
+  }
+}
+
+/* Experience Entrance CTA Styling */
+.experience-cta-wrap {
+  margin: 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  @media (min-width: 768px) {
+    align-items: flex-start;
+  }
+}
+
+.experience-cta-btn {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.15), rgba(102, 179, 255, 0.25));
+  border: 1px solid rgba(102, 179, 255, 0.4);
+  color: #ffffff;
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(66, 133, 244, 0.1);
+  letter-spacing: 0.05em;
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(102, 179, 255, 0.25), rgba(125, 211, 252, 0.35));
+    border-color: #7dd3fc;
+    box-shadow: 0 0 25px rgba(66, 133, 244, 0.3);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.experience-cta-sub {
+  font-size: 0.8rem;
+  color: #888888;
+  letter-spacing: 0.1em;
+}
+
+/* Immersive Experience Active State */
+.wolves-teaser-page.immersive-experience-active {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Immersive Fullscreen Dashboard */
+.immersive-layout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+  background-color: rgba(12, 16, 22, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Immersive Top Header HUD */
+.immersive-hud-header {
+  height: 60px;
+  border-bottom: 1px solid rgba(102, 179, 255, 0.2);
+  background: rgba(16, 21, 31, 0.5);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+
+  .hud-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #e2e8f0;
+    letter-spacing: 0.05em;
+  }
+
+  .hud-indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #27c93f;
+    box-shadow: 0 0 10px #27c93f;
+  }
+
+  .hud-exit-btn {
+    background: transparent;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    color: rgba(248, 113, 113, 0.9);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(248, 113, 113, 0.1);
+      border-color: #f87171;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(248, 113, 113, 0.25);
+    }
+  }
+}
+
+/* Immersive Middle Content (2fr 1fr) */
+.immersive-content-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  align-items: stretch;
+  gap: 24px;
+  padding: 24px;
+  min-height: 0; /* Important for flex-child scrolling */
+  box-sizing: border-box;
+
+  @media (max-width: 1023px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: 3fr 2fr;
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
+.immersive-col-left {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  :deep(#comic-reader) {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  :deep(.page-flip-comic-layout) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  :deep(.comic-viewport) {
+    flex: 1;
+    max-height: calc(100vh - 240px);
+    width: 100%;
+    max-width: 100%;
+    border-color: rgba(102, 179, 255, 0.35);
+  }
+}
+
+.immersive-col-right {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  :deep(.dispatch-quote-section) {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :deep(.dispatch-quote-card) {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  :deep(.quote-viewport) {
+    flex: 1;
+    overflow-y: auto;
+    /* Custom thin scrollbar */
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(102, 179, 255, 0.2);
+      border-radius: 2px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(102, 179, 255, 0.4);
+    }
+  }
+}
+
+/* Immersive Bottom HUD Footer */
+.immersive-hud-footer {
+  height: 96px;
+  border-top: 1px solid rgba(102, 179, 255, 0.2);
+  background: rgba(16, 21, 31, 0.6);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-shrink: 0;
+
+  @media (max-width: 767px) {
+    height: auto;
+    padding: 16px;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+/* Mascot Telemetry Circle Console */
+.mascot-console-hud {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+
+  @media (max-width: 767px) {
+    align-self: flex-start;
+  }
+
+  .mascot-console-ring {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 1px solid rgba(102, 179, 255, 0.45);
+    background: #090d16;
+    padding: 2px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(102, 179, 255, 0.15);
+  }
+
+  .mascot-display-area {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mascot-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 1s ease-in-out;
+
+    &.fading-out {
+      opacity: 0;
+    }
+    &.fading-in {
+      animation: mascotFadeIn 1s ease-in-out forwards;
+    }
+  }
+
+  .hud-ring-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+  }
+
+  .mascot-telemetry-text {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    line-height: 1.3;
+  }
+}
+
+@keyframes mascotFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Soundtrack Dock Row Customization */
+.immersive-soundtrack-dock {
+  flex: 1;
+  max-width: 680px;
+
+  @media (max-width: 767px) {
+    width: 100%;
+  }
+}
+
+/* Scoped override styles within immersive mode footer */
+.immersive-hud-footer {
+  :deep(.sidebar-soundtrack-card) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100%;
+
+    .soundtrack-panel {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .soundtrack-panel-main {
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 24px !important;
+      width: 100%;
+
+      @media (max-width: 900px) {
+        grid-template-columns: auto 1fr auto !important;
+        align-items: center !important;
+      }
+    }
+
+    .soundtrack-artwork-shell,
+    .soundtrack-lyrics-panel,
+    .soundtrack-status,
+    .soundtrack-links,
+    .soundtrack-label,
+    .soundtrack-mobile-bar {
+      display: none !important;
+    }
+
+    .soundtrack-copy {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      text-align: left !important;
+      flex: 1 !important;
+      min-width: 0 !important;
+    }
+
+    .soundtrack-title {
+      font-size: 0.95rem !important;
+      font-weight: bold !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .soundtrack-artist {
+      font-size: 0.75rem !important;
+      color: rgba(102, 179, 255, 0.8) !important;
+      margin: 0 !important;
+    }
+
+    .soundtrack-controls-group {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 8px !important;
+      margin: 0 !important;
+      flex-shrink: 0 !important;
+    }
+
+    .quote-nav-btn {
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 1.1rem !important;
+    }
+
+    .soundtrack-action {
+      min-height: 36px !important;
+      height: 36px !important;
+      padding: 0 16px !important;
+      font-size: 0.8rem !important;
+    }
+  }
+}
+
+/* Right Telemetry Column */
+.hud-right-telemetry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+
+  @media (max-width: 767px) {
+    align-self: flex-end;
+  }
+
+  .decryption-mini-meter {
+    width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .meter-header-mini {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: #888888;
+  }
+
+  .meter-bar-mini {
+    height: 3px;
+    background-color: #0c1016;
+    border-radius: 1.5px;
+    overflow: hidden;
+    border: 1px solid rgba(102, 179, 255, 0.1);
+  }
+
+  .meter-fill-mini {
+    height: 100%;
+    width: 7%;
+    background-color: #66b3ff;
+    border-radius: 1.5px;
+    box-shadow: 0 0 6px rgba(102, 179, 255, 0.5);
+  }
+
+  .hud-telemetry-coords {
+    font-size: 0.68rem;
+    font-weight: bold;
+    color: #616161;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* Custom Fast Pulse Utility */
+.animate-pulse-fast {
+  animation: pulseFast 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseFast {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
   }
 }
 </style>
