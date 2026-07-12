@@ -414,12 +414,12 @@ npm run lint:fix             # Lints and fixes issues in the project
 ```
 
 **CRITICAL REMINDERS:**
-- ⏱️ **ALWAYS use `--include=dev`** when installing dependencies
-- 🚀 **Run dev server in async mode** to keep it alive
-- 🧪 **ALWAYS test manually** after making changes
-- 📱 **Test responsive design** on different screen sizes
-- 🌍 **Consider i18n impact** for all text changes (13 languages — always update all locale files)
-- 📸 **Take screenshots** of UI changes for review
+- **ALWAYS use `--include=dev`** when installing dependencies
+- **Run dev server in async mode** to keep it alive
+- **ALWAYS test manually** after making changes
+- **Test responsive design** on different screen sizes
+- **Consider i18n impact** for all text changes (13 languages — always update all locale files)
+- **Take screenshots** of UI changes for review
 - **Always** follow the conventional commits specification when sending pull requests
 - **Always** include screenshots of both desktop and mobile in pull requests
 - **Always** use tailwind css and do not hardcode pixel sizes
@@ -427,11 +427,14 @@ npm run lint:fix             # Lints and fixes issues in the project
 - **Always** ensure images are compressed appropriately for mobile
 - **Always** do surgical improvements, keep it simple and readable
 - **Always** match conventions that exist, like font sizes and visual style
-- 🌐 **vue-i18n is in LEGACY mode:** use `(i18n.global as any).locale = x` — NOT `.locale.value = x` (will silently no-op)
-- 📐 **TopNavbar uses `px` not `rem`** — site root font-size is 63.5% (~10 px base); pixel values in Navbar are intentional
-- 🔒 **Dakota page is `noindex` / unlisted** — intentionally hidden from search engines and nav; do not add to sitemap or main nav
-- 🔒 **Bluespeed page is `noindex` / unlisted** — same pattern as Dakota; `src/KnuckleApp.vue`, `bluespeed/index.html`, components at `src/components/knuckle/`
-- ✅ **Run `node tests/navbar-visual.mjs`** to validate navbar rendering against docs.projectbluefin.io (38 Playwright assertions)
+- **vue-i18n is in LEGACY mode:** use `(i18n.global as any).locale = x` — NOT `.locale.value = x` (will silently no-op)
+- **TopNavbar uses `px` not `rem`** — site root font-size is 63.5% (~10 px base); pixel values in Navbar are intentional
+- **Dakota page is `noindex` / unlisted** — intentionally hidden from search engines and nav; do not add to sitemap or main nav
+- **Bluespeed page is `noindex` / unlisted** — same pattern as Dakota; `src/KnuckleApp.vue`, `bluespeed/index.html`, components at `src/components/knuckle/`
+- **Run `node tests/navbar-visual.mjs`** to validate navbar rendering against docs.projectbluefin.io (38 Playwright assertions)
+- **public/dakota-versions.json modification:** Running the Vitest suite can rewrite `public/dakota-versions.json` as a side effect of its automatic updater path; this must remain unstaged and discarded before commits.
+- **Wolves layout ratio:** The Wolves page desktop layout MUST use a `2fr 1fr` grid template to allocate 66% width to the slides and 33% width to the lore column.
+- **Emoji restriction:** The repository owner/user hates emojis. NEVER use emojis in code comments, configuration files, commit messages, pull requests, documentation (including this file), or assistant responses.
 
 ## Ecosystem Integration Strategy (decided 2026-05-21)
 
