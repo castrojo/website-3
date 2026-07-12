@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import WolvesQrCodes from './WolvesQrCodes.vue'
 import { bazziteQuotes } from './lore'
+import WolvesQrCodes from './WolvesQrCodes.vue'
 
 // Replace these placeholders with the approved final Discord quotes before launch.
 </script>
