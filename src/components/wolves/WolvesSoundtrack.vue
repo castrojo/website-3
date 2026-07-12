@@ -227,6 +227,8 @@ function createPlayer() {
   }
 
   player = new youtubeWindow.YT.Player(playerMount, {
+    width: 200,
+    height: 200,
     playerVars: {
       listType: 'playlist',
       list: source.playlistId,
@@ -655,20 +657,20 @@ onBeforeUnmount(() => {
 
 .wolves-player-host-shell {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: 200px;
+  height: 200px;
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
 }
 
 .wolves-player-host {
-  width: 1px;
-  height: 1px;
+  width: 200px;
+  height: 200px;
 
   > * {
-    width: 1px;
-    height: 1px;
+    width: 200px;
+    height: 200px;
     border: 0;
   }
 }

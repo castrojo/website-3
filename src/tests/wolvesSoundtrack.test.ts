@@ -199,6 +199,8 @@ describe('wolves soundtrack', () => {
 
     expect(playerHost.contains(players[0].mountedNode)).toBe(true)
     expect(playerShell.getAttribute('aria-hidden')).toBe('true')
+    expect(players[0].config.width).toBe(200)
+    expect(players[0].config.height).toBe(200)
     expect(window.getComputedStyle(playerShell).overflow).toBe('hidden')
     expect(lyricsLink.attributes('href')).toBe('https://www.nightwish.com/songs/7-days-to-the-wolves')
     expect(lyricsLink.attributes('target')).toBe('_blank')
