@@ -23,6 +23,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:page', page: number): void
   (e: 'chapterChange', id: string): void
+  (e: 'update:autoplay', autoplay: boolean): void
 }>()
 
 // PDF source ───────────────────────────────────────────────────────────────
@@ -204,12 +205,21 @@ function setupFlipResizeObserver() {
   flipResizeObserver.observe(flipViewport.value)
 }
 
+function shuffleArray<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]
+  }
+  return array
+}
+
 async function loadComicPdf() {
   pdfLoading.value = true
   pdfError.value = ''
   try {
     const lib = await loadPdfJs()
     pdfDocument = await lib.getDocument(pdfUrl).promise
+    shuffleArray(wallpapers)
     totalPages.value = wallpapers.length + 1 // 1 Cover + Wallpapers from projectbluefin/documentation/artwork
     pdfLoading.value = false
     await nextTick()
@@ -254,6 +264,7 @@ watch(() => props.autoplay, (val) => {
 }, { immediate: true })
 
 watch(localAutoplay, (val) => {
+  emit('update:autoplay', val)
   if (val) {
     startAutoplayTimer()
   }

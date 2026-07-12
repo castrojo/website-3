@@ -15,7 +15,7 @@ This document specifies the technical design for a dedicated, immersive, theater
 * **Visual style:** High-tech, dark terminal CTA button styled with Tailwind utility classes. No emojis are used.
 * **Label:** `[ EXPERIENCE SEVEN DAYS TO THE WOLVES ]`
 * **Sub-label:** `RECOMMENDED: HEADPHONES ON // VOLUME UP` (monospaced, dim gray)
-* **Behavior:** 
+* **Behavior:**
   1. Sets Vue state `isImmersive = true`.
   2. Automatically starts soundtrack playback (equivalent to clicking "Start Soundtrack" if not already playing).
   3. Triggers native HTML5 browser fullscreen on the document's root element (`document.documentElement.requestFullscreen()`).
@@ -73,7 +73,7 @@ When `isImmersive` is true, a class `.immersive-experience-active` is appended t
   overflow: hidden;
   height: 100vh;
   width: 100vw;
-  
+
   // Hide non-immersive content
   .wolves-hero,
   #wolves-support,

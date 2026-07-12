@@ -154,6 +154,7 @@ function getNightWallpaperUrl(monthIndex: number) {
 }
 
 const isImmersive = ref(false)
+const isComicAutoplay = ref(false)
 const baseUrl = import.meta.env.BASE_URL
 
 const filteredMascots = computed(() => {
@@ -206,6 +207,7 @@ watch(isImmersive, (active) => {
 
 function enterImmersiveExperience() {
   isImmersive.value = true
+  isComicAutoplay.value = true
   isPlaying.value = true
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch((err) => {
@@ -442,7 +444,7 @@ onBeforeUnmount(() => {
       <header class="immersive-hud-header">
         <div class="hud-left font-mono">
           <span class="hud-indicator-dot animate-pulse-fast" />
-          COGNITIVE_CHANNEL_SECURED // SEVEN DAYS TO THE WOLVES
+          kubectl get pods -n wolves --selector=app=seven-days-to-the-wolves --watch
         </div>
         <button class="hud-exit-btn font-mono" @click="exitImmersiveExperience">
           [ EXIT EXPERIENCE ]
@@ -453,8 +455,8 @@ onBeforeUnmount(() => {
       <div class="immersive-content-grid">
         <div class="immersive-col-left">
           <WolvesComicReader
+            v-model:autoplay="isComicAutoplay"
             :chapters="wolvesRelease.chapters"
-            :autoplay="isPlaying"
             @update:page="currentPage = $event"
           />
         </div>
@@ -492,8 +494,8 @@ onBeforeUnmount(() => {
             <div class="hud-ring-overlay" />
           </div>
           <div class="mascot-telemetry-text font-mono">
-            <span>OPERATIVE_CORE</span>
-            <span class="text-cyan">FEED: ACTIVE</span>
+            <span>POD: wolves-telemetry-controller-7</span>
+            <span class="text-cyan">STATUS: Running</span>
           </div>
         </div>
 
@@ -511,11 +513,21 @@ onBeforeUnmount(() => {
           />
         </div>
 
-        <!-- Right telemetry HUD details -->
+        <!-- Telemetry & Controls (including comic autoplay toggle) -->
         <div class="hud-right-telemetry font-mono">
+          <button
+            class="immersive-autoplay-btn font-mono"
+            :class="{ 'is-active': isComicAutoplay }"
+            type="button"
+            @click="isComicAutoplay = !isComicAutoplay"
+          >
+            <span class="hud-indicator-dot-mini" />
+            COMIC: {{ isComicAutoplay ? 'AUTO' : 'MANUAL' }}
+          </button>
+
           <div class="decryption-mini-meter">
             <div class="meter-header-mini">
-              <span>DECRYPTION // NODE_07</span>
+              <span>DEPLOYMENT: wolves-decryption-engine-7</span>
               <span class="text-cyan">7%</span>
             </div>
             <div class="meter-bar-mini">
@@ -523,7 +535,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="hud-telemetry-coords">
-            LAT: 42.109 // LON: -83.045
+            CLUSTER: k3s-exo-1.production // HOST: ghost.local
           </div>
         </div>
       </footer>
@@ -1451,7 +1463,7 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(102, 179, 255, 0.4);
   color: #ffffff;
   padding: 14px 28px;
-  font-size: 1.1rem;
+  font-size: 1.65rem; /* Upgraded 50% from 1.1rem! */
   font-weight: bold;
   border-radius: 8px;
   cursor: pointer;
@@ -1472,7 +1484,7 @@ onBeforeUnmount(() => {
 }
 
 .experience-cta-sub {
-  font-size: 0.8rem;
+  font-size: 1.2rem; /* Upgraded 50% from 0.8rem! */
   color: #888888;
   letter-spacing: 0.1em;
 }
@@ -1502,7 +1514,7 @@ onBeforeUnmount(() => {
 
 /* Immersive Top Header HUD */
 .immersive-hud-header {
-  height: 60px;
+  height: 80px; /* Upgraded from 60px to fit 50% larger typography comfortably */
   border-bottom: 1px solid rgba(102, 179, 255, 0.2);
   background: rgba(16, 21, 31, 0.5);
   padding: 0 24px;
@@ -1515,7 +1527,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.9rem;
+    font-size: 1.35rem; /* Upgraded 50% from 0.9rem! */
     font-weight: bold;
     color: #e2e8f0;
     letter-spacing: 0.05em;
@@ -1534,7 +1546,7 @@ onBeforeUnmount(() => {
     border: 1px solid rgba(248, 113, 113, 0.4);
     color: rgba(248, 113, 113, 0.9);
     padding: 8px 16px;
-    font-size: 0.85rem;
+    font-size: 1.3rem; /* Upgraded 50% from 0.85rem! */
     font-weight: bold;
     border-radius: 6px;
     cursor: pointer;
@@ -1594,7 +1606,7 @@ onBeforeUnmount(() => {
 
   :deep(.comic-viewport) {
     flex: 1;
-    max-height: calc(100vh - 240px);
+    max-height: calc(100vh - 260px); /* Upgraded subtraction for 80px header + 120px footer */
     width: 100%;
     max-width: 100%;
     border-color: rgba(102, 179, 255, 0.35);
@@ -1607,6 +1619,47 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  /* 1.5x typography scale-up for all lore column elements when in immersive mode */
+  :deep(.dispatch-plan-content) {
+    .dispatch-plan-command {
+      font-size: 1.35rem !important;
+    }
+    .title-h2 {
+      font-size: 1.85rem !important;
+    }
+    .title-p {
+      font-size: 1.25rem !important;
+    }
+  }
+
+  :deep(.conversation-heading) {
+    font-size: 1.35rem !important;
+  }
+  :deep(.conversation-title) {
+    font-size: 1.95rem !important;
+  }
+  :deep(.conversation-message-header) {
+    font-size: 1.35rem !important;
+  }
+  :deep(.conversation-message p) {
+    font-size: 1.7rem !important;
+  }
+  :deep(.conversation-source) {
+    font-size: 1.25rem !important;
+    a {
+      font-size: 1.25rem !important;
+    }
+  }
+  :deep(.lore-quote-text) {
+    font-size: 1.85rem !important;
+  }
+  :deep(.lore-quote-meta) {
+    font-size: 1.35rem !important;
+    strong {
+      font-size: 1.45rem !important;
+    }
+  }
 
   :deep(.dispatch-quote-section) {
     height: 100% !important;
@@ -1643,7 +1696,7 @@ onBeforeUnmount(() => {
 
 /* Immersive Bottom HUD Footer */
 .immersive-hud-footer {
-  height: 96px;
+  height: 120px; /* Upgraded from 96px to fit 50% larger typography comfortably */
   border-top: 1px solid rgba(102, 179, 255, 0.2);
   background: rgba(16, 21, 31, 0.6);
   padding: 0 24px;
@@ -1663,34 +1716,50 @@ onBeforeUnmount(() => {
 
 /* Mascot Telemetry Circle Console */
 .mascot-console-hud {
+  position: absolute;
+  bottom: 140px; /* Floats above the larger footer controls bar */
+  left: 32px;
+  z-index: 110;
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
+  background: rgba(12, 16, 22, 0.75);
+  border: 1px solid rgba(102, 179, 255, 0.35);
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  pointer-events: none; /* Allows clicks to pass through if it overlaps comic elements */
 
-  @media (max-width: 767px) {
-    align-self: flex-start;
+  @media (max-width: 1023px) {
+    position: static;
+    margin-top: 12px;
+    align-self: center;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .mascot-console-ring {
     position: relative;
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    border: 1px solid rgba(102, 179, 255, 0.45);
-    background: #090d16;
-    padding: 2px;
+    width: 120px; /* Upgraded to 120px! Much larger. */
+    height: 120px; /* Upgraded to 120px! Much larger. */
+    border: 1px solid rgba(102, 179, 255, 0.5);
+    background: rgba(9, 13, 22, 0.85);
+    padding: 6px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 10px rgba(102, 179, 255, 0.15);
+    box-shadow: 0 0 15px rgba(102, 179, 255, 0.25);
+    border-radius: 8px; /* Square/rectangular grid HUD look */
   }
 
   .mascot-display-area {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
+    border-radius: 4px;
     overflow: hidden;
     position: relative;
     display: flex;
@@ -1701,7 +1770,7 @@ onBeforeUnmount(() => {
   .mascot-avatar {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* Do not crop the beautiful dinosaur images! */
     position: absolute;
     top: 0;
     left: 0;
@@ -1721,8 +1790,8 @@ onBeforeUnmount(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+    border-radius: 4px;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
     pointer-events: none;
   }
 
@@ -1793,13 +1862,51 @@ onBeforeUnmount(() => {
       }
     }
 
-    .soundtrack-artwork-shell,
     .soundtrack-lyrics-panel,
-    .soundtrack-status,
-    .soundtrack-links,
-    .soundtrack-label,
     .soundtrack-mobile-bar {
       display: none !important;
+    }
+
+    .soundtrack-artwork-shell {
+      display: block !important;
+      width: 66px !important; /* Upgraded 50% from 44px */
+      height: 66px !important; /* Upgraded 50% from 44px */
+      border-radius: 8px !important;
+      flex-shrink: 0 !important;
+    }
+
+    .soundtrack-label {
+      display: block !important;
+      font-size: 1rem !important; /* Upgraded 50% from 0.65rem */
+      letter-spacing: 0.1em !important;
+      color: rgba(102, 179, 255, 0.7) !important;
+    }
+
+    .soundtrack-status {
+      display: block !important;
+      font-size: 1.1rem !important; /* Upgraded 50% from 0.72rem */
+      color: rgba(148, 163, 184, 0.75) !important;
+      line-height: 1.3 !important;
+      max-width: 48ch !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .soundtrack-links {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 12px !important;
+      margin-top: 2px !important;
+      font-size: 1.1rem !important; /* Upgraded 50% from 0.72rem */
+      align-items: center !important;
+
+      .soundtrack-link {
+        font-size: 1.1rem !important; /* Upgraded 50% from 0.72rem */
+      }
+      .soundtrack-premium-note {
+        display: none !important;
+      }
     }
 
     .soundtrack-copy {
@@ -1812,7 +1919,7 @@ onBeforeUnmount(() => {
     }
 
     .soundtrack-title {
-      font-size: 0.95rem !important;
+      font-size: 1.42rem !important; /* Upgraded 50% from 0.95rem */
       font-weight: bold !important;
       margin: 0 !important;
       white-space: nowrap !important;
@@ -1821,7 +1928,7 @@ onBeforeUnmount(() => {
     }
 
     .soundtrack-artist {
-      font-size: 0.75rem !important;
+      font-size: 1.125rem !important; /* Upgraded 50% from 0.75rem */
       color: rgba(102, 179, 255, 0.8) !important;
       margin: 0 !important;
     }
@@ -1830,23 +1937,65 @@ onBeforeUnmount(() => {
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
-      gap: 8px !important;
+      gap: 12px !important; /* Slightly increased gap for larger buttons */
       margin: 0 !important;
       flex-shrink: 0 !important;
     }
 
     .quote-nav-btn {
-      width: 36px !important;
-      height: 36px !important;
-      font-size: 1.1rem !important;
+      width: 54px !important; /* Upgraded 50% from 36px */
+      height: 54px !important; /* Upgraded 50% from 36px */
+      font-size: 1.65rem !important; /* Upgraded 50% from 1.1rem */
     }
 
     .soundtrack-action {
-      min-height: 36px !important;
-      height: 36px !important;
-      padding: 0 16px !important;
-      font-size: 0.8rem !important;
+      min-height: 54px !important; /* Upgraded 50% from 36px */
+      height: 54px !important; /* Upgraded 50% from 36px */
+      padding: 0 24px !important; /* Adjusted padding for larger text */
+      font-size: 1.2rem !important; /* Upgraded 50% from 0.8rem */
     }
+  }
+}
+
+/* Comic Autoplay Toggle Button */
+.immersive-autoplay-btn {
+  background: #10151f;
+  border: 1px solid rgba(102, 179, 255, 0.25);
+  color: #a0aec0;
+  font-size: 1.2rem; /* Upgraded 50% from 0.78rem */
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+
+  &:hover {
+    border-color: rgba(102, 179, 255, 0.5);
+    color: #ffffff;
+  }
+
+  &.is-active {
+    border-color: #27c93f;
+    color: #27c93f;
+    box-shadow: 0 0 10px rgba(39, 201, 63, 0.2);
+
+    .hud-indicator-dot-mini {
+      background-color: #27c93f;
+      box-shadow: 0 0 6px #27c93f;
+    }
+  }
+
+  .hud-indicator-dot-mini {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #5d5d5d;
+    transition: all 0.2s ease;
   }
 }
 
