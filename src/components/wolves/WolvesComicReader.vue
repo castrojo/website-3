@@ -109,6 +109,7 @@ const wallpapers = [
   { type: 'single', name: 'kubecon-55168545299.webp', title: 'KubeCon Europe 2026 Daily Highlights - 053' }
 ]
 
+const shuffledWallpapers = ref<any[]>([])
 const duskIsNight = ref(false)
 let duskTimer: ReturnType<typeof setInterval> | null = null
 
@@ -252,8 +253,8 @@ async function loadComicPdf() {
   try {
     const lib = await loadPdfJs()
     pdfDocument = await lib.getDocument(pdfUrl).promise
-    shuffleArray(wallpapers)
-    totalPages.value = wallpapers.length + 1 // 1 Cover + Wallpapers from projectbluefin/documentation/artwork
+    shuffledWallpapers.value = shuffleArray([...wallpapers])
+    totalPages.value = shuffledWallpapers.value.length + 1 // 1 Cover + Wallpapers from projectbluefin/documentation/artwork
     pdfLoading.value = false
     await nextTick()
     setupFlipResizeObserver()
@@ -297,6 +298,8 @@ function startAutoplayTimer() {
     }
     else {
       /* Loop back to page 2 (instead of page 1) at the end */
+      // Reshuffle the local playlist copy for the next loop
+      shuffledWallpapers.value = shuffleArray([...wallpapers])
       setPage(2)
     }
   }, autoplayInterval.value)
@@ -412,7 +415,7 @@ onBeforeUnmount(() => {
           />
           <!-- Wallpaper Pages (Pages 2-15) -->
           <div v-if="!pdfLoading && !pdfError && page > 1" class="wallpaper-viewport-wrapper">
-            <template v-for="(wp, idx) in wallpapers" :key="idx">
+            <template v-for="(wp, idx) in shuffledWallpapers" :key="idx">
               <div v-if="page === idx + 2" class="wallpaper-display-card animate-fade">
                 <div v-if="wp.type === 'single'" class="wallpaper-container">
                   <img
