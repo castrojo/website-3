@@ -18,11 +18,11 @@ describe('wolvesLoreColumn.vue', () => {
 
     await wrapper.find('.quote-viewport').trigger('click')
 
-    expect(wrapper.text()).toContain(bazziteQuotes[0].quote)
-    expect(wrapper.text()).toContain(bazziteQuotes[0].attribution)
-    expect(wrapper.text()).toContain(bazziteQuotes[0].context as string)
-    expect('person' in bazziteQuotes[0]).toBe(false)
-    expect('sourceTitle' in bazziteQuotes[0]).toBe(false)
+    expect(wrapper.text()).toContain(bazziteQuotes[6].quote)
+    expect(wrapper.text()).toContain(bazziteQuotes[6].attribution)
+    expect(wrapper.text()).toContain(bazziteQuotes[6].context as string)
+    expect('person' in bazziteQuotes[6]).toBe(false)
+    expect('sourceTitle' in bazziteQuotes[6]).toBe(false)
   })
 
   it('does not render QR codes inside the lore column', () => {

@@ -34,10 +34,23 @@ export type WolvesLoreEntry
 export const bazziteQuotes: BazziteQuote[] = rawBazziteQuotes
 export const interceptedCommunications: InterceptedConversation[] = rawInterceptedCommunications
 
-const loreEntries = shuffleLoreEntries([
+const rawEntries = [
   ...bazziteQuotes.map(data => ({ type: 'quote' as const, data })),
   ...interceptedCommunications.map(data => ({ type: 'conversation' as const, data })),
-])
+]
+
+const clarkeEntries = rawEntries.filter(
+  entry => entry.type === 'quote' && entry.data.attribution === 'Arthur C. Clarke'
+)
+
+const nonClarkeEntries = rawEntries.filter(
+  entry => !(entry.type === 'quote' && entry.data.attribution === 'Arthur C. Clarke')
+)
+
+const loreEntries = [
+  ...shuffleLoreEntries(clarkeEntries),
+  ...shuffleLoreEntries(nonClarkeEntries),
+]
 
 export function getChapterIdForLore(entry: WolvesLoreEntry): string {
   if (entry.type === 'quote') {
