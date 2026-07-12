@@ -249,7 +249,7 @@ let autoplayTimer: ReturnType<typeof setInterval> | null = null
 const localAutoplay = ref(false)
 
 const autoplayInterval = computed(() => {
-  return props.fastPacing ? 5000 : 10000
+  return props.fastPacing ? 2000 : 10000
 })
 
 function stopAutoplayTimer() {
