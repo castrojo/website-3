@@ -1,10 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-const here = fileURLToPath(new URL('.', import.meta.url))
-const src = readFileSync(resolve(here, '../../src/KnuckleApp.vue'), 'utf8')
+const src = readFileSync(resolve(process.cwd(), 'src/KnuckleApp.vue'), 'utf8')
 
 const templateMatch = src.match(/<template>([\s\S]*?)<\/template>/)
 const template = templateMatch?.[1] ?? ''

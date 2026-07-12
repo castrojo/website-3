@@ -11,7 +11,8 @@
     "lint:fix": "eslint --fix",
     "test": "vitest",
     "test:run": "vitest run",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "update:wolves-playlist": "node scripts/update-wolves-playlist.js"
   },
   "dependencies": {
     "@iconify-prerendered/vue-mdi": "^0.28.1737398331",
@@ -36,9 +37,11 @@
     "@types/qrcode": "^1.5.6",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vitest/coverage-v8": "^4.1.7",
+    "@vue/test-utils": "^2.4.11",
     "@xmldom/xmldom": "^0.9.10",
     "eslint": "^9.38.0",
     "eslint-plugin-format": "^1.0.2",
+    "happy-dom": "^20.10.6",
     "playwright": "^1.61.1",
     "tailwindcss": "^4.3.2",
     "typescript": "5.9.3",

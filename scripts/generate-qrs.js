@@ -12,8 +12,8 @@ if (!fs.existsSync(targetDir)) {
 }
 
 const storeUrl = 'https://store.projectbluefin.io'
-// Placeholder donation URL: points to the official Bluefin donations/contributors section
-const donateUrl = 'https://docs.projectbluefin.io/donations'
+// Replace with the final Project Bluefin donation URL before launch.
+const donateUrl = '#'
 
 async function generateQR(text, filename) {
   try {

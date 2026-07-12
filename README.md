@@ -54,6 +54,10 @@ npm run lint:fix    # Auto-fix lint errors
 npm run typecheck   # Type-check with vue-tsc
 ```
 
+## Wolves soundtrack metadata
+
+Run `npm run update:wolves-playlist` after installing `yt-dlp` to refresh the checked-in `public/wolves-playlist.json` and local track artwork for playlist `PLA78oiE-RGAE`. The site consumes those static assets at runtime and does not expose a YouTube Data API key.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide — including the PR workflow, i18n instructions, and linting requirements.
