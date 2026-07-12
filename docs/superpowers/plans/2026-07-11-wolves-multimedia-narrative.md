@@ -476,6 +476,11 @@ git add src/components/wolves/WolvesComicReader.vue src/tests/wolvesComicReader.
 git commit -m "feat(wolves): render comic pages on demand"
 ```
 
+#### Task 5 review report
+
+- Added the exact `## Wolves soundtrack metadata` README section requested in review.
+- Documented `npm run update:wolves-playlist`, the required `yt-dlp` dependency, the checked-in `public/wolves-playlist.json` manifest, local `public/wolves-artwork/` assets, and that no browser-visible YouTube Data API key is exposed.
+
 ### Task 6: Build the Chronological Archive & Return-Visit Cue
 
 **Files:**
