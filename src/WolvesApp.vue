@@ -222,10 +222,24 @@ function handleFirstLoreFinished() {
 }
 
 function enterImmersiveExperience() {
-  isImmersive.value = true
-  isComicAutoplay.value = false
-  pacingMode.value = 'normal'
-  isPlaying.value = true
+  const transition = () => {
+    isImmersive.value = true
+    isComicAutoplay.value = true
+    pacingMode.value = 'normal'
+    isPlaying.value = true
+  }
+
+  const documentWithTransition = document as Document & {
+    startViewTransition?: (cb: () => void) => void
+  }
+
+  if (documentWithTransition.startViewTransition) {
+    documentWithTransition.startViewTransition(transition)
+  }
+  else {
+    transition()
+  }
+
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch((err) => {
       console.warn('Could not enter fullscreen:', err)
@@ -234,7 +248,21 @@ function enterImmersiveExperience() {
 }
 
 function exitImmersiveExperience() {
-  isImmersive.value = false
+  const transition = () => {
+    isImmersive.value = false
+  }
+
+  const documentWithTransition = document as Document & {
+    startViewTransition?: (cb: () => void) => void
+  }
+
+  if (documentWithTransition.startViewTransition) {
+    documentWithTransition.startViewTransition(transition)
+  }
+  else {
+    transition()
+  }
+
   if (document.fullscreenElement && document.exitFullscreen) {
     document.exitFullscreen().catch((err) => {
       console.warn('Could not exit fullscreen:', err)
@@ -243,7 +271,20 @@ function exitImmersiveExperience() {
 }
 
 function handleFullscreenChange() {
-  isImmersive.value = !!document.fullscreenElement
+  const transition = () => {
+    isImmersive.value = !!document.fullscreenElement
+  }
+
+  const documentWithTransition = document as Document & {
+    startViewTransition?: (cb: () => void) => void
+  }
+
+  if (documentWithTransition.startViewTransition) {
+    documentWithTransition.startViewTransition(transition)
+  }
+  else {
+    transition()
+  }
 }
 
 onMounted(() => {
