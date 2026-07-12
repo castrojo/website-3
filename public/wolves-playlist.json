@@ -1,0 +1,60 @@
+{
+  "source": {
+    "provider": "youtube",
+    "playlistId": "PLA78oiE-RGAE",
+    "playlistUrl": "https://www.youtube.com/playlist?list=PLA78oiE-RGAE",
+    "musicUrl": "https://music.youtube.com/playlist?list=PLA78oiE-RGAE",
+    "spotifyUri": null
+  },
+  "tracks": [
+    {
+      "id": "LASru9j0oIc",
+      "title": "7 Days to the Wolves",
+      "artist": "Nightwish",
+      "youtubeVideoId": "LASru9j0oIc",
+      "artwork": "wolves-artwork/LASru9j0oIc.jpg"
+    },
+    {
+      "id": "amKIngGUvCk",
+      "title": "Ghosts In The Mist",
+      "artist": "Unleash The Archers",
+      "youtubeVideoId": "amKIngGUvCk",
+      "artwork": "wolves-artwork/amKIngGUvCk.jpg"
+    },
+    {
+      "id": "9skBT5TUqzo",
+      "title": "Tonight We Must Be Warriors",
+      "artist": "Avatar Metal",
+      "youtubeVideoId": "9skBT5TUqzo",
+      "artwork": "wolves-artwork/9skBT5TUqzo.jpg"
+    },
+    {
+      "id": "Z--vLaXdlgk",
+      "title": "Not Your Monster",
+      "artist": "THE DARK ELEMENT Feat.Anette Olzon & Jani Liimatainen - Topic",
+      "youtubeVideoId": "Z--vLaXdlgk",
+      "artwork": "wolves-artwork/Z--vLaXdlgk.jpg"
+    },
+    {
+      "id": "5OFLFVC11Cg",
+      "title": "End of You",
+      "artist": "Poppy",
+      "youtubeVideoId": "5OFLFVC11Cg",
+      "artwork": "wolves-artwork/5OFLFVC11Cg.jpg"
+    },
+    {
+      "id": "san94Q93IcY",
+      "title": "Soulbound",
+      "artist": "Unleash The Archers",
+      "youtubeVideoId": "san94Q93IcY",
+      "artwork": "wolves-artwork/san94Q93IcY.jpg"
+    },
+    {
+      "id": "rYkYLIYvI18",
+      "title": "Last Ride of the Day",
+      "artist": "Nightwish",
+      "youtubeVideoId": "rYkYLIYvI18",
+      "artwork": "wolves-artwork/rYkYLIYvI18.jpg"
+    }
+  ]
+}
