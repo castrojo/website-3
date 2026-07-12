@@ -61,19 +61,21 @@ Expected: `package.json` and `package-lock.json` add both packages under `devDep
 Update the `test` section in `vite.config.ts`:
 
 ```ts
-test: {
-  environment: 'happy-dom',
-  coverage: {
-    provider: 'v8',
-    reporter: ['text', 'lcov'],
-    thresholds: {
-      statements: 50,
-      branches: 50,
-      functions: 50,
-      lines: 50,
+const config = {
+  test: {
+    environment: 'happy-dom',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      thresholds: {
+        statements: 50,
+        branches: 50,
+        functions: 50,
+        lines: 50,
+      },
     },
   },
-},
+}
 ```
 
 - [ ] **Step 3: Add the test harness smoke test**
@@ -81,8 +83,8 @@ test: {
 Create `src/tests/componentSetup.test.ts`:
 
 ```ts
-import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
 
 describe('Vue component test harness', () => {
   it('mounts an interactive component', async () => {
@@ -99,7 +101,7 @@ describe('Vue component test harness', () => {
 
 - [ ] **Step 4: Run the test harness**
 
-Run: `npm run test:run -- src/tests/componentSetup.test.ts`  
+Run: `npm run test:run -- src/tests/componentSetup.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -137,7 +139,7 @@ it('publishes the Wolves campaign entrypoint', async () => {
 
 - [ ] **Step 2: Run the test to verify the current metadata contract**
 
-Run: `npm run test:run -- src/tests/content.test.ts`  
+Run: `npm run test:run -- src/tests/content.test.ts`
 Expected: PASS after the route metadata is confirmed or FAIL with the missing campaign metadata.
 
 - [ ] **Step 3: Make asset paths base-path safe**
@@ -211,7 +213,7 @@ describe('Wolves story manifest', () => {
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `npm run test:run -- src/tests/wolvesStory.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesStory.test.ts`
 Expected: FAIL because the manifest and helpers do not exist.
 
 - [ ] **Step 3: Create the typed manifest and helpers**
@@ -266,7 +268,8 @@ export const wolvesRelease: WolvesRelease = {
 Create `src/utils/wolvesStory.ts`:
 
 ```ts
-import { wolvesRelease, type WolvesArtifact, type WolvesChapter } from '../data/wolves-story'
+import type { WolvesArtifact, WolvesChapter } from '../data/wolves-story'
+import { wolvesRelease } from '../data/wolves-story'
 
 export function getChapterForPage(page: number): WolvesChapter | undefined {
   return wolvesRelease.chapters.find(chapter => page >= chapter.pageStart && page <= chapter.pageEnd)
@@ -285,7 +288,7 @@ Migrate the existing quote and intercepted-communications records into `wolvesRe
 
 - [ ] **Step 4: Run the manifest tests**
 
-Run: `npm run test:run -- src/tests/wolvesStory.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesStory.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -311,8 +314,8 @@ git commit -m "feat(wolves): add canonical story manifest"
 Create `src/tests/wolvesSoundtrack.test.ts`:
 
 ```ts
-import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
 import WolvesSoundtrack from '../components/wolves/WolvesSoundtrack.vue'
 
 it('does not create the player until the visitor starts the soundtrack', async () => {
@@ -326,7 +329,7 @@ it('does not create the player until the visitor starts the soundtrack', async (
 
 - [ ] **Step 2: Run the component test to verify it fails**
 
-Run: `npm run test:run -- src/tests/wolvesSoundtrack.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesSoundtrack.test.ts`
 Expected: FAIL because the component does not exist.
 
 - [ ] **Step 3: Implement the component with user-initiated state**
@@ -362,7 +365,7 @@ Add `padding-bottom: calc(88px + env(safe-area-inset-bottom));` to the page’s 
 
 - [ ] **Step 5: Run the focused test**
 
-Run: `npm run test:run -- src/tests/wolvesSoundtrack.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesSoundtrack.test.ts`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -388,8 +391,8 @@ git commit -m "feat(wolves): make soundtrack the story entry"
 Create `src/tests/wolvesComicReader.test.ts`:
 
 ```ts
-import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
 import WolvesComicReader from '../components/wolves/WolvesComicReader.vue'
 
 it('starts in paged mode and reports the active page', async () => {
@@ -403,7 +406,7 @@ it('starts in paged mode and reports the active page', async () => {
 
 - [ ] **Step 2: Run the reader test to verify it fails**
 
-Run: `npm run test:run -- src/tests/wolvesComicReader.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesComicReader.test.ts`
 Expected: FAIL because the component does not exist.
 
 - [ ] **Step 3: Move PDF.js logic into the focused reader**
@@ -417,7 +420,7 @@ const pdfUrl = `${import.meta.env.BASE_URL}color-with-bluefin.pdf`
 Use `readingMode = ref<'paged' | 'continuous'>('paged')`. In paged mode, render exactly one canvas. In continuous mode, create a page placeholder per page and attach one `IntersectionObserver`:
 
 ```ts
-const observer = new IntersectionObserver(entries => {
+const observer = new IntersectionObserver((entries) => {
   for (const entry of entries) {
     if (entry.isIntersecting) {
       void renderPage(Number((entry.target as HTMLElement).dataset.page))
@@ -433,8 +436,13 @@ Observe each placeholder after PDF metadata loads. Do not call a loop that rende
 Use a `role="tablist"` for mode controls, buttons with `role="tab"` and `:aria-selected`, and named controls:
 
 ```vue
-<button aria-label="Previous page" :disabled="page === 1" @click="setPage(page - 1)">Previous</button>
-<button aria-label="Next page" :disabled="page === totalPages" @click="setPage(page + 1)">Next</button>
+<button aria-label="Previous page" :disabled="page === 1" @click="setPage(page - 1)">
+Previous
+</button>
+
+<button aria-label="Next page" :disabled="page === totalPages" @click="setPage(page + 1)">
+Next
+</button>
 ```
 
 Emit `update:page` from `setPage()` and derive the active chapter through `getChapterForPage(page)`.
@@ -458,7 +466,7 @@ const activeChapter = computed(() => getChapterForPage(currentPage.value))
 
 - [ ] **Step 6: Run focused reader tests**
 
-Run: `npm run test:run -- src/tests/wolvesComicReader.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesComicReader.test.ts`
 Expected: PASS.
 
 - [ ] **Step 7: Commit**
@@ -484,8 +492,8 @@ git commit -m "feat(wolves): render comic pages on demand"
 Create `src/tests/wolvesArchive.test.ts`:
 
 ```ts
-import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
 import WolvesArchive from '../components/wolves/WolvesArchive.vue'
 import { wolvesRelease } from '../data/wolves-story'
 
@@ -501,7 +509,7 @@ it('renders artifacts in canonical order and marks new entries', () => {
 
 - [ ] **Step 2: Run the archive test to verify it fails**
 
-Run: `npm run test:run -- src/tests/wolvesArchive.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesArchive.test.ts`
 Expected: FAIL because the component does not exist.
 
 - [ ] **Step 3: Implement semantic chronological artifacts**
@@ -537,7 +545,7 @@ Render `WolvesArchive` after the reader and insert a chapter artifact callout wh
 
 - [ ] **Step 5: Run the archive test**
 
-Run: `npm run test:run -- src/tests/wolvesArchive.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesArchive.test.ts`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -564,8 +572,8 @@ git commit -m "feat(wolves): add chronological story archive"
 Create `src/tests/wolvesAccessibility.test.ts`:
 
 ```ts
-import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
 import WolvesSoundtrack from '../components/wolves/WolvesSoundtrack.vue'
 
 it('uses an accessible button to reopen the collapsed soundtrack', () => {
@@ -576,7 +584,7 @@ it('uses an accessible button to reopen the collapsed soundtrack', () => {
 
 - [ ] **Step 2: Run the test to verify current behavior**
 
-Run: `npm run test:run -- src/tests/wolvesAccessibility.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesAccessibility.test.ts`
 Expected: PASS after Task 3 or FAIL with a missing semantic control.
 
 - [ ] **Step 3: Fix Escape behavior in `TopNavbar.vue`**
@@ -621,7 +629,7 @@ Keep controls at least `min-height: 44px; min-width: 44px;` and retain mobile sa
 
 - [ ] **Step 5: Run the focused accessibility test**
 
-Run: `npm run test:run -- src/tests/wolvesAccessibility.test.ts`  
+Run: `npm run test:run -- src/tests/wolvesAccessibility.test.ts`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -638,7 +646,7 @@ git commit -m "fix(wolves): improve keyboard and mobile access"
 
 - [ ] **Step 1: Run the full test suite**
 
-Run: `npm run test:run`  
+Run: `npm run test:run`
 Expected: PASS.
 
 - [ ] **Step 2: Run static validation**
