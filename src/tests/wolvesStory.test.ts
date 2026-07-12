@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import interceptedCommunications from '../data/intercepted-communications.json'
+import { interceptedCommunications } from '../components/wolves/lore'
 import { wolvesRelease } from '../data/wolves-story'
 import { getArtifactsForChapter, getChapterForPage, getNewArtifactIds } from '../utils/wolvesStory'
 
@@ -21,7 +21,7 @@ describe('wolves story manifest', () => {
   })
 
   it('has manifest artifacts for all intercepted communication titles', () => {
-    const interceptedTitles = interceptedCommunications.map((comm: any) => comm.title)
+    const interceptedTitles = interceptedCommunications.map(comm => comm.title)
     const artifactTitles = wolvesRelease.artifacts.map(artifact => artifact.title)
 
     for (const title of interceptedTitles) {
