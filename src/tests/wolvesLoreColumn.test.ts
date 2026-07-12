@@ -1,7 +1,5 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import qrDonate from '@/assets/svg/qr-donate.svg'
-import qrStore from '@/assets/svg/qr-store.svg'
 import { bazziteQuotes } from '../components/wolves/lore'
 import WolvesLoreColumn from '../components/wolves/WolvesLoreColumn.vue'
 import { wolvesRelease } from '../data/wolves-story'
@@ -27,17 +25,13 @@ describe('wolvesLoreColumn.vue', () => {
     expect('sourceTitle' in bazziteQuotes[0]).toBe(false)
   })
 
-  it('renders QR images from Vite imports', () => {
+  it('renders the QR code component', () => {
     const wrapper = mount(WolvesLoreColumn, {
       props: {
         chapter: wolvesRelease.chapters[1],
       },
     })
 
-    const qrImages = wrapper.findAll('.qr-image-box img')
-
-    expect(qrImages).toHaveLength(2)
-    expect(qrImages[0].attributes('src')).toBe(qrStore)
-    expect(qrImages[1].attributes('src')).toBe(qrDonate)
+    expect(wrapper.findComponent({ name: 'WolvesQrCodes' }).exists()).toBe(true)
   })
 })
