@@ -7,7 +7,7 @@ import qrStore from '@/assets/svg/qr-store.svg'
   <section class="qr-grid" aria-label="Support Project Bluefin">
     <article class="qr-card">
       <h3 class="qr-title">
-        Store Access
+        Store
       </h3>
       <div class="qr-image-box">
         <img :src="qrStore" alt="QR code for the Project Bluefin store">
@@ -22,7 +22,7 @@ import qrStore from '@/assets/svg/qr-store.svg'
 
     <article class="qr-card">
       <h3 class="qr-title">
-        Donate Funds
+        Donate to Project Bluefin
       </h3>
       <div class="qr-image-box">
         <img :src="qrDonate" alt="QR code for Project Bluefin donations">
@@ -31,7 +31,7 @@ import qrStore from '@/assets/svg/qr-store.svg'
         <a href="#" class="qr-btn dark">
           DONATE
         </a>
-        <span class="qr-domain">docs.projectbluefin.io/donations</span>
+        <span class="qr-domain">donate url pending</span>
       </div>
     </article>
   </section>

@@ -12,7 +12,7 @@ if (!fs.existsSync(targetDir)) {
 }
 
 const storeUrl = 'https://store.projectbluefin.io'
-// Replace with the final Project Bluefin donation URL before launch.
+// TODO: Replace with the real Project Bluefin donation URL when available.
 const donateUrl = '#'
 
 async function generateQR(text, filename) {

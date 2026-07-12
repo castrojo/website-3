@@ -1,74 +1,66 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
-import { bazziteQuotes } from '../components/wolves/lore'
 import WolvesApp from '../WolvesApp.vue'
-
-const { comicReaderAttrsSpy, soundtrackAttrsSpy } = vi.hoisted(() => ({
-  comicReaderAttrsSpy: vi.fn(),
-  soundtrackAttrsSpy: vi.fn(),
-}))
 
 vi.mock('../components/TopNavbar.vue', () => ({
   default: { template: '<div>TopNavbar</div>' },
 }))
 
 vi.mock('../components/wolves/WolvesComicReader.vue', () => ({
-  default: defineComponent({
-    name: 'WolvesComicReaderStub',
-    inheritAttrs: false,
-    props: {
-      chapters: {
-        type: Array,
-        default: () => [],
-      },
-    },
-    setup(_, { attrs }) {
-      comicReaderAttrsSpy({ ...attrs })
-      return () => h('div', { class: 'comic-reader' }, 'WolvesComicReader')
-    },
-  }),
+  default: {
+    props: ['chapters', 'autoplay'],
+    emits: ['update:page'],
+    template: '<button class="comic-reader" @click="$emit(`update:page`, 6)">WolvesComicReader</button>',
+  },
 }))
 
 vi.mock('../components/wolves/WolvesSoundtrack.vue', () => ({
-  default: defineComponent({
-    name: 'WolvesSoundtrackStub',
-    inheritAttrs: false,
-    setup(_, { attrs }) {
-      soundtrackAttrsSpy({ ...attrs })
-      return () => h('div', { ...attrs }, 'WolvesSoundtrack')
-    },
-  }),
+  default: {
+    props: ['playing', 'chapter'],
+    template: '<div class="soundtrack-chapter">{{ chapter?.id ?? `none` }}</div>',
+  },
+}))
+
+vi.mock('../components/wolves/WolvesLoreColumn.vue', () => ({
+  default: {
+    props: ['chapter'],
+    template: '<div class="lore-chapter">{{ chapter?.id ?? `none` }}</div>',
+  },
+}))
+
+vi.mock('../components/wolves/WolvesQrCodes.vue', () => ({
+  default: {
+    template: '<div class="wolves-qr-codes">WolvesQrCodes</div>',
+  },
 }))
 
 describe('wolvesApp.vue', () => {
-  it('orders the mobile landmarks comic, soundtrack, lore, and QR codes', () => {
+  it('renders the page title, lore column, bottom QR section, and discord mesh link', () => {
     const wrapper = mount(WolvesApp)
-    const ids = wrapper.findAll('[data-testid]').map(node => node.attributes('data-testid'))
 
-    expect(ids).toEqual([
-      'wolves-comic-column',
-      'wolves-soundtrack',
-      'wolves-lore-column',
-      'wolves-qr-codes',
-    ])
     expect(wrapper.text()).toContain('Seven Days to the Wolves')
-    expect(wrapper.text()).toContain(bazziteQuotes[0].attribution)
-    expect(wrapper.findAll('.qr-grid')).toHaveLength(1)
-    const loreColumn = wrapper.get('[data-testid="wolves-lore-column"]')
-    expect(loreColumn.findAll('.qr-grid')).toHaveLength(0)
-    expect(wrapper.text()).not.toContain('JOIN THE MESH (DISCORD)')
+    expect(wrapper.text()).toContain('JOIN THE MESH (DISCORD)')
+    expect(wrapper.find('.lore-chapter').text()).toBe('prologue')
+    expect(wrapper.find('.wolves-page-qr').exists()).toBe(true)
+    expect(wrapper.find('.wolves-qr-codes').exists()).toBe(true)
   })
 
-  it('does not couple comic page events to the soundtrack', () => {
+  it('passes the active chapter to soundtrack and lore when the comic page changes', async () => {
     const wrapper = mount(WolvesApp)
-    const comicReader = wrapper.findComponent({ name: 'WolvesComicReaderStub' })
-    const soundtrack = wrapper.findComponent({ name: 'WolvesSoundtrackStub' })
 
-    expect(comicReader.props()).not.toHaveProperty('autoplay')
-    expect(comicReaderAttrsSpy.mock.lastCall?.[0]).not.toHaveProperty('autoplay')
-    expect(soundtrack.props()).toEqual({})
-    expect(soundtrackAttrsSpy.mock.lastCall?.[0]).not.toHaveProperty('playing')
-    expect(soundtrackAttrsSpy.mock.lastCall?.[0]).not.toHaveProperty('chapter')
+    await wrapper.find('.comic-reader').trigger('click')
+
+    expect(wrapper.find('.soundtrack-chapter').text()).toBe('pursuit')
+    expect(wrapper.find('.lore-chapter').text()).toBe('pursuit')
+  })
+
+  it('handles email submission in the terminal console card', async () => {
+    const wrapper = mount(WolvesApp)
+
+    const input = wrapper.find('.console-input')
+    await input.setValue('operative@projectbluefin.io')
+    await wrapper.find('.console-form').trigger('submit')
+
+    expect(wrapper.find('.console-feedback').text()).toContain('kubectl rollout status')
   })
 })
