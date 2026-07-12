@@ -120,14 +120,19 @@ const mixedPhotos = computed(() => {
     title: p.title,
     type: 'single' as const,
     dayName: undefined,
-    nightName: undefined
+    nightName: undefined,
+    rawPhoto: p
   }))
 
   // 4. Combine and apply random-offset bias scores
-  // Showcase gets score range [0.0, 0.4] (strongly biased to start)
+  // First 3 showcase screenshots get score range [0.0, 0.1] (strictly pinned to start of playlist)
+  // Remaining showcase screenshots get score range [0.1, 0.4]
   // People (local and remote) get score range [0.3, 1.0] (biased to end)
   const scored = [
-    ...localShowcase.map(p => ({ p, score: Math.random() * 0.4 })),
+    ...localShowcase.map((p, idx) => {
+      const score = idx < 3 ? (Math.random() * 0.1) : (0.1 + Math.random() * 0.3)
+      return { p, score }
+    }),
     ...localPeople.map(p => ({ p, score: 0.3 + Math.random() * 0.7 })),
     ...remotePeople.map(p => ({ p, score: 0.3 + Math.random() * 0.7 }))
   ]
@@ -179,6 +184,42 @@ function getFlickrPhotoUrl(photo: any) {
     return `${baseUrl}img/wallpapers/${photo.path}`
   }
   return photo.path
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  const copy = [...array]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
+function handleImageError(event: Event, photo: any) {
+  const img = event.target as HTMLImageElement
+  if (!photo) {
+    return
+  }
+
+  if (img.src.includes('bluespeed-cluster.png')) {
+    // Already fell back to local cluster wallpaper, stop recursion
+    return
+  }
+
+  // If this is a remote Flickr photo and we tried _b.jpg, fallback to _z.jpg (guaranteed fallback)
+  if (!photo.isLocal && img.src.includes('_b.jpg')) {
+    img.src = img.src.replace('_b.jpg', '_z.jpg')
+    return
+  }
+
+  // If _z.jpg also fails or if it's already on _z.jpg, fallback to medium size (no suffix)
+  if (!photo.isLocal && img.src.includes('_z.jpg')) {
+    img.src = img.src.replace('_z.jpg', '.jpg')
+    return
+  }
+
+  // Final fallback to a guaranteed gorgeous local showcase screenshot to avoid "black screens"
+  img.src = `${baseUrl}img/wallpapers/wolves/showcase/bluespeed-cluster.png`
 }
 
 // Active chapter ───────────────────────────────────────────────────────────
@@ -463,7 +504,8 @@ onMounted(async () => {
   try {
     const response = await fetch(`${import.meta.env.BASE_URL}flickr-photos.json`)
     if (response.ok) {
-      flickrPhotos.value = await response.json()
+      const rawPhotos = await response.json()
+      flickrPhotos.value = shuffleArray(rawPhotos)
     }
   }
   catch (err) {
@@ -494,14 +536,15 @@ onBeforeUnmount(() => {
           <div v-if="props.trackIndex && props.trackIndex > 0" class="flickr-gallery-wrapper">
             <!-- Previous Photo (fading out) -->
             <div
-              v-if="previousPhotoIndex !== null && mixedPhotos[previousPhotoIndex]"
+              v-if="previousPhotoIndex !== null && mixedPhotos[previousPhotoIndex!]"
               class="flickr-photo-layer fading-out"
               :style="{ animationDuration: `${currentTrack?.fadeDuration ?? 1500}ms` }"
             >
               <img
-                :src="getFlickrPhotoUrl(mixedPhotos[previousPhotoIndex])"
+                :src="getFlickrPhotoUrl(mixedPhotos[previousPhotoIndex!])"
                 class="flickr-img"
-                :alt="mixedPhotos[previousPhotoIndex]?.title"
+                :alt="mixedPhotos[previousPhotoIndex!]?.title"
+                @error="(e) => handleImageError(e, mixedPhotos[previousPhotoIndex!])"
               >
             </div>
 
@@ -516,12 +559,16 @@ onBeforeUnmount(() => {
                 :src="getFlickrPhotoUrl(mixedPhotos[activePhotoIndex])"
                 class="flickr-img"
                 :alt="mixedPhotos[activePhotoIndex]?.title"
+                @error="(e) => handleImageError(e, mixedPhotos[activePhotoIndex])"
               >
             </div>
 
             <!-- Sleek photo caption -->
             <div v-if="mixedPhotos[activePhotoIndex]" class="flickr-caption font-mono">
-              <span class="caption-label text-cyan">CNCF STREAM //</span> {{ mixedPhotos[activePhotoIndex].title }}
+              <span class="caption-label text-cyan">
+                {{ mixedPhotos[activePhotoIndex].isLocal ? 'BLUEFIN SHOWCASE //' : 'CNCF STREAM //' }}
+              </span>
+              {{ mixedPhotos[activePhotoIndex].title }}
             </div>
           </div>
 
