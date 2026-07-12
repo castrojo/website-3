@@ -7,11 +7,15 @@ import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
 const props = defineProps<{
   chapter?: WolvesChapter
   playing?: boolean
+  loreCopied?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:playing', playing: boolean): void
   (e: 'trackChange', index: number): void
+  (e: 'prevLore'): void
+  (e: 'nextLore'): void
+  (e: 'shareLore'): void
 }>()
 
 type PlayerStatus = 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'error'
@@ -443,15 +447,41 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <button
-          type="button"
-          class="soundtrack-action"
-          :aria-label="actionAriaLabel"
-          :disabled="status === 'loading'"
-          @click="handlePrimaryAction"
-        >
-          {{ actionLabel }}
-        </button>
+        <div class="soundtrack-controls-group">
+          <button
+            type="button"
+            class="quote-nav-btn prev"
+            aria-label="Previous transcript"
+            @click="emit('prevLore')"
+          >
+            &larr;
+          </button>
+          <button
+            type="button"
+            class="soundtrack-action"
+            :aria-label="actionAriaLabel"
+            :disabled="status === 'loading'"
+            @click="handlePrimaryAction"
+          >
+            {{ actionLabel }}
+          </button>
+          <button
+            type="button"
+            class="quote-nav-btn next"
+            aria-label="Next transcript"
+            @click="emit('nextLore')"
+          >
+            &rarr;
+          </button>
+          <button
+            type="button"
+            class="quote-nav-btn share-btn font-mono"
+            :aria-label="loreCopied ? 'Transcript copied' : 'Share transcript'"
+            @click="emit('shareLore')"
+          >
+            {{ loreCopied ? 'COPIED!' : 'SHARE' }}
+          </button>
+        </div>
       </div>
 
       <div class="soundtrack-lyrics-panel">
@@ -794,13 +824,61 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
+.soundtrack-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+
+  @media (min-width: 900px) {
+    justify-self: end;
+  }
+
+  @media (max-width: 767px) {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+    margin-top: 12px;
+  }
+}
+
+.quote-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(66, 133, 244, 0.45);
+  background-color: #10151f;
+  color: #66b3ff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(66, 133, 244, 0.15);
+    border-color: #7dd3fc;
+    color: #ffffff;
+  }
+}
+
+.quote-nav-btn.share-btn {
+  width: auto;
+  min-width: 68px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-weight: bold;
+}
+
 @media (max-width: 767px) {
   .soundtrack-panel-main {
     grid-template-columns: auto 1fr;
   }
 
   .soundtrack-action {
-    grid-column: 1 / -1;
     width: 100%;
   }
 }

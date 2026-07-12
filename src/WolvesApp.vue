@@ -33,6 +33,25 @@ const isPlaying = ref(false)
 const currentPage = ref(1)
 const activeChapter = computed<WolvesChapter | undefined>(() => getChapterForPage(currentPage.value))
 
+const loreColumnRef = ref<any>(null)
+const isLoreCopied = ref(false)
+
+function handlePrevLore() {
+  loreColumnRef.value?.prevLore()
+}
+
+function handleNextLore() {
+  loreColumnRef.value?.nextLore()
+}
+
+function handleShareLore() {
+  loreColumnRef.value?.shareLore()
+}
+
+function handleCopiedStatus(status: boolean) {
+  isLoreCopied.value = status
+}
+
 function handleTrackChange(index: number) {
   if (index === 0) {
     currentPage.value = 1
@@ -109,12 +128,20 @@ function handleEmailSubmit() {
           <WolvesSoundtrack
             v-model:playing="isPlaying"
             :chapter="activeChapter"
+            :lore-copied="isLoreCopied"
             @track-change="handleTrackChange"
+            @prev-lore="handlePrevLore"
+            @next-lore="handleNextLore"
+            @share-lore="handleShareLore"
           />
         </div>
 
         <div class="col-right">
-          <WolvesLoreColumn :chapter="activeChapter" />
+          <WolvesLoreColumn
+            ref="loreColumnRef"
+            :chapter="activeChapter"
+            @copied-status="handleCopiedStatus"
+          />
 
           <!-- Decryption Status Meter -->
           <div class="decryption-meter-card">

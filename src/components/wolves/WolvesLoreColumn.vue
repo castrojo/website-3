@@ -8,6 +8,16 @@ const props = defineProps<{
   chapter?: WolvesChapter
 }>()
 
+const emit = defineEmits<{
+  (e: 'copiedStatus', status: boolean): void
+}>()
+
+const isCopied = ref(false)
+
+watch(isCopied, (newVal) => {
+  emit('copiedStatus', newVal)
+})
+
 const filteredLoreEntries = computed(() => getLoreEntriesForChapter(props.chapter))
 const currentLoreIndex = ref(0)
 const currentLoreEntry = computed<WolvesLoreEntry | null>(() => filteredLoreEntries.value[currentLoreIndex.value] ?? null)
@@ -17,7 +27,6 @@ const typedMessagesText = ref<string[]>([])
 let loreTimer: ReturnType<typeof setInterval> | null = null
 let typewriterTimer: ReturnType<typeof setInterval> | null = null
 
-const isCopied = ref(false)
 let copyTimeout: ReturnType<typeof setTimeout> | null = null
 
 function clearTypewriter() {
@@ -214,39 +223,19 @@ onBeforeUnmount(() => {
     clearTimeout(copyTimeout)
   }
 })
+
+defineExpose({
+  nextLore,
+  prevLore,
+  shareLore,
+  isCopied,
+})
 </script>
 
 <template>
   <div class="wolves-lore-column">
     <section id="intercepted-communications" class="dispatch-quote-section comic-reader-section">
       <div class="dispatch-quote-card">
-        <div class="quote-nav">
-          <button
-            class="quote-nav-btn share-btn font-mono"
-            :aria-label="isCopied ? 'Transcript copied' : 'Share transcript'"
-            type="button"
-            @click="shareLore"
-          >
-            {{ isCopied ? 'COPIED!' : 'SHARE' }}
-          </button>
-          <button
-            class="quote-nav-btn prev"
-            aria-label="Previous transcript"
-            type="button"
-            @click="prevLore"
-          >
-            &larr;
-          </button>
-          <button
-            class="quote-nav-btn next"
-            aria-label="Next transcript"
-            type="button"
-            @click="nextLore"
-          >
-            &rarr;
-          </button>
-        </div>
-
         <div class="dispatch-plan-content">
           <p class="dispatch-plan-command">
             nimbinatus@blue-universal:~$ monitor --archive
@@ -541,55 +530,7 @@ onBeforeUnmount(() => {
   color: rgba(189, 189, 189, 0.6);
 }
 
-.quote-nav {
-  display: flex;
-  gap: 8px;
-  z-index: 3;
-
-  @media (max-width: 479px) {
-    position: static;
-    margin-bottom: 12px;
-    justify-content: flex-end;
-  }
-
-  @media (min-width: 480px) {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-  }
-}
-
-.quote-nav-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--color-blue-rgb), 0.45);
-  background-color: #10151f;
-  color: var(--color-blue-light);
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: rgba(var(--color-blue-rgb), 0.15);
-    border-color: var(--color-blue-light);
-    color: #ffffff;
-  }
-}
-
-.quote-nav-btn.share-btn {
-  width: auto;
-  min-width: 68px;
-  padding: 0 12px;
-  font-size: 0.85rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-weight: bold;
-}
-
+/* Communication transition effects */
 .quote-fade-enter-active,
 .quote-fade-leave-active {
   transition: opacity 0.5s ease-in-out;
