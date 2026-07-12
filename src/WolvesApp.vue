@@ -1413,7 +1413,8 @@ onBeforeUnmount(() => {
 .immersive-hud-header {
   height: 80px; /* Upgraded from 60px to fit 50% larger typography comfortably */
   border-bottom: 1px solid rgba(102, 179, 255, 0.2);
-  background: rgba(16, 21, 31, 0.5);
+  background: rgba(16, 21, 31, 0.45);
+  backdrop-filter: blur(12px);
   padding: 0 24px;
   display: flex;
   align-items: center;
@@ -1519,6 +1520,10 @@ onBeforeUnmount(() => {
 
   /* 1.5x typography scale-up for all lore column elements when in immersive mode */
   :deep(.dispatch-plan-content) {
+    background: linear-gradient(180deg, rgba(16, 21, 31, 0.45) 0%, rgba(12, 16, 22, 0.45) 100%) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(102, 179, 255, 0.2) !important;
+
     .dispatch-plan-command {
       font-size: 1.35rem !important;
     }
@@ -1569,6 +1574,9 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background-color: rgba(16, 21, 31, 0.45) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(102, 179, 255, 0.25) !important;
   }
 
   :deep(.quote-viewport) {
@@ -1595,7 +1603,8 @@ onBeforeUnmount(() => {
 .immersive-hud-footer {
   height: 120px; /* Upgraded from 96px to fit 50% larger typography comfortably */
   border-top: 1px solid rgba(102, 179, 255, 0.2);
-  background: rgba(16, 21, 31, 0.6);
+  background: rgba(16, 21, 31, 0.45);
+  backdrop-filter: blur(12px);
   padding: 0 24px;
   display: flex;
   align-items: center;
