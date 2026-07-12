@@ -43,6 +43,7 @@ const iframeApiSrc = 'https://www.youtube.com/iframe_api'
 interface MockPlayerRecord {
   config: any
   element: Element | string
+  mountedNode: HTMLIFrameElement
   playlistIndex: number
   playVideo: ReturnType<typeof vi.fn>
   pauseVideo: ReturnType<typeof vi.fn>
@@ -59,6 +60,7 @@ function installMockIframeApi() {
   class MockPlayer {
     config: any
     element: Element | string
+    mountedNode: HTMLIFrameElement
     playlistIndex = 0
     playVideo = vi.fn(() => {
       this.config.events?.onStateChange?.({
@@ -80,6 +82,16 @@ function installMockIframeApi() {
     constructor(element: Element | string, config: any) {
       this.element = element
       this.config = config
+      const mountNode = element as HTMLElement
+      if (!mountNode.parentElement) {
+        throw new Error('MockPlayer target must stay attached')
+      }
+
+      const replacementPlayer = document.createElement('iframe')
+      replacementPlayer.title = 'Mock YouTube Player'
+      replacementPlayer.setAttribute('data-mock-youtube-player', String(players.length))
+      mountNode.replaceWith(replacementPlayer)
+      this.mountedNode = replacementPlayer
       players.push(this as unknown as MockPlayerRecord)
     }
 
@@ -154,6 +166,7 @@ describe('wolves soundtrack', () => {
 
   it('keeps the same player while unrelated reader events occur', async () => {
     const wrapper = mount(WolvesSoundtrack)
+    const persistentHost = wrapper.get('[data-testid="wolves-player-host"]').element
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
@@ -163,16 +176,15 @@ describe('wolves soundtrack', () => {
     players[0].triggerReady()
     await flushPromises()
 
-    const playerNode = wrapper.get('[data-testid="wolves-player-host"]').element
-
     await wrapper.setProps({})
 
-    expect(wrapper.get('[data-testid="wolves-player-host"]').element).toBe(playerNode)
+    expect(wrapper.get('[data-testid="wolves-player-host"]').element).toBe(persistentHost)
     expect(players).toHaveLength(1)
   })
 
   it('makes the persistent player host visible and accessible after soundtrack start', async () => {
     const wrapper = mount(WolvesSoundtrack, { attachTo: document.body })
+    const persistentHost = wrapper.get('[data-testid="wolves-player-host"]').element as HTMLElement
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
@@ -184,6 +196,9 @@ describe('wolves soundtrack', () => {
 
     const playerShell = wrapper.get('.wolves-player-host-shell').element as HTMLElement
     const playerHost = wrapper.get('[data-testid="wolves-player-host"]').element as HTMLElement
+
+    expect(playerHost).toBe(persistentHost)
+    expect(playerHost.contains(players[0].mountedNode)).toBe(true)
 
     expect(playerShell.getAttribute('aria-hidden')).toBeNull()
 
@@ -233,16 +248,22 @@ describe('wolves soundtrack', () => {
     expect(wrapper.get('a[aria-label="Open soundtrack in YouTube Music"]').attributes('href')).toContain('music.youtube.com')
   })
 
-  it('retries with a fresh player while keeping the same host after a player error', async () => {
+  it('retries inside the same outer host after YouTube replaces the inner mount', async () => {
     const wrapper = mount(WolvesSoundtrack)
+    const persistentHost = wrapper.get('[data-testid="wolves-player-host"]').element as HTMLElement
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
 
     resolveIframeApi()
     await flushPromises()
+    players[0].triggerReady()
+    await flushPromises()
 
-    const failedHost = wrapper.get('[data-testid="wolves-player-host"]').element
+    expect(wrapper.get('[data-testid="wolves-player-host"]').element).toBe(persistentHost)
+    expect(wrapper.element.contains(persistentHost)).toBe(true)
+    expect(persistentHost.contains(players[0].mountedNode)).toBe(true)
+
     players[0].triggerError()
     await flushPromises()
 
@@ -253,7 +274,10 @@ describe('wolves soundtrack', () => {
 
     expect(players[0].destroy).toHaveBeenCalledTimes(1)
     expect(players).toHaveLength(2)
-    expect(wrapper.get('[data-testid="wolves-player-host"]').element).toBe(failedHost)
+    expect(wrapper.get('[data-testid="wolves-player-host"]').element).toBe(persistentHost)
+    expect(wrapper.element.contains(persistentHost)).toBe(true)
+    expect(persistentHost.contains(players[0].mountedNode)).toBe(false)
+    expect(persistentHost.contains(players[1].mountedNode)).toBe(true)
 
     players[1].triggerReady()
     await flushPromises()

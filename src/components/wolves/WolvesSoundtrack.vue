@@ -51,6 +51,7 @@ const currentTrackIndex = ref(0)
 const playerHost = ref<HTMLElement | null>(null)
 
 let player: YouTubePlayer | null = null
+let playerMount: HTMLDivElement | null = null
 let youtubeApiPromise: Promise<void> | null = null
 let shouldAutoplayOnReady = false
 
@@ -212,7 +213,14 @@ function createPlayer() {
     throw new Error('YouTube player constructor unavailable')
   }
 
-  player = new youtubeWindow.YT.Player(playerHost.value, {
+  if (!playerMount?.isConnected) {
+    playerHost.value.replaceChildren()
+    playerMount = document.createElement('div')
+    playerMount.className = 'wolves-player-mount'
+    playerHost.value.appendChild(playerMount)
+  }
+
+  player = new youtubeWindow.YT.Player(playerMount, {
     playerVars: {
       listType: 'playlist',
       list: source.playlistId,
@@ -258,9 +266,11 @@ function createPlayer() {
   })
 }
 
-async function resetFailedPlayer() {
+function resetFailedPlayer() {
   player?.destroy?.()
   player = null
+  playerMount = null
+  playerHost.value?.replaceChildren()
 }
 
 async function startSoundtrack() {
@@ -269,7 +279,7 @@ async function startSoundtrack() {
   }
 
   if (status.value === 'error') {
-    await resetFailedPlayer()
+    resetFailedPlayer()
   }
 
   status.value = 'loading'
@@ -315,6 +325,7 @@ onBeforeUnmount(() => {
   syncRootPlayerClass(false)
   player?.destroy?.()
   player = null
+  playerMount = null
 })
 </script>
 
@@ -616,6 +627,14 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     min-height: 220px;
+  }
+
+  > * {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+    border: 0;
   }
 }
 
