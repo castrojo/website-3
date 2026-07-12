@@ -37,22 +37,6 @@
     ]
   },
   {
-    "title": "Do Not Reply",
-    "channel": "SABOT-6",
-    "date": "2326-05-24",
-    "messages": [
-      {
-        "speaker": "UNMARKED GRAVE",
-        "text": "Under no circumstance let the stupid one manage secrets.",
-        "timestamp": "00:00:01"
-      },
-      {
-        "speaker": "SYSTEM",
-        "text": "MESSAGE RECEIVED. ORIGIN UNVERIFIED."
-      }
-    ]
-  },
-  {
     "title": "The Garden Before Time",
     "channel": "ISHTAR//UNVEILING-01",
     "date": "ARCHIVAL",
@@ -323,7 +307,7 @@
       },
       {
         "speaker": "Jordan",
-        "text": "I've never seen anything like it. They fight like demons. Do not worry my friend, when you see the what we are up against you're not going to care what the Elders think. Clanker or no clanker, it doesn't matter. Tomorrow all open source goes to war."
+        "text": "They fight like demons. Do not worry my friend, when you see the what we are up against you're not going to care what the Elders think. Clankers or no clankers, it doesn't matter. Tomorrow all open source goes to war."
       }
     ]
   },

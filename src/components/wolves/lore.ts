@@ -41,7 +41,12 @@ const loreEntries = shuffleLoreEntries([
 
 export function getChapterIdForLore(entry: WolvesLoreEntry): string {
   if (entry.type === 'quote') {
-    return 'pursuit'
+    const chapterIds = ['prologue', 'pursuit', 'awakening'] as const
+    const quoteIndex = bazziteQuotes.findIndex(quote => quote.quote === entry.data.quote)
+    if (quoteIndex === -1) {
+      return 'prologue'
+    }
+    return chapterIds[(quoteIndex + 1) % chapterIds.length]
   }
 
   const title = entry.data.title
