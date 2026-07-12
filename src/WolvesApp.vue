@@ -96,6 +96,162 @@ const currentLoreIndex = ref(0)
 const currentLoreEntry = computed<LoreEntry | null>(() => filteredLoreEntries.value[currentLoreIndex.value] ?? null)
 let loreTimer: ReturnType<typeof setInterval> | null = null
 
+// Typewriter reveal effect state & logic
+const typedQuoteText = ref('')
+const typedMessagesText = ref<string[]>([])
+let typewriterTimer: ReturnType<typeof setInterval> | null = null
+
+function runTypewriter() {
+  if (typewriterTimer) {
+    clearInterval(typewriterTimer)
+    typewriterTimer = null
+  }
+
+  const entry = currentLoreEntry.value
+  if (!entry) {
+    return
+  }
+
+  if (entry.type === 'quote') {
+    typedQuoteText.value = ''
+    const targetText = entry.data.quote
+    let idx = 0
+    const step = Math.max(1, Math.ceil(targetText.length / 30)) // complete in ~30 frames
+    typewriterTimer = setInterval(() => {
+      idx += step
+      if (idx >= targetText.length) {
+        typedQuoteText.value = targetText
+        clearInterval(typewriterTimer!)
+        typewriterTimer = null
+      }
+      else {
+        const cyberChars = '01#$@&%<>_+'
+        const randChar = cyberChars[Math.floor(Math.random() * cyberChars.length)]
+        typedQuoteText.value = targetText.slice(0, idx) + randChar
+      }
+    }, 20)
+  }
+  else if (entry.type === 'conversation') {
+    typedMessagesText.value = entry.data.messages.map(() => '')
+    const messages = entry.data.messages
+    let frame = 0
+    typewriterTimer = setInterval(() => {
+      frame++
+      let allDone = true
+      for (let i = 0; i < messages.length; i++) {
+        const targetText = messages[i].text
+        const step = Math.max(1, Math.ceil(targetText.length / 30))
+        const currentLen = frame * step
+        if (currentLen < targetText.length) {
+          const cyberChars = '01#$@&%<>_+'
+          const randChar = cyberChars[Math.floor(Math.random() * cyberChars.length)]
+          typedMessagesText.value[i] = targetText.slice(0, currentLen) + randChar
+          allDone = false
+        }
+        else {
+          typedMessagesText.value[i] = targetText
+        }
+      }
+      if (allDone) {
+        clearInterval(typewriterTimer!)
+        typewriterTimer = null
+      }
+    }, 20)
+  }
+}
+
+function skipTypewriter() {
+  if (typewriterTimer) {
+    clearInterval(typewriterTimer)
+    typewriterTimer = null
+  }
+  const entry = currentLoreEntry.value
+  if (!entry) {
+    return
+  }
+  if (entry.type === 'quote') {
+    typedQuoteText.value = entry.data.quote
+  }
+  else if (entry.type === 'conversation') {
+    typedMessagesText.value = entry.data.messages.map(m => m.text)
+  }
+}
+
+watch(currentLoreEntry, () => {
+  runTypewriter()
+}, { immediate: true })
+
+// Lore manual navigation
+function nextLore() {
+  const len = filteredLoreEntries.value.length
+  if (len <= 1) {
+    return
+  }
+  currentLoreIndex.value = (currentLoreIndex.value + 1) % len
+  restartLoreTimer()
+}
+
+function prevLore() {
+  const len = filteredLoreEntries.value.length
+  if (len <= 1) {
+    return
+  }
+  currentLoreIndex.value = (currentLoreIndex.value - 1 + len) % len
+  restartLoreTimer()
+}
+
+// Lore share action
+const isCopied = ref(false)
+let copyTimeout: ReturnType<typeof setTimeout> | null = null
+
+function shareLore() {
+  const entry = currentLoreEntry.value
+  if (!entry) {
+    return
+  }
+
+  let shareText = ''
+  const pageUrl = window.location.href.split('#')[0]
+
+  if (entry.type === 'quote') {
+    shareText = `[Bluefin Archive Quote]
+"${entry.data.quote}"
+— ${entry.data.person} (${entry.data.sourceType}: ${entry.data.sourceTitle}${entry.data.sourceDetail ? ` — ${entry.data.sourceDetail}` : ''})
+${pageUrl}`
+  }
+  else if (entry.type === 'conversation') {
+    const messages = entry.data.messages
+      .map(m => `${m.speaker}: ${m.text}`)
+      .join('\n')
+    shareText = `[Bluefin Archive Intercept - ${entry.data.title}]
+Channel: ${entry.data.channel} | Date: ${entry.data.date}
+${messages}
+${pageUrl}`
+  }
+
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    void navigator.clipboard.writeText(shareText).then(() => {
+      isCopied.value = true
+      if (copyTimeout) {
+        clearTimeout(copyTimeout)
+      }
+      copyTimeout = setTimeout(() => {
+        isCopied.value = false
+      }, 2000)
+    })
+  }
+  else {
+    isCopied.value = true
+    if (copyTimeout) {
+      clearTimeout(copyTimeout)
+    }
+    copyTimeout = setTimeout(() => {
+      isCopied.value = false
+    }, 2000)
+  }
+  restartLoreTimer()
+}
+
 function stopLoreTimer() {
   if (loreTimer) {
     clearInterval(loreTimer)
@@ -150,6 +306,12 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopLoreTimer()
+  if (typewriterTimer) {
+    clearInterval(typewriterTimer)
+  }
+  if (copyTimeout) {
+    clearTimeout(copyTimeout)
+  }
 })
 </script>
 
@@ -203,6 +365,34 @@ onBeforeUnmount(() => {
           <!-- SECTION 3: INTERCEPTED COMMUNICATIONS -->
           <section id="intercepted-communications" class="comic-reader-section dispatch-quote-section">
             <div class="dispatch-quote-card">
+              <!-- Lore navigation and actions -->
+              <div class="quote-nav">
+                <button
+                  class="quote-nav-btn share-btn font-mono"
+                  :aria-label="isCopied ? 'Transcript copied' : 'Share transcript'"
+                  type="button"
+                  @click="shareLore"
+                >
+                  {{ isCopied ? 'COPIED!' : 'SHARE' }}
+                </button>
+                <button
+                  class="quote-nav-btn prev"
+                  aria-label="Previous transcript"
+                  type="button"
+                  @click="prevLore"
+                >
+                  &larr;
+                </button>
+                <button
+                  class="quote-nav-btn next"
+                  aria-label="Next transcript"
+                  type="button"
+                  @click="nextLore"
+                >
+                  &rarr;
+                </button>
+              </div>
+
               <div class="dispatch-plan-content">
                 <p class="dispatch-plan-command">
                   nimbinatus@blue-universal:~$ monitor --archive
@@ -217,7 +407,7 @@ onBeforeUnmount(() => {
                 </p>
               </div>
 
-              <div class="quote-viewport">
+              <div class="quote-viewport" @click="skipTypewriter">
                 <Transition name="quote-fade">
                   <div
                     v-if="currentLoreEntry"
@@ -241,7 +431,7 @@ onBeforeUnmount(() => {
                           <span class="conversation-speaker">{{ message.speaker }}</span>
                           <time v-if="message.timestamp">{{ message.timestamp }}</time>
                         </div>
-                        <p>{{ message.text }}</p>
+                        <p>{{ typedMessagesText[index] ?? '' }}</p>
                       </li>
                     </ol>
                     <div
@@ -268,7 +458,7 @@ onBeforeUnmount(() => {
                         &ldquo;
                       </div>
                       <p class="lore-quote-text">
-                        {{ currentLoreEntry.data.quote }}
+                        {{ typedQuoteText }}
                       </p>
                       <div class="lore-quote-meta">
                         <strong>{{ currentLoreEntry.data.person }}</strong>
@@ -585,8 +775,12 @@ onBeforeUnmount(() => {
   background: linear-gradient(180deg, rgba(16, 21, 31, 0.98) 0%, rgba(12, 16, 22, 0.98) 100%);
   border: 1px solid rgba(var(--color-blue-rgb), 0.22);
   border-radius: 10px;
-  padding: 12px 96px 12px 14px;
+  padding: 12px 14px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  @media (min-width: 480px) {
+    padding-right: 192px;
+  }
 }
 
 .dispatch-plan-command {
@@ -746,12 +940,21 @@ onBeforeUnmount(() => {
 }
 
 .quote-nav {
-  position: absolute;
-  top: 24px;
-  right: 24px;
   display: flex;
   gap: 8px;
   z-index: 3;
+
+  @media (max-width: 479px) {
+    position: static;
+    margin-bottom: 12px;
+    justify-content: flex-end;
+  }
+
+  @media (min-width: 480px) {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+  }
 }
 
 .quote-nav-btn {

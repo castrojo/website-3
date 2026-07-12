@@ -59,6 +59,7 @@ const scrollCards = ref<(HTMLElement | null)[]>([])
 
 let flipResizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
+let activePageObserver: IntersectionObserver | null = null
 
 function setScrollCanvasRef(el: Element | null, index: number) {
   scrollCanvases.value[index] = el as HTMLCanvasElement | null
@@ -169,9 +170,11 @@ function setupFlipResizeObserver() {
 
 function setupIntersectionObserver() {
   intersectionObserver?.disconnect()
+  activePageObserver?.disconnect()
   if (typeof IntersectionObserver === 'undefined') {
     return
   }
+  // Render observer: preloads canvas elements before they hit the viewport
   intersectionObserver = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
@@ -185,9 +188,27 @@ function setupIntersectionObserver() {
       }
     }
   }, { rootMargin: '800px 0px' })
+
+  // Active page detector: updates active page state as user manually scrolls
+  activePageObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const n = Number((entry.target as HTMLElement).dataset.page)
+        if (n !== page.value) {
+          setPage(n, false)
+        }
+      }
+    }
+  }, {
+    root: null,
+    rootMargin: '-35% 0px -45% 0px',
+    threshold: 0,
+  })
+
   for (const card of scrollCards.value) {
     if (card) {
       intersectionObserver.observe(card)
+      activePageObserver.observe(card)
     }
   }
 }
@@ -218,6 +239,8 @@ async function loadComicPdf() {
 
 // Autoplay / Autoscroll Timer
 let autoplayTimer: ReturnType<typeof setInterval> | null = null
+const localAutoplay = ref(false)
+const isProgrammaticScroll = ref(false)
 
 function stopAutoplayTimer() {
   if (autoplayTimer) {
@@ -232,29 +255,36 @@ function startAutoplayTimer() {
   }
   autoplayTimer = setInterval(() => {
     if (page.value < totalPages.value) {
-      setPage(page.value + 1)
+      setPage(page.value + 1, true)
     }
     else {
       // Loop back to page 1 at the end
-      setPage(1)
+      setPage(1, true)
     }
   }, 10000) // Paced at 10 seconds per page
 }
 
 watch(() => props.autoplay, (val) => {
+  localAutoplay.value = !!val
+}, { immediate: true })
+
+watch(localAutoplay, (val) => {
   if (val) {
     startAutoplayTimer()
   }
   else {
     stopAutoplayTimer()
   }
-}, { immediate: true })
+})
 
 // Navigation ───────────────────────────────────────────────────────────────
-function setPage(n: number) {
+function setPage(n: number, programmatic = true) {
+  if (programmatic) {
+    isProgrammaticScroll.value = true
+  }
   page.value = n
   emit('update:page', n)
-  if (props.autoplay) {
+  if (localAutoplay.value && programmatic) {
     stopAutoplayTimer()
     startAutoplayTimer()
   }
@@ -268,10 +298,13 @@ watch(page, (n) => {
     }
   }
   else {
-    const card = scrollCards.value[n - 1]
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (isProgrammaticScroll.value) {
+      const card = scrollCards.value[n - 1]
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
+    isProgrammaticScroll.value = false
   }
 })
 
@@ -288,6 +321,7 @@ watch(readingMode, async (mode) => {
   await nextTick()
   if (mode === 'paged') {
     intersectionObserver?.disconnect()
+    activePageObserver?.disconnect()
     setupFlipResizeObserver()
     renderFlipPage()
   }
@@ -356,6 +390,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown)
   flipResizeObserver?.disconnect()
   intersectionObserver?.disconnect()
+  activePageObserver?.disconnect()
   renderTasks.forEach(task => task.cancel())
   renderTasks.clear()
   pdfDocument?.destroy()
@@ -386,6 +421,18 @@ onBeforeUnmount(() => {
           Continuous Scroll
         </button>
       </div>
+
+      <!-- Autoplay Toggle -->
+      <button
+        class="autoplay-toggle-btn font-mono"
+        :class="{ 'is-active': localAutoplay }"
+        :aria-label="localAutoplay ? 'Disable page autoplay' : 'Enable page autoplay'"
+        type="button"
+        @click="localAutoplay = !localAutoplay"
+      >
+        <span class="indicator-dot" />
+        {{ localAutoplay ? 'AUTOPLAY: ACTIVE' : 'AUTOPLAY: PAUSED' }}
+      </button>
     </div>
 
     <!-- Paged mode -->
@@ -517,8 +564,57 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+
+  @media (min-width: 600px) {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.autoplay-toggle-btn {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  background-color: #10151f;
+  border: 1px solid #272727;
+  color: #bdbdbd;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(66, 133, 244, 0.4);
+    color: #ffffff;
+  }
+
+  &.is-active {
+    border-color: #27c93f;
+    color: #27c93f;
+    box-shadow: 0 0 10px rgba(39, 201, 63, 0.2);
+
+    .indicator-dot {
+      background-color: #27c93f;
+      box-shadow: 0 0 8px #27c93f;
+    }
+  }
+
+  .indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #5d5d5d;
+    transition: all 0.2s ease;
+  }
 }
 
 .mode-selectors {

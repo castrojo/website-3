@@ -150,4 +150,19 @@ describe('wolvesComicReader', () => {
     // Should not emit update:page when arrow key is in tablist
     expect(wrapper.emitted('update:page')).toBeFalsy()
   })
+
+  it('renders autoplay toggle button and allows toggling it off/on', async () => {
+    const wrapper = mount(WolvesComicReader, {
+      props: {
+        chapters: [],
+        autoplay: true,
+      },
+    })
+
+    const toggleBtn = wrapper.get('.autoplay-toggle-btn')
+    expect(toggleBtn.text()).toContain('AUTOPLAY: ACTIVE')
+
+    await toggleBtn.trigger('click')
+    expect(toggleBtn.text()).toContain('AUTOPLAY: PAUSED')
+  })
 })
