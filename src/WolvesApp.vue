@@ -295,7 +295,7 @@ onBeforeUnmount(() => {
 
           <div class="experience-cta-wrap">
             <button class="experience-cta-btn font-mono" @click="enterImmersiveExperience">
-              ▶ LAUNCH THE IMMERSIVE EXPERIENCE
+              ▶ JOIN THE EVOLUTION
             </button>
             <div class="experience-cta-sub font-mono">
               RECOMMENDED: HEADPHONES ON // VOLUME UP
