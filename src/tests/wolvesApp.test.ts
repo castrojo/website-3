@@ -57,13 +57,14 @@ describe('wolvesApp.vue', () => {
     expect(soundtrackAttrsSpy.mock.lastCall?.[0]).not.toHaveProperty('chapter')
   })
 
-  it('renders title, static lore, qr donate placeholder, newsletter console, and discord mesh link', () => {
+  it('renders title, static lore sidebar once, newsletter console, and discord mesh link', () => {
     const wrapper = mount(WolvesApp)
 
     expect(wrapper.text()).toContain('Seven Days to the Wolves')
     expect(wrapper.text()).toContain('JOIN THE MESH (DISCORD)')
     expect(wrapper.text()).toContain('DECRYPTION_STATUS')
     expect(wrapper.text()).toContain(bazziteQuotes[0].attribution)
+    expect(wrapper.findAll('.qr-grid')).toHaveLength(1)
     expect(wrapper.findAll('a[href="#"]')).toHaveLength(1)
   })
 

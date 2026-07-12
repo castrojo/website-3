@@ -17,7 +17,6 @@ import { ref } from 'vue'
 import TopNavbar from './components/TopNavbar.vue'
 import WolvesComicReader from './components/wolves/WolvesComicReader.vue'
 import WolvesLoreColumn from './components/wolves/WolvesLoreColumn.vue'
-import WolvesQrCodes from './components/wolves/WolvesQrCodes.vue'
 import WolvesSoundtrack from './components/wolves/WolvesSoundtrack.vue'
 import { wolvesRelease } from './data/wolves-story'
 
@@ -76,7 +75,6 @@ function handleEmailSubmit() {
 
         <div class="col-right">
           <WolvesLoreColumn />
-          <WolvesQrCodes />
 
           <div class="decryption-meter-card">
             <div class="meter-header">

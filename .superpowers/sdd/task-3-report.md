@@ -128,3 +128,97 @@ All build, lint, and type-checks passed perfectly without errors or warnings:
 - Statically imported `qr-store.svg` and `qr-donate.svg` inside `WolvesQrCodes.vue` and bound the generated asset URLs to the rendered `<img>` tags so Vite rewrites them correctly in production builds.
 - Updated focused Wolves coverage to assert the lore column still includes the QR component and moved the asset-URL assertions into `src/tests/wolvesQrCodes.test.ts`.
 - Verified the targeted QR test and the production build after the component split.
+
+## Task 3 - 2026-07-12T08:49:01-04:00
+- Branch: `feat/wolves-final-layout`
+- Final commit: `8182fc76abf3e66a9e2857cb0441e93a3be25c8d`
+- Targeted tests: PASS
+- Build: PASS
+
+### Test output
+```text
+
+> project-bluefin-website@0.1.0 test:run
+> vitest run src/tests/wolvesQrCodes.test.ts src/tests/wolvesLoreColumn.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.7 [39m[90m/var/home/jorge/src/website/.worktrees/wolves-final-layout[39m
+
+ [32m✓[39m src/tests/wolvesQrCodes.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/tests/wolvesLoreColumn.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 21[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 08:48:57
+[2m   Duration [22m 645ms[2m (transform 441ms, setup 0ms, import 642ms, tests 39ms, environment 385ms)[22m
+```
+
+### Build output
+```text
+
+> project-bluefin-website@0.1.0 build
+> vue-tsc && vite build
+
+vite v8.0.16 building client environment for production...
+[2Ktransforming...✓ 211 modules transformed.
+[lightningcss minify] Unknown at rule: @theme
+190 |  @layer theme, base, components, utilities;
+191 |  @layer theme {
+192 |    @theme default {
+    |          ^
+193 |      --font-sans:
+194 |        ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+[lightningcss minify] Unknown at rule: @theme
+657 |    }
+658 |    /* Deprecated */
+659 |    @theme default inline reference {
+    |          ^
+660 |      --blur: 8px;
+661 |      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+[lightningcss minify] Unknown at rule: @tailwind
+974 |  }
+975 |  @layer utilities {
+976 |    @tailwind utilities;
+    |             ^
+977 |  }
+978 |  html {
+rendering chunks...
+computing gzip size...
+dist/public/testing.html                    1.99 kB │ gzip:  0.84 kB
+dist/wolves/index.html                      2.31 kB │ gzip:  0.75 kB
+dist/dakota/index.html                      2.41 kB │ gzip:  0.81 kB
+dist/server/index.html                      2.80 kB │ gzip:  0.88 kB
+dist/index.html                             3.14 kB │ gzip:  1.00 kB
+dist/assets/growth_bluefins-BfQF89SC.svg   37.45 kB │ gzip:  8.34 kB
+dist/assets/Holidaysaurus-Zwg407Pd.webp   174.77 kB
+dist/assets/testing-NFGCXXq1.css            0.41 kB │ gzip:  0.21 kB
+dist/assets/TopNavbar-BR3SxdsB.css          4.68 kB │ gzip:  1.24 kB
+dist/assets/ImageChooser-DvV64khA.css       6.75 kB │ gzip:  1.59 kB
+dist/assets/dakota-8MJ_jgQd.css             9.73 kB │ gzip:  2.36 kB
+dist/assets/main-ZZaFvmKP.css              11.12 kB │ gzip:  2.12 kB
+dist/assets/wolves-CEcZH0fC.css            21.16 kB │ gzip:  4.42 kB
+dist/assets/server-DwNmrRCU.css            29.27 kB │ gzip:  5.08 kB
+dist/assets/style-nCSw4e7l.css             53.09 kB │ gzip: 11.38 kB
+dist/assets/testing-BIhoN6sj.js             0.69 kB │ gzip:  0.45 kB
+dist/assets/rolldown-runtime-QTnfLwEv.js    0.69 kB │ gzip:  0.42 kB
+dist/assets/useLocale-DbyC9kIY.js           0.84 kB │ gzip:  0.53 kB
+dist/assets/dakota-CQthLLHE.js              8.13 kB │ gzip:  3.21 kB
+dist/assets/ImageChooser-BNfEu2SI.js        9.79 kB │ gzip:  2.82 kB
+dist/assets/main-Bn1vcW9p.js               25.80 kB │ gzip:  8.21 kB
+dist/assets/server-BS_znike.js             26.57 kB │ gzip:  9.71 kB
+dist/assets/TopNavbar-cSL-0eRX.js          28.32 kB │ gzip: 11.43 kB
+dist/assets/wolves-B15P5ox_.js             36.20 kB │ gzip: 12.85 kB
+dist/assets/vue-vendor-DRVWupHM.js         54.36 kB │ gzip: 17.77 kB
+dist/assets/ui-icons-SdnJDwRD.js           74.33 kB │ gzip: 28.01 kB
+dist/assets/utils-C8T7OCp_.js              91.72 kB │ gzip: 29.71 kB
+dist/assets/style-D8PqpqCz.js             178.10 kB │ gzip: 59.78 kB
+
+✓ built in 937ms
+```
+
+## 2026-07-12 Final Task 3 Review Fixes
+
+- Changed the mounted donate CTA in `src/components/wolves/WolvesQrCodes.vue` to the approved placeholder target `#`.
+- Removed the duplicate `WolvesQrCodes` mount from `src/WolvesApp.vue` so the sidebar QR block is rendered exactly once via `src/components/wolves/WolvesLoreColumn.vue`.
+- Updated focused Wolves app/lore/QR tests to assert the single QR mount and placeholder donate CTA.
+- Verified with `npm run test:run -- src/tests/wolvesApp.test.ts src/tests/wolvesLoreColumn.test.ts src/tests/wolvesQrCodes.test.ts` and `npm run build`.

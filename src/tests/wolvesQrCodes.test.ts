@@ -13,6 +13,6 @@ describe('wolvesQrCodes.vue', () => {
     expect(qrImages[0].attributes('src')).toBe(qrStore)
     expect(qrImages[1].attributes('src')).toBe(qrDonate)
     expect(wrapper.get('a[href="https://store.projectbluefin.io"]').text()).toContain('VISIT STORE')
-    expect(wrapper.get('a[href="https://docs.projectbluefin.io/donations"]').text()).toContain('DONATE')
+    expect(wrapper.get('a[href="#"]').text()).toContain('DONATE')
   })
 })

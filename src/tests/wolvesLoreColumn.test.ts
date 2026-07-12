@@ -4,7 +4,7 @@ import { bazziteQuotes } from '../components/wolves/lore'
 import WolvesLoreColumn from '../components/wolves/WolvesLoreColumn.vue'
 
 describe('wolvesLoreColumn.vue', () => {
-  it('renders the static accessible placeholder quote list and QR section', () => {
+  it('renders the static accessible placeholder quote list and one QR section', () => {
     const wrapper = mount(WolvesLoreColumn)
     const items = wrapper.findAll('ol li')
 
@@ -15,7 +15,8 @@ describe('wolvesLoreColumn.vue', () => {
     expect(wrapper.text()).toContain(bazziteQuotes[0].attribution)
     expect(wrapper.text()).toContain(bazziteQuotes[0].context as string)
     expect(wrapper.findAll('button')).toHaveLength(0)
-    expect(wrapper.find('.qr-grid').exists()).toBe(true)
+    expect(wrapper.findAll('.qr-grid')).toHaveLength(1)
+    expect(wrapper.get('a[href="#"]').text()).toContain('DONATE')
     expect('person' in bazziteQuotes[0]).toBe(false)
     expect('sourceTitle' in bazziteQuotes[0]).toBe(false)
   })

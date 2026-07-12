@@ -28,7 +28,7 @@ import qrStore from '@/assets/svg/qr-store.svg'
         <img :src="qrDonate" alt="QR code for Project Bluefin donations">
       </div>
       <div class="qr-action-wrap">
-        <a href="https://docs.projectbluefin.io/donations" target="_blank" rel="noopener noreferrer" class="qr-btn dark">
+        <a href="#" class="qr-btn dark">
           DONATE
         </a>
         <span class="qr-domain">docs.projectbluefin.io/donations</span>
