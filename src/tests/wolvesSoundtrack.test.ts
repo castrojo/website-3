@@ -1,6 +1,33 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import WolvesSoundtrack from '../components/wolves/WolvesSoundtrack.vue'
+
+const originalMatchMedia = window.matchMedia
+
+function mockMatchMedia(matches: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: '(max-width: 767px)',
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
+
+afterEach(() => {
+  document.body.classList.remove('wolves-player-active')
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: originalMatchMedia,
+  })
+})
 
 describe('wolves soundtrack (nowPlayingBar design)', () => {
   it('renders playlist title and metadata when standby', () => {
@@ -41,5 +68,26 @@ describe('wolves soundtrack (nowPlayingBar design)', () => {
     await wrapper.find('.play-button').trigger('click')
     expect(wrapper.emitted('update:playing')).toBeTruthy()
     expect(wrapper.emitted('update:playing')?.[0]).toEqual([true])
+  })
+
+  it('switches to the compact fixed bar on mobile without duplicating controls', async () => {
+    mockMatchMedia(true)
+
+    const wrapper = mount(WolvesSoundtrack, {
+      props: {
+        chapter: undefined,
+        playing: true,
+      },
+    })
+    await nextTick()
+
+    expect(wrapper.classes()).toContain('is-mobile-compact')
+    expect(document.body.classList.contains('wolves-player-active')).toBe(true)
+    expect(wrapper.findAll('.play-button')).toHaveLength(1)
+    expect(wrapper.get('.play-button').attributes('aria-label')).toBe('Pause soundtrack')
+    expect(wrapper.find('#wolves-yt-player').exists()).toBe(true)
+
+    wrapper.unmount()
+    expect(document.body.classList.contains('wolves-player-active')).toBe(false)
   })
 })

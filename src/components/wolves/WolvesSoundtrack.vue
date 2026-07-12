@@ -102,7 +102,12 @@ const currentLyricText = computed(() => {
   return lines[currentLyricIndex.value]?.text || ''
 })
 const typedLyric = ref('')
+const mobileBreakpointQuery = '(max-width: 767px)'
+const isMobileViewport = ref(false)
+const isCompactMobilePlayer = computed(() => props.playing && isMobileViewport.value)
 let typewriterTimer: ReturnType<typeof setInterval> | null = null
+let viewportMediaQuery: MediaQueryList | null = null
+let removeViewportListener: (() => void) | null = null
 
 function runLyricTypewriter() {
   if (typewriterTimer) {
@@ -220,6 +225,49 @@ function stopTimePolling() {
   }
 }
 
+function updateViewportState(matches?: boolean) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  isMobileViewport.value = matches ?? viewportMediaQuery?.matches ?? window.innerWidth <= 767
+}
+
+function syncFloatingPlayerState() {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  document.body.classList.toggle('wolves-player-active', isCompactMobilePlayer.value)
+}
+
+function initViewportObserver() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (typeof window.matchMedia === 'function') {
+    viewportMediaQuery = window.matchMedia(mobileBreakpointQuery)
+    const handleChange = (event: MediaQueryListEvent) => updateViewportState(event.matches)
+    updateViewportState(viewportMediaQuery.matches)
+
+    if (typeof viewportMediaQuery.addEventListener === 'function') {
+      viewportMediaQuery.addEventListener('change', handleChange)
+      removeViewportListener = () => viewportMediaQuery?.removeEventListener('change', handleChange)
+    }
+    else {
+      viewportMediaQuery.addListener(handleChange)
+      removeViewportListener = () => viewportMediaQuery?.removeListener(handleChange)
+    }
+    return
+  }
+
+  const handleResize = () => updateViewportState()
+  updateViewportState()
+  window.addEventListener('resize', handleResize)
+  removeViewportListener = () => window.removeEventListener('resize', handleResize)
+}
+
 function initPlayer() {
   if (player) {
     return
@@ -303,6 +351,10 @@ watch(activeTrack, () => {
   syncPlayerState()
 })
 
+watch(isCompactMobilePlayer, () => {
+  syncFloatingPlayerState()
+}, { immediate: true })
+
 watch(currentLyricIndex, async (newIdx) => {
   await nextTick()
   if (lyricsContainer.value) {
@@ -318,12 +370,17 @@ watch(currentLyricIndex, async (newIdx) => {
 })
 
 onMounted(async () => {
+  initViewportObserver()
   await loadYtApi()
   initPlayer()
   runLyricTypewriter()
 })
 
 onBeforeUnmount(() => {
+  removeViewportListener?.()
+  removeViewportListener = null
+  viewportMediaQuery = null
+  document.body.classList.remove('wolves-player-active')
   stopTimePolling()
   if (typewriterTimer) {
     clearInterval(typewriterTimer)
@@ -336,7 +393,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="sidebar-soundtrack-card now-playing-bar" :class="{ 'has-lyrics': playing }">
+  <div
+    class="sidebar-soundtrack-card now-playing-bar"
+    :class="{ 'has-lyrics': playing, 'is-mobile-compact': isCompactMobilePlayer }"
+  >
     <div class="meta-panel-grid">
       <!-- Left Column: Audio and Chapter Commentary -->
       <div class="meta-panel-left">
@@ -776,6 +836,53 @@ onBeforeUnmount(() => {
     width: 1px;
     height: 1px;
     border: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar-soundtrack-card.now-playing-bar.is-mobile-compact {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 40;
+    padding: 12px;
+    border-radius: 14px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+
+    .meta-panel-grid {
+      display: block;
+    }
+
+    .player-top-row {
+      gap: 12px;
+    }
+
+    .thumbnail-wrapper {
+      width: 48px;
+      height: 48px;
+    }
+
+    .info-zone {
+      gap: 0;
+
+      .label {
+        font-size: 0.62rem;
+      }
+
+      .playlist-title {
+        font-size: 0.9rem;
+      }
+
+      .active-album {
+        display: none;
+      }
+    }
+
+    .telemetry-commentary,
+    .meta-panel-right {
+      display: none;
+    }
   }
 }
 </style>
