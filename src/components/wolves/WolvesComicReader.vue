@@ -45,6 +45,30 @@ const readingMode = ref<'paged' | 'continuous'>('paged')
 const pdfLoading = ref(true)
 const pdfError = ref('')
 
+// Base path for public assets
+const baseUrl = import.meta.env.BASE_URL
+
+// Wallpapers list from projectbluefin/documentation/artwork
+const wallpapers = [
+  { type: 'single', name: 'bluefin-huntress.webp', title: 'Huntress' },
+  { type: 'daynight', name: 'bluefin-dusk', dayName: 'bluefin-dusk-day.webp', nightName: 'bluefin-dusk-night.webp', title: 'Dusk (Day & Night)' },
+  { type: 'single', name: 'bluefin-lazy-days.webp', title: 'Lazy Days' },
+  { type: 'single', name: 'bluefin-chicken.webp', title: 'Chicken' },
+  { type: 'single', name: 'bluefin-xe_sunset.webp', title: 'Sunset' },
+  { type: 'single', name: 'bluefin-xe_space_needle.webp', title: 'Space Needle' },
+  { type: 'single', name: 'bluefin-xe_red_tulip.webp', title: 'Red Tulip' },
+  { type: 'single', name: 'bluefin-xe_foothills.webp', title: 'Foothills' },
+  { type: 'single', name: 'bluefin-xe_clouds.webp', title: 'Clouds' },
+  { type: 'single', name: 'aurora-xe_sunset.webp', title: 'Aurora Sunset' },
+  { type: 'single', name: 'aurora-xe_space_needle.webp', title: 'Aurora Space Needle' },
+  { type: 'single', name: 'aurora-xe_foothills.webp', title: 'Aurora Foothills' },
+  { type: 'single', name: 'aurora-xe_clouds.webp', title: 'Aurora Clouds' },
+  { type: 'single', name: 'aurora-jonatan-pie-aurora.webp', title: 'Jonatan Pie' }
+]
+
+const duskIsNight = ref(false)
+let duskTimer: ReturnType<typeof setInterval> | null = null
+
 // Active chapter ───────────────────────────────────────────────────────────
 const activeChapter = computed(() =>
   props.chapters.find(ch => page.value >= ch.pageStart && page.value <= ch.pageEnd),
@@ -151,6 +175,9 @@ async function renderPageOnCanvas(pageNumber: number, canvas: HTMLCanvasElement,
 }
 
 function renderFlipPage() {
+  if (page.value > 1) {
+    return
+  }
   if (!flipCanvas.value) {
     return
   }
@@ -179,11 +206,13 @@ function setupIntersectionObserver() {
     for (const entry of entries) {
       if (entry.isIntersecting) {
         const n = Number((entry.target as HTMLElement).dataset.page)
-        const canvas = scrollCanvases.value[n - 1]
-        if (canvas) {
-          const host = canvas.parentElement as HTMLElement | null
-          const width = host ? getContentWidth(host) : (scrollContainer.value?.clientWidth ?? 0)
-          void renderPageOnCanvas(n, canvas, width)
+        if (n === 1) {
+          const canvas = scrollCanvases.value[0]
+          if (canvas) {
+            const host = canvas.parentElement as HTMLElement | null
+            const width = host ? getContentWidth(host) : (scrollContainer.value?.clientWidth ?? 0)
+            void renderPageOnCanvas(1, canvas, width)
+          }
         }
       }
     }
@@ -219,7 +248,7 @@ async function loadComicPdf() {
   try {
     const lib = await loadPdfJs()
     pdfDocument = await lib.getDocument(pdfUrl).promise
-    totalPages.value = pdfDocument.numPages
+    totalPages.value = 15 // 1 Cover + 14 Wallpapers from projectbluefin/documentation/artwork
     pdfLoading.value = false
     await nextTick()
     if (readingMode.value === 'paged') {
@@ -383,10 +412,16 @@ function handleKeyDown(event: KeyboardEvent) {
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
   loadComicPdf()
+  duskTimer = setInterval(() => {
+    duskIsNight.value = !duskIsNight.value
+  }, 6000) // Toggle dusk day/night state every 6 seconds for a soothing cycle
 })
 
 onBeforeUnmount(() => {
   stopAutoplayTimer()
+  if (duskTimer) {
+    clearInterval(duskTimer)
+  }
   window.removeEventListener('keydown', handleKeyDown)
   flipResizeObserver?.disconnect()
   intersectionObserver?.disconnect()
@@ -450,12 +485,43 @@ onBeforeUnmount(() => {
             </button>
           </div>
           <canvas
-            v-show="!pdfLoading && !pdfError"
+            v-show="!pdfLoading && !pdfError && page === 1"
             ref="flipCanvas"
             class="pdf-page-canvas"
             role="img"
             :aria-label="`Comic page ${page} of ${totalPages}`"
           />
+          <!-- Wallpaper Pages (Pages 2-15) -->
+          <div v-if="!pdfLoading && !pdfError && page > 1" class="wallpaper-viewport-wrapper">
+            <template v-for="(wp, idx) in wallpapers" :key="idx">
+              <div v-if="page === idx + 2" class="wallpaper-display-card animate-fade">
+                <div v-if="wp.type === 'single'" class="wallpaper-container">
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${wp.name}`"
+                    class="wallpaper-img"
+                    :alt="wp.title"
+                  >
+                </div>
+                <div v-else-if="wp.type === 'daynight'" class="wallpaper-container daynight">
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${wp.dayName}`"
+                    class="wallpaper-img"
+                    alt="Bluefin Dusk - Day"
+                  >
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${wp.nightName}`"
+                    class="wallpaper-img night-overlay"
+                    :class="{ 'is-night': duskIsNight }"
+                    alt="Bluefin Dusk - Night"
+                  >
+                </div>
+                <!-- Decorative caption -->
+                <div class="wallpaper-caption font-mono">
+                  <span class="caption-label text-cyan">BLUEFIN ARCHIVE //</span> {{ wp.title }}
+                </div>
+              </div>
+            </template>
+          </div>
         </div>
 
         <button
@@ -543,15 +609,39 @@ onBeforeUnmount(() => {
           <div class="comic-viewport">
             <div class="comic-content-area">
               <canvas
-                :ref="(el) => setScrollCanvasRef(el as Element | null, n - 1)"
+                v-if="n === 1"
+                :ref="(el) => setScrollCanvasRef(el as Element | null, 0)"
                 class="pdf-page-canvas"
                 role="img"
                 :aria-label="`Page ${n} of ${totalPages}`"
               />
+              <div v-else class="wallpaper-viewport-wrapper scroll-layout-card">
+                <div v-if="wallpapers[n - 2].type === 'single'" class="wallpaper-container">
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${wallpapers[n - 2].name}`"
+                    class="wallpaper-img"
+                    :alt="wallpapers[n - 2].title"
+                  >
+                </div>
+                <div v-else-if="wallpapers[n - 2].type === 'daynight'" class="wallpaper-container daynight">
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${wallpapers[n - 2].dayName}`"
+                    class="wallpaper-img"
+                    alt="Bluefin Dusk - Day"
+                  >
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${wallpapers[n - 2].nightName}`"
+                    class="wallpaper-img night-overlay"
+                    :class="{ 'is-night': duskIsNight }"
+                    alt="Bluefin Dusk - Night"
+                  >
+                </div>
+              </div>
             </div>
           </div>
-          <div class="comic-caption-bar">
-            Page {{ n }} of {{ totalPages }}
+          <div class="comic-caption-bar font-mono text-cyan">
+            <span v-if="n === 1">Coloring Book Cover</span>
+            <span v-else>Wallpaper Archive // {{ wallpapers[n - 2].title }}</span>
           </div>
         </div>
       </template>
@@ -842,6 +932,108 @@ onBeforeUnmount(() => {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
+  }
+}
+
+// Wallpaper Gallery Styling ──────────────────────────────────────────────────
+.wallpaper-viewport-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  &.scroll-layout-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 420px;
+    border-radius: 12px;
+  }
+}
+
+.wallpaper-display-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.scroll-mode {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.wallpaper-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallpaper-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 3s ease-in-out;
+}
+
+.night-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+
+  &.is-night {
+    opacity: 1;
+  }
+}
+
+.wallpaper-caption {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(16, 21, 31, 0.85);
+  border: 1px solid rgba(66, 133, 244, 0.3);
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  z-index: 5;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+
+  .caption-label {
+    font-weight: bold;
+  }
+}
+
+.animate-fade {
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 </style>
