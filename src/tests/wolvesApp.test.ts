@@ -35,32 +35,27 @@ vi.mock('../components/wolves/WolvesQrCodes.vue', () => ({
 }))
 
 describe('wolvesApp.vue', () => {
-  it('renders the page title, lore column, bottom QR section, and discord mesh link', () => {
+  it('renders the page title, bottom QR section, and has experience button', () => {
     const wrapper = mount(WolvesApp)
 
     expect(wrapper.text()).toContain('Seven Days to the Wolves')
-    expect(wrapper.text()).toContain('JOIN THE MESH (DISCORD)')
-    expect(wrapper.find('.lore-chapter').text()).toBe('prologue')
     expect(wrapper.find('.wolves-page-qr').exists()).toBe(true)
     expect(wrapper.find('.wolves-qr-codes').exists()).toBe(true)
+    expect(wrapper.find('.experience-cta-btn').exists()).toBe(true)
   })
 
-  it('passes the active chapter to soundtrack and lore when the comic page changes', async () => {
+  it('passes the active chapter to soundtrack and lore in immersive mode', async () => {
     const wrapper = mount(WolvesApp)
 
-    await wrapper.find('.comic-reader').trigger('click')
+    // Initially immersive elements are not rendered
+    expect(wrapper.find('.comic-reader').exists()).toBe(false)
 
-    expect(wrapper.find('.soundtrack-chapter').text()).toBe('pursuit')
-    expect(wrapper.find('.lore-chapter').text()).toBe('pursuit')
-  })
+    // Click button to enter immersive mode
+    await wrapper.find('.experience-cta-btn').trigger('click')
 
-  it('handles email submission in the terminal console card', async () => {
-    const wrapper = mount(WolvesApp)
-
-    const input = wrapper.find('.console-input')
-    await input.setValue('operative@projectbluefin.io')
-    await wrapper.find('.console-form').trigger('submit')
-
-    expect(wrapper.find('.console-feedback').text()).toContain('kubectl rollout status')
+    // Now elements are rendered
+    expect(wrapper.find('.comic-reader').exists()).toBe(true)
+    expect(wrapper.find('.soundtrack-chapter').text()).toBe('none')
+    expect(wrapper.find('.lore-chapter').text()).toBe('none')
   })
 })

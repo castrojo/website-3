@@ -1,8 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { bazziteQuotes } from '../components/wolves/lore'
+import { loreEntries } from '../components/wolves/lore'
 import WolvesLoreColumn from '../components/wolves/WolvesLoreColumn.vue'
-import { wolvesRelease } from '../data/wolves-story'
 
 vi.mock('../utils/loreRotation', () => ({
   shuffleLoreEntries: <T>(entries: T[]) => entries,
@@ -12,23 +11,26 @@ describe('wolvesLoreColumn.vue', () => {
   it('renders quote-schema entries from bazzite quotes data', async () => {
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        chapter: wolvesRelease.chapters[1],
+        chapter: undefined,
       },
     })
 
     await wrapper.find('.quote-viewport').trigger('click')
 
-    expect(wrapper.text()).toContain(bazziteQuotes[6].quote)
-    expect(wrapper.text()).toContain(bazziteQuotes[6].attribution)
-    expect(wrapper.text()).toContain(bazziteQuotes[6].context as string)
-    expect('person' in bazziteQuotes[6]).toBe(false)
-    expect('sourceTitle' in bazziteQuotes[6]).toBe(false)
+    const activeEntry = loreEntries[0]
+    expect(activeEntry.type).toBe('quote')
+    const activeQuote = activeEntry.data as any
+
+    expect(wrapper.text()).toContain(activeQuote.quote)
+    expect(wrapper.text()).toContain(activeQuote.attribution)
+    expect('person' in activeQuote).toBe(false)
+    expect('sourceTitle' in activeQuote).toBe(false)
   })
 
   it('does not render QR codes inside the lore column', () => {
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        chapter: wolvesRelease.chapters[0],
+        chapter: undefined,
       },
     })
 

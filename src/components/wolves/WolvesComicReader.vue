@@ -433,17 +433,7 @@ onBeforeUnmount(() => {
           &larr; Previous
         </button>
 
-        <!-- Autoplay Toggle aligned in control bar -->
-        <button
-          class="autoplay-toggle-btn font-mono"
-          :class="{ 'is-active': localAutoplay }"
-          :aria-label="localAutoplay ? 'Disable page autoplay' : 'Enable page autoplay'"
-          type="button"
-          @click="localAutoplay = !localAutoplay"
-        >
-          <span class="indicator-dot" />
-          {{ localAutoplay ? 'AUTO' : 'MANUAL' }}
-        </button>
+        <!-- Removed duplicate autoplay toggle -->
 
         <div class="kbd-hint font-mono">
           Page {{ page }} / {{ totalPages || '—' }}

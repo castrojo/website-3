@@ -66,25 +66,7 @@ function handleTrackChange(index: number) {
   }
 }
 
-// Console Email Submission
-const emailInput = ref('')
-const isSubmittingEmail = ref(false)
-const emailSubmitted = ref(false)
-const emailFeedback = ref('')
-
-function handleEmailSubmit() {
-  if (!emailInput.value || !emailInput.value.includes('@')) {
-    emailFeedback.value = 'Error from server (BadRequest): invalid email coordinate'
-    return
-  }
-  isSubmittingEmail.value = true
-  emailFeedback.value = 'kubectl rollout status deployment/comms-relay-agent -n bazzite'
-  setTimeout(() => {
-    isSubmittingEmail.value = false
-    emailSubmitted.value = true
-    emailFeedback.value = 'deployment "comms-relay-agent" successfully rolled out // CONNECTION SECURED.'
-  }, 1500)
-}
+// Email submission removed as form is deleted
 
 // Background Wallpaper State
 const playlistCurrentTime = ref(0)
@@ -217,9 +199,13 @@ watch(isImmersive, (active) => {
   }
 })
 
+function handleFirstLoreFinished() {
+  isComicAutoplay.value = true
+}
+
 function enterImmersiveExperience() {
   isImmersive.value = true
-  isComicAutoplay.value = true
+  isComicAutoplay.value = false
   isPlaying.value = true
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch((err) => {
@@ -303,148 +289,6 @@ onBeforeUnmount(() => {
         </div>
       </header>
 
-      <!-- Two-column desktop layout: Comic Reader on the left, a pinned
-           Soundtrack Widget + Bazzite Dispatch sidebar on the right. Falls
-           back to a single vertical stack below 1024px. -->
-      <div class="content-grid">
-        <div class="col-left">
-          <!-- SECTION 2: COMIC READER -->
-          <WolvesComicReader
-            :chapters="wolvesRelease.chapters"
-            :autoplay="isPlaying"
-            @update:page="currentPage = $event"
-          />
-
-          <!-- Soundtrack Control Widget (Moved below slides, expanded) -->
-          <WolvesSoundtrack
-            v-model:playing="isPlaying"
-            :chapter="activeChapter"
-            :lore-copied="isLoreCopied"
-            @track-change="handleTrackChange"
-            @prev-lore="handlePrevLore"
-            @next-lore="handleNextLore"
-            @share-lore="handleShareLore"
-            @progress="handleProgress"
-          />
-        </div>
-
-        <div class="col-right">
-          <WolvesLoreColumn
-            ref="loreColumnRef"
-            :chapter="activeChapter"
-            @copied-status="handleCopiedStatus"
-          />
-
-          <!-- Decryption Status Meter -->
-          <div class="decryption-meter-card">
-            <div class="meter-header">
-              <span class="meter-title font-mono">DECRYPTION_STATUS // CHAPTER_02</span>
-              <span class="meter-percentage font-mono">7%</span>
-            </div>
-            <div class="meter-bar-container">
-              <div class="meter-bar-fill" style="width: 7%" />
-            </div>
-            <p class="meter-details font-mono">
-              Operatives active: 1,337 // Decoding node: PROMETHEUS-7
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION 4: COMMUNITY & CONVERSION (Console + Discord) -->
-      <section id="wolves-support" class="comic-reader-section">
-        <div class="support-wrap">
-          <h2 class="title-h2">
-            Establish Secure Channel
-          </h2>
-          <p class="title-p">
-            Subscribe to receive decrypted transmissions and critical notifications when Chapter 1 launches. Or connect to the operative mesh directly on Discord.
-          </p>
-        </div>
-
-        <div class="community-console-grid">
-          <!-- Terminal Newsletter Console -->
-          <div class="terminal-console-card">
-            <div class="console-header">
-              <span class="console-title font-mono">nimbinatus@blue-universal:~</span>
-              <div class="gnome-window-controls">
-                <button class="gnome-control-btn minimize" aria-label="Minimize" tabindex="-1" type="button">
-                  <svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="5.5" width="8" height="1" fill="currentColor" /></svg>
-                </button>
-                <button class="gnome-control-btn maximize" aria-label="Maximize" tabindex="-1" type="button">
-                  <svg width="12" height="12" viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="0.5" fill="none" stroke="currentColor" stroke-width="1" /></svg>
-                </button>
-                <button class="gnome-control-btn close" aria-label="Close" tabindex="-1" type="button">
-                  <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" /></svg>
-                </button>
-              </div>
-            </div>
-            <div class="console-body">
-              <p class="console-text font-mono text-cyan">
-                nimbinatus@blue-universal:~$ kubectl apply -f bazzite-comms.yaml
-              </p>
-              <p class="console-text font-mono text-green">
-                configmap/bazzite-comms-config created
-                <br>deployment.apps/comms-relay-agent created
-              </p>
-              <p class="console-text font-mono text-gray">
-                [SYSTEM] Enter operative email to launch deployment:
-              </p>
-
-              <form v-if="!emailSubmitted" class="console-form" @submit.prevent="handleEmailSubmit">
-                <span class="console-prompt font-mono">&gt;</span>
-                <input
-                  v-model="emailInput"
-                  type="email"
-                  placeholder="operative@domain.xyz"
-                  class="console-input font-mono"
-                  :disabled="isSubmittingEmail"
-                  required
-                >
-                <button
-                  type="submit"
-                  class="console-submit-btn font-mono"
-                  :disabled="isSubmittingEmail"
-                >
-                  [ APPLY ]
-                </button>
-              </form>
-
-              <div v-if="emailFeedback" class="console-feedback font-mono" :class="{ success: emailSubmitted }">
-                {{ emailFeedback }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Encrypted Discord Invite Card -->
-          <div class="discord-invite-card">
-            <h3 class="discord-title font-mono">
-              [ SECURE_MESH_LINK ]
-            </h3>
-            <p class="discord-desc">
-              Connect to the live mesh. Chat with core maintainers, coordinate Linux workstation factory builds, and decrypt incoming lore with the community.
-            </p>
-            <div class="discord-action-wrap">
-              <a
-                href="https://discord.gg/projectbluefin"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="discord-btn"
-              >
-                JOIN THE MESH (DISCORD) &rarr;
-              </a>
-              <span class="discord-coords font-mono">COORDS: 42.109 / -83.045 // MESH_ACTIVE</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="support-links font-mono">
-          <a href="https://store.projectbluefin.io" target="_blank" rel="noopener noreferrer">STORE_ACCESS</a>
-          <span class="separator">|</span>
-          <a href="https://docs.projectbluefin.io/donations" target="_blank" rel="noopener noreferrer">DONATE_FUNDS</a>
-        </div>
-      </section>
-
       <section class="wolves-page-qr comic-reader-section">
         <WolvesQrCodes />
       </section>
@@ -478,6 +322,7 @@ onBeforeUnmount(() => {
             ref="loreColumnRef"
             :chapter="activeChapter"
             @copied-status="handleCopiedStatus"
+            @first-finished="handleFirstLoreFinished"
           />
         </div>
       </div>
@@ -534,7 +379,7 @@ onBeforeUnmount(() => {
             @click="isComicAutoplay = !isComicAutoplay"
           >
             <span class="hud-indicator-dot-mini" />
-            COMIC: {{ isComicAutoplay ? 'AUTO' : 'MANUAL' }}
+            COMIC: {{ isComicAutoplay ? 'Auto' : 'Manual' }}
           </button>
 
           <div class="decryption-mini-meter">
@@ -715,13 +560,21 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 20px;
   padding: 24px 0 20px;
-  border-bottom: 1px solid rgba(var(--color-blue-rgb), 0.2);
 
   .hero-text {
     text-align: center;
+    background-color: rgba(16, 21, 31, 0.75);
+    border: 1px solid rgba(var(--color-blue-rgb), 0.2);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    max-width: 800px;
+    margin: 0 auto;
 
     @media (min-width: 768px) {
       text-align: left;
+      padding: 48px;
     }
   }
 

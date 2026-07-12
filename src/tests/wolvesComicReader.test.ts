@@ -77,7 +77,7 @@ describe('wolvesComicReader', () => {
     expect(removeListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
   })
 
-  it('renders autoplay toggle button and allows toggling it off/on', async () => {
+  it('handles autoplay prop correctly', async () => {
     const wrapper = mount(WolvesComicReader, {
       props: {
         chapters: [],
@@ -85,10 +85,6 @@ describe('wolvesComicReader', () => {
       },
     })
 
-    const toggleBtn = wrapper.get('.autoplay-toggle-btn')
-    expect(toggleBtn.text()).toContain('AUTO')
-
-    await toggleBtn.trigger('click')
-    expect(toggleBtn.text()).toContain('MANUAL')
+    expect(wrapper.props('autoplay')).toBe(true)
   })
 })

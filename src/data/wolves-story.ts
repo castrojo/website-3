@@ -30,32 +30,7 @@ export interface WolvesRelease {
 export const wolvesRelease: WolvesRelease = {
   id: '2026-07-11-r1',
   publishedAt: '2026-07-11',
-  chapters: [
-    {
-      id: 'prologue',
-      title: 'The Signal',
-      description: 'The archive opens.',
-      pageStart: 1,
-      pageEnd: 7,
-      soundtrackLabel: 'Arrival',
-    },
-    {
-      id: 'pursuit',
-      title: 'The Hunt',
-      description: 'The maintainers are pursued.',
-      pageStart: 8,
-      pageEnd: 14,
-      soundtrackLabel: 'Pressure',
-    },
-    {
-      id: 'awakening',
-      title: 'The Wolves',
-      description: 'Resistance becomes possible.',
-      pageStart: 15,
-      pageEnd: 20,
-      soundtrackLabel: 'Resistance',
-    },
-  ],
+  chapters: [],
   artifacts: [
     // --- Prologue: transmissions ---
     {

@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'copiedStatus', status: boolean): void
+  (e: 'firstFinished'): void
 }>()
 
 const isCopied = ref(false)
@@ -154,6 +155,9 @@ function startLoreTimer() {
   const delay = isInitial ? 15000 : getDynamicDelay(currentEntry)
 
   loreTimer = setTimeout(() => {
+    if (currentLoreIndex.value === 0 && isInitialQuote.value) {
+      emit('firstFinished')
+    }
     isInitialQuote.value = false
     currentLoreIndex.value = (currentLoreIndex.value + 1) % filteredLoreEntries.value.length
   }, delay)
@@ -169,6 +173,9 @@ function nextLore() {
     return
   }
 
+  if (currentLoreIndex.value === 0 && isInitialQuote.value) {
+    emit('firstFinished')
+  }
   isInitialQuote.value = false
   currentLoreIndex.value = (currentLoreIndex.value + 1) % filteredLoreEntries.value.length
   restartLoreTimer()
