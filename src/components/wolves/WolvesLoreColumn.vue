@@ -270,9 +270,11 @@ defineExpose({
             Recovered Transmissions
           </h2>
           <p class="title-p">
-            Signal: Captured
-            <br>Source: Quotes + Intercepts
-            <br>Rotation: Randomized on load
+            CLUSTER: ghost.exo-1.k3s // NS: wolves-telemetry
+            <br>FACTORY: factory.projectbluefin.io // BUILD: 100% [PASS]
+            <br>VARIANT: bluefin:testing // ARCH: x86_64, aarch64
+            <br>STREAMS: 13/13 LOCALES // STATUS: Active
+            <br>REPLICAS: 3/3 READY // TELEMETRY: Connected
           </p>
         </div>
 
