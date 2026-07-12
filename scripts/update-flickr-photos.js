@@ -27,8 +27,9 @@ async function main() {
     // 1. Get total count of Maintainer photos (from flickr.photos.search)
     const mSearchUrl = `https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${apiKey}&user_id=${userId}&text=Maintainer&per_page=1&format=json&nojsoncallback=1`
     const mRes = await fetch(mSearchUrl)
-    if (!mRes.ok)
+    if (!mRes.ok) {
       throw new Error(`Flickr Maintainer metadata error: ${mRes.status}`)
+    }
     const mData = await mRes.json()
     if (mData.stat !== 'ok' || !mData.photos) {
       throw new Error(`Flickr Maintainer API error: ${mData.message || 'invalid response'}`)
@@ -38,8 +39,9 @@ async function main() {
     // 2. Get total count of General public photos
     const gSearchUrl = `https://www.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=${apiKey}&user_id=${userId}&per_page=1&format=json&nojsoncallback=1`
     const gRes = await fetch(gSearchUrl)
-    if (!gRes.ok)
+    if (!gRes.ok) {
       throw new Error(`Flickr General metadata error: ${gRes.status}`)
+    }
     const gData = await gRes.json()
     if (gData.stat !== 'ok' || !gData.photos) {
       throw new Error(`Flickr General API error: ${gData.message || 'invalid response'}`)
@@ -80,8 +82,9 @@ async function main() {
       ...mTargetPages.map(async (page) => {
         const url = `https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${apiKey}&user_id=${userId}&text=Maintainer&per_page=${perPage}&page=${page}&format=json&nojsoncallback=1`
         const res = await fetch(url)
-        if (!res.ok)
+        if (!res.ok) {
           throw new Error(`HTTP error Maintainer page ${page}: ${res.status}`)
+        }
         const data = await res.json()
         if (data.stat !== 'ok' || !data.photos || !Array.isArray(data.photos.photo)) {
           throw new Error(`Flickr API error Maintainer page ${page}: ${data.message || 'invalid'}`)
@@ -91,8 +94,9 @@ async function main() {
       ...gTargetPages.map(async (page) => {
         const url = `https://www.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=${apiKey}&user_id=${userId}&per_page=${perPage}&page=${page}&format=json&nojsoncallback=1`
         const res = await fetch(url)
-        if (!res.ok)
+        if (!res.ok) {
           throw new Error(`HTTP error General page ${page}: ${res.status}`)
+        }
         const data = await res.json()
         if (data.stat !== 'ok' || !data.photos || !Array.isArray(data.photos.photo)) {
           throw new Error(`Flickr API error General page ${page}: ${data.message || 'invalid'}`)
