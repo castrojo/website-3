@@ -56,8 +56,14 @@ describe('wolvesApp.vue', () => {
 
     // Now elements are rendered
     expect(wrapper.find('.comic-reader').exists()).toBe(true)
-    expect(wrapper.find('.soundtrack-chapter').text()).toBe('none')
-    expect(wrapper.find('.lore-chapter').text()).toBe('none')
+    // Page 1 is in 'prologue' chapter
+    expect(wrapper.find('.soundtrack-chapter').text()).toBe('prologue')
+    expect(wrapper.find('.lore-chapter').text()).toBe('prologue')
+
+    // Clicking the comic reader mock advances page to 8 (which is 'pursuit' chapter)
+    await wrapper.find('.comic-reader').trigger('click')
+    expect(wrapper.find('.soundtrack-chapter').text()).toBe('pursuit')
+    expect(wrapper.find('.lore-chapter').text()).toBe('pursuit')
   })
 
   it('activates fast pacing when first song progress passes 3:21 (201s) and hyper pacing at 4:17 (257s)', async () => {

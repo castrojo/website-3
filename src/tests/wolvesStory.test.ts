@@ -5,9 +5,9 @@ import { getArtifactsForChapter, getChapterForPage, getNewArtifactIds } from '..
 
 describe('wolves story manifest', () => {
   it('assigns every comic page to exactly one chapter', () => {
-    expect(getChapterForPage(1)).toBeUndefined()
-    expect(getChapterForPage(15)).toBeUndefined()
-    expect(getChapterForPage(20)).toBeUndefined()
+    expect(getChapterForPage(1)?.id).toBe('prologue')
+    expect(getChapterForPage(15)?.id).toBe('awakening')
+    expect(getChapterForPage(20)?.id).toBe('awakening')
     expect(getChapterForPage(21)).toBeUndefined()
   })
 
