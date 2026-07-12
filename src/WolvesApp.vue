@@ -307,7 +307,7 @@ onMounted(() => {
   // Start quote auto-cycling interval (9 seconds)
   quoteTimer = setInterval(() => {
     currentQuoteIndex.value = (currentQuoteIndex.value + 1) % bazziteQuotes.length
-  }, 9000)
+  }, 15000)
 })
 
 onBeforeUnmount(() => {
