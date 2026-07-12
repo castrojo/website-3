@@ -163,23 +163,31 @@ const mixedPhotos = computed(() => {
     return result
   }
   else {
-    // Other Tracks: Healthy, interesting mix of people, showcase, and others
-    // We interleave: 1 showcase for every 2 people/Flickr photos (33% showcase, 67% people/others)
-    // This ensures showcase is consistently visible while Flickr photos (the bulk of content) are heavily present
-    const result: any[] = [...pinnedStart]
-    const remainingShowcaseCopy = [...remainingShowcase]
-    const shuffledPeopleCopy = [...shuffledPeople]
+    // Tracks 2-6: Ensure showcase photos never go back-to-back, and each song starts with a showcase photo
+    const result: any[] = []
+    const showcaseCopy = [...shuffledShowcase]
+    const peopleCopy = [...shuffledPeople]
 
-    while (remainingShowcaseCopy.length > 0 || shuffledPeopleCopy.length > 0) {
+    // Start with 1 showcase photo
+    if (showcaseCopy.length > 0) {
+      result.push(showcaseCopy.shift())
+    }
+
+    while (showcaseCopy.length > 0 || peopleCopy.length > 0) {
       // Add up to 2 people/Flickr photos
+      let addedPeople = 0
       for (let k = 0; k < 2; k++) {
-        if (shuffledPeopleCopy.length > 0) {
-          result.push(shuffledPeopleCopy.shift())
+        if (peopleCopy.length > 0) {
+          result.push(peopleCopy.shift())
+          addedPeople++
         }
       }
-      // Add 1 showcase photo
-      if (remainingShowcaseCopy.length > 0) {
-        result.push(remainingShowcaseCopy.shift())
+
+      // Add 1 showcase photo (only if we added at least 1 people/Flickr photo to prevent back-to-back!)
+      if (showcaseCopy.length > 0) {
+        if (addedPeople > 0 || result.length === 0) {
+          result.push(showcaseCopy.shift())
+        }
       }
     }
     return result
