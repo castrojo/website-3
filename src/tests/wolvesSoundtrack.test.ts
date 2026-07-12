@@ -171,6 +171,34 @@ describe('wolves soundtrack', () => {
     expect(players).toHaveLength(1)
   })
 
+  it('makes the persistent player host visible and accessible after soundtrack start', async () => {
+    const wrapper = mount(WolvesSoundtrack, { attachTo: document.body })
+
+    await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
+    await flushPromises()
+
+    resolveIframeApi()
+    await flushPromises()
+    players[0].triggerReady()
+    await flushPromises()
+
+    const playerShell = wrapper.get('.wolves-player-host-shell').element as HTMLElement
+    const playerHost = wrapper.get('[data-testid="wolves-player-host"]').element as HTMLElement
+
+    expect(playerShell.getAttribute('aria-hidden')).toBeNull()
+
+    const shellStyle = window.getComputedStyle(playerShell)
+    const hostStyle = window.getComputedStyle(playerHost)
+
+    expect(shellStyle.width).not.toBe('1px')
+    expect(shellStyle.height).not.toBe('1px')
+    expect(shellStyle.overflow).not.toBe('hidden')
+    expect(hostStyle.width).not.toBe('1px')
+    expect(hostStyle.height).not.toBe('1px')
+
+    wrapper.unmount()
+  })
+
   it('updates the displayed track from playlist events instead of chapter props', async () => {
     const wrapper = mount(WolvesSoundtrack)
 
@@ -205,7 +233,7 @@ describe('wolves soundtrack', () => {
     expect(wrapper.get('a[aria-label="Open soundtrack in YouTube Music"]').attributes('href')).toContain('music.youtube.com')
   })
 
-  it('retries with a replacement player after a player error', async () => {
+  it('retries with a fresh player while keeping the same host after a player error', async () => {
     const wrapper = mount(WolvesSoundtrack)
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
@@ -225,7 +253,7 @@ describe('wolves soundtrack', () => {
 
     expect(players[0].destroy).toHaveBeenCalledTimes(1)
     expect(players).toHaveLength(2)
-    expect(wrapper.get('[data-testid="wolves-player-host"]').element).not.toBe(failedHost)
+    expect(wrapper.get('[data-testid="wolves-player-host"]').element).toBe(failedHost)
 
     players[1].triggerReady()
     await flushPromises()

@@ -49,7 +49,6 @@ const status = ref<PlayerStatus>('idle')
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
 const currentTrackIndex = ref(0)
 const playerHost = ref<HTMLElement | null>(null)
-const playerHostKey = ref(0)
 
 let player: YouTubePlayer | null = null
 let youtubeApiPromise: Promise<void> | null = null
@@ -262,8 +261,6 @@ function createPlayer() {
 async function resetFailedPlayer() {
   player?.destroy?.()
   player = null
-  playerHostKey.value += 1
-  await nextTick()
 }
 
 async function startSoundtrack() {
@@ -383,9 +380,12 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <div class="wolves-player-host-shell" aria-hidden="true">
+      <div
+        class="wolves-player-host-shell"
+        :class="{ 'is-visible': isStarted }"
+        :aria-hidden="isStarted ? undefined : 'true'"
+      >
         <div
-          :key="playerHostKey"
           ref="playerHost"
           data-testid="wolves-player-host"
           class="wolves-player-host"
@@ -593,11 +593,30 @@ onBeforeUnmount(() => {
   width: 1px;
   height: 1px;
   overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  &.is-visible {
+    width: 100%;
+    height: auto;
+    min-height: 220px;
+    aspect-ratio: 16 / 9;
+    overflow: visible;
+    opacity: 1;
+    border-top: 1px solid rgba(66, 133, 244, 0.22);
+    background: #050810;
+  }
 }
 
 .wolves-player-host {
   width: 1px;
   height: 1px;
+
+  .wolves-player-host-shell.is-visible & {
+    width: 100%;
+    height: 100%;
+    min-height: 220px;
+  }
 }
 
 .soundtrack-mobile-bar {
@@ -672,6 +691,11 @@ onBeforeUnmount(() => {
   .soundtrack-action {
     grid-column: 1 / -1;
     width: 100%;
+  }
+
+  .wolves-player-host-shell.is-visible,
+  .wolves-player-host-shell.is-visible .wolves-player-host {
+    min-height: 180px;
   }
 }
 </style>
