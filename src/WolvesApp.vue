@@ -21,6 +21,7 @@ README: Bluefin Wolves Teaser Landing Page Component
 import TopNavbar from './components/TopNavbar.vue'
 import WolvesComicReader from './components/wolves/WolvesComicReader.vue'
 import WolvesLoreColumn from './components/wolves/WolvesLoreColumn.vue'
+import WolvesQrCodes from './components/wolves/WolvesQrCodes.vue'
 import WolvesSoundtrack from './components/wolves/WolvesSoundtrack.vue'
 import { wolvesRelease } from './data/wolves-story'
 
@@ -58,6 +59,10 @@ const wolvesBackgroundImage = `url(${import.meta.env.BASE_URL}evening/10-bluefin
           <WolvesLoreColumn />
         </aside>
       </div>
+
+      <section data-testid="wolves-qr-codes" class="wolves-page-qr comic-reader-section">
+        <WolvesQrCodes />
+      </section>
     </main>
   </div>
 </template>
@@ -187,5 +192,9 @@ const wolvesBackgroundImage = `url(${import.meta.env.BASE_URL}evening/10-bluefin
     max-height: calc(100dvh - 2rem);
     overflow-y: auto;
   }
+}
+
+.wolves-page-qr {
+  margin-top: 8px;
 }
 </style>

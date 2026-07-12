@@ -55,6 +55,8 @@ describe('wolvesApp.vue', () => {
     expect(wrapper.text()).toContain('Seven Days to the Wolves')
     expect(wrapper.text()).toContain(bazziteQuotes[0].attribution)
     expect(wrapper.findAll('.qr-grid')).toHaveLength(1)
+    const loreColumn = wrapper.get('[data-testid="wolves-lore-column"]')
+    expect(loreColumn.findAll('.qr-grid')).toHaveLength(0)
     expect(wrapper.text()).not.toContain('JOIN THE MESH (DISCORD)')
   })
 
