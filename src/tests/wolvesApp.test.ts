@@ -13,7 +13,7 @@ vi.mock('../components/wolves/WolvesSoundtrack.vue', () => ({
   default: { template: '<div>WolvesSoundtrack</div>' },
 }))
 
-describe('WolvesApp.vue', () => {
+describe('wolvesApp.vue', () => {
   it('renders title, dispatch card, newsletter console, and discord mesh link', () => {
     const wrapper = mount(WolvesApp)
 
