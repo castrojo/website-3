@@ -7,6 +7,7 @@ import { defineConfig } from 'vite'
 // https://vitejs.dev/config/
 export default defineConfig({
   test: {
+    environment: 'happy-dom',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
