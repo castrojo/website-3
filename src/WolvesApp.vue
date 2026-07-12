@@ -588,7 +588,7 @@ onBeforeUnmount(() => {
     border-radius: 16px;
     padding: 32px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(2px);
     max-width: 800px;
     margin: 0 auto;
 
