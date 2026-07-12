@@ -20,7 +20,7 @@ Below the desktop breakpoint, the document order is comic reader, full soundtrac
 
 `WolvesComicReader.vue` is untouched.
 
-`WolvesSoundtrack.vue` owns a single, page-lifetime YouTube IFrame API player and the full desktop/mobile soundtrack presentation. It creates the player only after an explicit click. It exposes a compact presentation from the same state when mobile playback begins.
+`WolvesSoundtrack.vue` owns a single, page-lifetime YouTube IFrame API player and the full desktop/mobile soundtrack presentation. It creates the player only after an explicit click. The player remains mounted but visually hidden at YouTube's required 200x200 minimum viewport; the visible panel is audio-first and exposes no video widget. It exposes a compact presentation from the same state when mobile playback begins.
 
 `WolvesLoreColumn.vue` renders quote data and controls. `WolvesQrCodes.vue` renders the generated Store and Donate QR assets.
 
@@ -34,7 +34,9 @@ The soundtrack uses a provider-neutral source and track manifest:
 - The YouTube IFrame API is loaded after Start Soundtrack. Player state events, not button intent, drive `loading`, `ready`, `playing`, `paused`, and `error` UI states.
 - The player stays mounted while comic pages turn. Neither page nor chapter state is passed to playback, so it never changes the listener's selected track.
 
-The page cannot reliably detect YouTube sign-in, and signing in alone does not ensure ad-free playback; YouTube Premium does. The chosen UX is an in-page YouTube playlist player plus a visible YouTube Music deep link and a concise Premium requirement notice. Neither route autoplays.
+The page cannot reliably detect YouTube sign-in, and signing in alone does not ensure ad-free playback; YouTube Premium does. The chosen UX is a hidden in-page YouTube playlist audio player plus a visible YouTube Music deep link and a concise Premium requirement notice. Neither route autoplays.
+
+The visible soundtrack panel displays a `Read official lyrics` link only for tracks with a verified artist-hosted source. Tracks without one display `Official lyrics unavailable`; the site never guesses a search URL or embeds third-party lyrics.
 
 Spotify later requires adding its URI and a provider adapter implementing the same source/track contract. No layout changes are required.
 
