@@ -48,6 +48,12 @@ function galleryCrossfadeDuration(wrapper: ReturnType<typeof mount>) {
   return Number(duration)
 }
 
+function activeTimelineImage(wrapper: ReturnType<typeof mount>) {
+  const activeLayer = wrapper.findAll('.flickr-photo-layer')
+    .find(layer => (layer.attributes('style') ?? '').includes('z-index: 2'))
+  return activeLayer?.find('.flickr-img').attributes('src')
+}
+
 describe('wolvesComicReader', () => {
   beforeEach(() => {
     mockGalleryData()
@@ -117,6 +123,23 @@ describe('wolvesComicReader', () => {
       dayName: 'wolves/wolves/bluefin-collapse-night.webp',
       nightName: 'wolves/wolves/bluefin-collapse-day.webp',
     })
+  })
+
+  it('keeps the first 15 seconds of Track 0 unchanged', async () => {
+    const wrapper = mount(WolvesComicReader, {
+      props: {
+        trackIndex: 0,
+        playlistCurrentTime: 0,
+      },
+    })
+
+    expect(activeTimelineImage(wrapper)).toContain('bluefin-collapse-night.webp')
+
+    await wrapper.setProps({ playlistCurrentTime: 8.4 })
+    expect(activeTimelineImage(wrapper)).toContain('bluefin-prey-day.webp')
+
+    await wrapper.setProps({ playlistCurrentTime: 14.99 })
+    expect(activeTimelineImage(wrapper)).toContain('bluefin-prey-day.webp')
   })
 
   it('keeps each later-track Flickr sequence stable and refreshes it for the next track', async () => {
