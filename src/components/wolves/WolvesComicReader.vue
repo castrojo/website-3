@@ -256,6 +256,13 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     pivotalPhoto = localPeople.splice(targetIndex, 1)[0]
   }
 
+  const bkTarget = 'wolves/people/bketelsen.jpeg'
+  const bkTargetIndex = localPeople.findIndex(wp => wp.id === bkTarget)
+  let bkPhoto: any = null
+  if (bkTargetIndex !== -1) {
+    bkPhoto = localPeople.splice(bkTargetIndex, 1)[0]
+  }
+
   const shuffledDaynight = deterministicShuffle(daynightShowcase, 101)
   const shuffledNormalShowcase = deterministicShuffle(normalShowcase, 202)
   const shuffledPeople = deterministicShuffle(localPeople, 303)
@@ -344,10 +351,23 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
   let remainingSec6 = 78
 
   if (pivotalPhoto) {
-    const freezeDuration = 14
+    const freezeDuration = 5.5
     result.push({
       ...pivotalPhoto,
       path: pivotalPhoto.path || '',
+      startTime: currentTime,
+      duration: freezeDuration,
+      endTime: currentTime + freezeDuration
+    })
+    currentTime += freezeDuration
+    remainingSec6 -= freezeDuration
+  }
+
+  if (bkPhoto) {
+    const freezeDuration = 8.5
+    result.push({
+      ...bkPhoto,
+      path: bkPhoto.path || '',
       startTime: currentTime,
       duration: freezeDuration,
       endTime: currentTime + freezeDuration
