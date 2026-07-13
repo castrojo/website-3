@@ -1693,7 +1693,7 @@ onBeforeUnmount(() => {
 
 /* Immersive Bottom HUD Footer */
 .immersive-hud-footer {
-  height: 140px; /* Upgraded from 120px to fit double-sized announcement text */
+  height: 140px;
   border-top: 1px solid rgba(102, 179, 255, 0.2);
   background: rgba(16, 21, 31, 0.45);
   backdrop-filter: blur(12px);
@@ -1703,6 +1703,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 24px;
   flex-shrink: 0;
+  position: relative; /* For absolute announcement area */
 
   @media (max-width: 767px) {
     height: auto;
@@ -1816,8 +1817,9 @@ onBeforeUnmount(() => {
 /* Soundtrack Dock Row Customization */
 .immersive-soundtrack-dock {
   flex: 1;
-  min-width: 400px;
-  max-width: 680px;
+  min-width: 450px;
+  max-width: 900px;
+  z-index: 20; /* Keep it clickable over the absolute announcement */
 
   @media (max-width: 767px) {
     width: 100%;
@@ -1922,9 +1924,11 @@ onBeforeUnmount(() => {
       font-size: 1.42rem !important; /* Upgraded 50% from 0.95rem */
       font-weight: bold !important;
       margin: 0 !important;
-      white-space: nowrap !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      white-space: normal !important;
       overflow: hidden !important;
-      text-overflow: ellipsis !important;
     }
 
     .soundtrack-artist {
@@ -2005,15 +2009,25 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1.5; /* Give it more room so it doesn't smoosh others */
   padding: 0 16px;
   overflow: hidden;
   height: 110px;
+  width: 50%;
   border: 1px dashed rgba(102, 179, 255, 0.15);
   border-radius: 4px;
-  margin: 0 16px;
   background: rgba(16, 21, 31, 0.3);
-  position: relative;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none; /* Let clicks pass through to dock if they overlap */
+  z-index: 10;
+
+  @media (max-width: 767px) {
+    position: relative;
+    left: auto;
+    transform: none;
+    width: 100%;
+  }
 
   .announcement-standby {
     font-size: 0.85rem;
