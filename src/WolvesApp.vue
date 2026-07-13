@@ -90,6 +90,39 @@ const isAnnouncementVisible = computed(() => {
   return playlistCurrentTime.value >= 345 && playlistCurrentTime.value <= 355
 })
 
+const announcementText = computed(() => {
+  if (!isAnnouncementVisible.value) {
+    return ''
+  }
+
+  const offset = playlistCurrentTime.value - 345
+  const phase1Text = 'We\'ve got your back, welcome to the path.'
+
+  // Phase 1: Typewriter effect (345s to 348s)
+  if (offset < 3) {
+    const chars = Math.floor((offset / 3) * phase1Text.length)
+    return phase1Text.substring(0, chars)
+  }
+  // Phase 2: Dramatic pause (348s to 349.5s)
+  else if (offset < 4.5) {
+    return phase1Text
+  }
+  // Phase 3: Garbled mess (349.5s to 351s)
+  else if (offset < 6) {
+    const chars = '!<>-_\\\\/[]{}—=+*^?#________X01'
+    let res = ''
+    const seed = Math.floor(offset * 20)
+    for (let i = 0; i < 35; i++) {
+      res += chars[(seed + i * 7) % chars.length]
+    }
+    return res
+  }
+  // Phase 4: The Reveal (351s to 355s)
+  else {
+    return 'We are Universal Blue.'
+  }
+})
+
 watch([playlistTrackIndex, playlistCurrentTime], ([trackIdx, curTime]) => {
   if (trackIdx === 0) {
     if (curTime >= 257) {
@@ -487,8 +520,8 @@ onBeforeUnmount(() => {
             [ COMM-LINK STANDBY ]
           </div>
           <transition name="flicker-glitch">
-            <div v-if="isAnnouncementVisible" class="announcement-message text-cyan">
-              We've got your back, welcome to the path.
+            <div v-if="isAnnouncementVisible" class="announcement-message lore-quote-text">
+              {{ announcementText }}<span v-if="playlistCurrentTime < 348" class="cursor">_</span>
             </div>
           </transition>
         </div>
@@ -2022,7 +2055,7 @@ onBeforeUnmount(() => {
   flex: 1;
   padding: 0 16px;
   overflow: hidden;
-  height: 48px;
+  height: 90px;
   border: 1px dashed rgba(102, 179, 255, 0.15);
   border-radius: 4px;
   margin: 0 16px;
@@ -2036,13 +2069,35 @@ onBeforeUnmount(() => {
   }
 
   .announcement-message {
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 2.25rem;
+    font-style: italic;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow:
+      0 0 15px rgba(255, 255, 255, 0.4),
+      0 0 5px rgba(102, 179, 255, 0.8);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     position: absolute;
+    text-align: center;
+    width: 100%;
+
+    .cursor {
+      animation: blink 1s step-end infinite;
+      margin-left: 2px;
+    }
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
   }
 }
 

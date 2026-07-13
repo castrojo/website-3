@@ -378,18 +378,11 @@ const activeTimelineSlide = computed(() => {
     return null
   }
   const curTime = props.playlistCurrentTime ?? 0
-  const slide = timelineSlides.value.find(s => curTime >= s.startTime && curTime < s.endTime)
-  if (slide) {
-    return slide
+  let index = timelineSlides.value.findIndex(s => curTime < s.endTime)
+  if (index === -1) {
+    index = timelineSlides.value.length - 1
   }
-
-  // Floating point gap fallback: find the last slide that started before curTime
-  for (let i = timelineSlides.value.length - 1; i >= 0; i--) {
-    if (curTime >= timelineSlides.value[i].startTime) {
-      return timelineSlides.value[i]
-    }
-  }
-  return timelineSlides.value[0]
+  return timelineSlides.value[index]
 })
 
 const currentSlideTransitionDuration = computed(() => {
