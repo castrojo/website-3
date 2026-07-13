@@ -721,6 +721,7 @@ function prevTrack() {
   }
 }
 
+/* Update the grid to be simpler */
 .soundtrack-panel-main {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -763,7 +764,7 @@ function prevTrack() {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .soundtrack-label,
@@ -794,12 +795,20 @@ function prevTrack() {
   color: #cbd5e1;
 }
 
+/* Status Panel */
+.soundtrack-status-panel {
+  padding: 12px 18px;
+  border-top: 1px solid rgba(66, 133, 244, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .soundtrack-status {
   margin: 0;
   font-size: 0.76rem;
   line-height: 1.5;
   color: #94a3b8;
-  max-width: 56ch;
 }
 
 .soundtrack-links {
@@ -829,41 +838,6 @@ function prevTrack() {
 .soundtrack-premium-note {
   font-size: 0.7rem;
   color: #94a3b8;
-}
-
-.soundtrack-action,
-.soundtrack-mobile-action {
-  border: 1px solid rgba(102, 179, 255, 0.55);
-  border-radius: 999px;
-  background: rgba(66, 133, 244, 0.08);
-  color: #e0f2fe;
-  cursor: pointer;
-  font-weight: 700;
-  transition:
-    transform 0.2s ease,
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-
-  &:hover:enabled {
-    transform: translateY(-1px);
-    background: rgba(66, 133, 244, 0.18);
-    border-color: rgba(125, 211, 252, 0.8);
-  }
-
-  &:disabled {
-    cursor: wait;
-    opacity: 0.72;
-  }
-}
-
-.soundtrack-action {
-  min-height: 44px;
-  padding: 0 20px;
-  justify-self: start;
-
-  @media (min-width: 900px) {
-    justify-self: end;
-  }
 }
 
 .soundtrack-lyrics-panel {
@@ -911,6 +885,119 @@ function prevTrack() {
     height: 200px;
     border: 0;
   }
+}
+
+/* New Icon Buttons */
+.soundtrack-icon-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(66, 133, 244, 0.45);
+  background-color: #10151f;
+  color: #66b3ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(66, 133, 244, 0.15);
+    border-color: #7dd3fc;
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.prev,
+  &.next {
+    width: 40px;
+    height: 40px;
+  }
+
+  &.play-pause {
+    width: 48px;
+    height: 48px;
+    background: rgba(66, 133, 244, 0.1);
+    border-color: rgba(102, 179, 255, 0.55);
+    color: #e0f2fe;
+
+    &:hover:not(:disabled) {
+      background: rgba(66, 133, 244, 0.2);
+      border-color: rgba(125, 211, 252, 0.8);
+    }
+  }
+
+  &.mobile-play-pause {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    background: rgba(66, 133, 244, 0.1);
+    border-color: rgba(102, 179, 255, 0.55);
+    color: #e0f2fe;
+  }
+}
+
+/* Progress Bar Desktop */
+.soundtrack-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.soundtrack-time {
+  font-size: 10px;
+  color: #94a3b8;
+  width: 32px;
+  text-align: center;
+}
+
+.soundtrack-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.soundtrack-progress-fill {
+  height: 100%;
+  background: #66b3ff;
+  transition:
+    width 0.1s linear,
+    background-color 0.2s ease;
+}
+
+/* Mobile Top Edge Progress Bar */
+.soundtrack-mobile-progress-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+
+/* Utility to ensure text truncates correctly */
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Lore Navigation container */
+.lore-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .soundtrack-mobile-bar {
@@ -970,13 +1057,6 @@ function prevTrack() {
   text-overflow: ellipsis;
 }
 
-.soundtrack-mobile-action {
-  min-width: 92px;
-  min-height: 40px;
-  padding: 0 14px;
-  flex-shrink: 0;
-}
-
 .soundtrack-controls-group {
   display: flex;
   align-items: center;
@@ -1017,34 +1097,6 @@ function prevTrack() {
   }
 }
 
-.soundtrack-skip-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid rgba(66, 133, 244, 0.45);
-  background-color: #10151f;
-  color: #66b3ff;
-  font-size: 1.1rem;
-  font-weight: bold;
-  line-height: 1;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  &:hover:not(:disabled) {
-    background-color: rgba(66, 133, 244, 0.15);
-    border-color: #7dd3fc;
-    color: #ffffff;
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-}
-
 .quote-nav-btn.share-btn {
   width: auto;
   min-width: 68px;
@@ -1052,16 +1104,6 @@ function prevTrack() {
   font-size: 0.85rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-weight: bold;
-}
-
-@media (max-width: 767px) {
-  .soundtrack-panel-main {
-    grid-template-columns: auto 1fr;
-  }
-
-  .soundtrack-action {
-    width: 100%;
-  }
 }
 
 .soundtrack-comic-controls {
