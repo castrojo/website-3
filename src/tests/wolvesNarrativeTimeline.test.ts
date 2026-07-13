@@ -51,7 +51,7 @@ describe('wolves narrative timeline', () => {
     })
     expect(getNarrativeSlotForTime(180)).toMatchObject({
       artifactId: 'lorem-pursuit-1',
-      startTime: 180,
+      startTime: 150,
       endTime: 220,
     })
     expect(getNarrativeSlotForTime(398)).toMatchObject({

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { WolvesLoreEntry } from './lore'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { LangLandingBluefinImageURLs } from '../../content'
 import { loreEntries } from './lore'
 
@@ -29,6 +29,13 @@ function clearTypewriter() {
   }
 }
 
+function scrollViewport() {
+  quoteViewportRef.value?.scrollTo({
+    top: quoteViewportRef.value.scrollHeight,
+    behavior: 'smooth',
+  })
+}
+
 function runTypewriter() {
   clearTypewriter()
 
@@ -52,12 +59,15 @@ function runTypewriter() {
 
     typewriterTimer = setInterval(() => {
       index++
-      if (index >= targetText.length) {
-        typedQuoteText.value = targetText
-        clearTypewriter()
+      typedQuoteText.value = targetText.slice(0, index)
+
+      const currentChar = targetText[index - 1]
+      if (currentChar === '.' || currentChar === '?' || currentChar === '!' || currentChar === '…') {
+        scrollViewport()
       }
-      else {
-        typedQuoteText.value = targetText.slice(0, index)
+
+      if (index >= targetText.length) {
+        clearTypewriter()
       }
     }, stepTime)
     return
@@ -145,6 +155,7 @@ function runTypewriter() {
     }
     else {
       typedMessagesText.value[activeMessageIndex.value] = targetText
+      scrollViewport()
       // Once a message completes, proceed to the next after a brief pause
       activeMessageIndex.value++
       currentLength = 0
@@ -189,22 +200,22 @@ const filteredMascots = computed(() => {
 })
 
 const mascotIndex = ref(0)
-const nextMascotIndex = ref<number | null>(null)
+const nextMascotIndex = ref(0)
 const isMascotTransitioning = ref(false)
 
 let mascotTimer: ReturnType<typeof setInterval> | null = null
 let mascotInitialTimeout: ReturnType<typeof setTimeout> | null = null
 
-function rotateMascot() {
+async function rotateMascot() {
   if (filteredMascots.value.length === 0) {
     return
   }
   const nextIdx = (mascotIndex.value + 1) % filteredMascots.value.length
   nextMascotIndex.value = nextIdx
+  await nextTick()
   isMascotTransitioning.value = true
   setTimeout(() => {
     mascotIndex.value = nextIdx
-    nextMascotIndex.value = null
     isMascotTransitioning.value = false
   }, 1000)
 }
@@ -336,16 +347,16 @@ onBeforeUnmount(() => {
             <div class="mascot-display-area">
               <template v-if="filteredMascots.length > 0">
                 <img
-                  v-if="nextMascotIndex !== null"
-                  :src="`${baseUrl}${filteredMascots[nextMascotIndex].replace('./', '')}`"
-                  class="mascot-avatar fading-in"
-                  alt="Telemetry Avatar Next"
+                  :src="`${baseUrl}${filteredMascots[mascotIndex].replace('./', '')}`"
+                  class="mascot-avatar mascot-avatar-current"
+                  :class="{ 'is-fading-out': isMascotTransitioning }"
+                  alt="Telemetry Avatar"
                 >
                 <img
-                  :src="`${baseUrl}${filteredMascots[mascotIndex].replace('./', '')}`"
-                  class="mascot-avatar"
-                  :class="{ 'fading-out': isMascotTransitioning }"
-                  alt="Telemetry Avatar"
+                  :src="`${baseUrl}${filteredMascots[nextMascotIndex].replace('./', '')}`"
+                  class="mascot-avatar mascot-avatar-next"
+                  :class="{ 'is-fading-in': isMascotTransitioning }"
+                  alt="Telemetry Avatar Next"
                 >
               </template>
             </div>
@@ -679,11 +690,12 @@ onBeforeUnmount(() => {
     will-change: opacity;
     transform: translateZ(0);
 
-    &.fading-out {
+    &.mascot-avatar-next,
+    &.is-fading-out {
       opacity: 0;
     }
-    &.fading-in {
-      animation: mascotFadeIn 1s linear forwards;
+    &.mascot-avatar-next.is-fading-in {
+      opacity: 0.85;
     }
   }
 
@@ -695,15 +707,6 @@ onBeforeUnmount(() => {
     letter-spacing: 0.05em;
     color: #94a3b8;
     line-height: 1.4;
-  }
-}
-
-@keyframes mascotFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.85;
   }
 }
 </style>

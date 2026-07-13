@@ -62,7 +62,45 @@ describe('wolvesLoreColumn Logic', () => {
     expect(entry.data.messages[0].text.startsWith(renderedMessage)).toBe(true)
   })
 
+  it('keeps two mascot layers mounted during rotation', async () => {
+    vi.useFakeTimers()
+    const wrapper = mount(WolvesLoreColumn, {
+      props: {
+        artifactId: 'arthur-c-clarke-3',
+        duration: 20,
+      },
+    })
+
+    expect(wrapper.findAll('.mascot-avatar')).toHaveLength(2)
+
+    await vi.advanceTimersByTimeAsync(15_000)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.mascot-avatar-current').classes()).toContain('is-fading-out')
+    expect(wrapper.find('.mascot-avatar-next').classes()).toContain('is-fading-in')
+  })
+
+  it('smoothly advances long quotes at reading beats', async () => {
+    vi.useFakeTimers()
+    const scrollTo = vi.spyOn(HTMLElement.prototype, 'scrollTo')
+    const wrapper = mount(WolvesLoreColumn, {
+      props: {
+        artifactId: 'arthur-c-clarke-3',
+        duration: 0.01,
+      },
+    })
+
+    vi.advanceTimersByTime(1_000)
+    await wrapper.vm.$nextTick()
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
+  })
+
   afterEach(() => {
     vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 })

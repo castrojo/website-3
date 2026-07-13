@@ -14,7 +14,7 @@ interface WolvesNarrativeLock {
 
 export const lockedNarrativeSlots: readonly WolvesNarrativeLock[] = [
   { artifactId: 'arthur-c-clarke-4', startTime: 0 },
-  { artifactId: 'lorem-pursuit-1', startTime: 180, endTime: 220 },
+  { artifactId: 'lorem-pursuit-1', startTime: 150, endTime: 220 },
   { artifactId: 'blue-universal-acquires-wayland-yutani', startTime: 398, endTime: 425 },
 ]
 
