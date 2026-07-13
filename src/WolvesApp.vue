@@ -58,13 +58,14 @@ const activeChapter = computed(() =>
   wolvesRelease.chapters.find(chapter => chapter.id === activeNarrativeArtifact.value?.chapterId),
 )
 
+const isImmersive = ref(false)
 const EQUINOX_ENTER_DURATION = 1500
 let equinoxTimeout: ReturnType<typeof setTimeout> | null = null
 let presentationTimeout: ReturnType<typeof setTimeout> | null = null
 let equinoxTransitionId = 0
 
 watch(playlistTrackIndex, (newVal) => {
-  if (!isSoundtrackActive.value) {
+  if (!isSoundtrackActive.value || !isImmersive.value) {
     return
   }
 
@@ -170,8 +171,6 @@ function getNightWallpaperUrl(monthIndex: number) {
   return `url('${import.meta.env.BASE_URL}img/wallpapers/bluefin-${pairStr}-night.webp')`
 }
 
-const isImmersive = ref(false)
-
 function enterImmersiveExperience() {
   const transition = () => {
     isImmersive.value = true
@@ -193,6 +192,20 @@ function enterImmersiveExperience() {
 function exitImmersiveExperience() {
   const transition = () => {
     isImmersive.value = false
+    isEquinoxActive.value = false
+    equinoxTransitionId++
+    if (equinoxTimeout) {
+      clearTimeout(equinoxTimeout)
+      equinoxTimeout = null
+    }
+    if (presentationTimeout) {
+      clearTimeout(presentationTimeout)
+      presentationTimeout = null
+    }
+    presentationSnapshot.value = null
+    playlistCurrentTime.value = 0
+    playlistDuration.value = 0
+    playlistTrackIndex.value = 0
   }
 
   const documentWithTransition = document as Document & {

@@ -159,4 +159,41 @@ describe('wolvesApp.vue', () => {
       vi.useRealTimers()
     }
   })
+
+  it('resets the Track 0 presentation when re-entering before player progress', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const wrapper = mount(WolvesApp)
+
+      await wrapper.get('.experience-cta-btn').trigger('click')
+      const soundtrack = wrapper.findComponent({ name: 'WolvesSoundtrack' })
+      await soundtrack.vm.$emit('progress', { currentTime: 180, duration: 240, playlistIndex: 0 })
+      await soundtrack.vm.$emit('progress', { currentTime: 12, duration: 240, playlistIndex: 1 })
+      await vi.advanceTimersByTimeAsync(1500)
+
+      expect(wrapper.get('.immersive-content-grid').attributes('data-presentation')).toBe('centered-gallery')
+      expect(wrapper.find('.lore-artifact').exists()).toBe(false)
+      expect(wrapper.get('.comic-reader').attributes('data-track-index')).toBe('1')
+
+      await soundtrack.vm.$emit('progress', { currentTime: 12, duration: 240, playlistIndex: 2 })
+      await wrapper.get('.hud-exit-btn').trigger('click')
+      await wrapper.get('.experience-cta-btn').trigger('click')
+
+      expect(wrapper.get('.immersive-content-grid').attributes('data-presentation')).toBe('narrative-split')
+      expect(wrapper.find('.lore-artifact').text()).toBe('arthur-c-clarke-4')
+      expect(wrapper.get('.comic-reader').attributes('data-track-index')).toBe('0')
+      expect(wrapper.get('.comic-reader').attributes('data-current-time')).toBe('0')
+
+      await vi.advanceTimersByTimeAsync(1500)
+
+      expect(wrapper.get('.immersive-content-grid').attributes('data-presentation')).toBe('narrative-split')
+      expect(wrapper.find('.lore-artifact').text()).toBe('arthur-c-clarke-4')
+      expect(wrapper.get('.comic-reader').attributes('data-track-index')).toBe('0')
+      expect(wrapper.get('.comic-reader').attributes('data-current-time')).toBe('0')
+    }
+    finally {
+      vi.useRealTimers()
+    }
+  })
 })

@@ -222,3 +222,9 @@ dist/assets/style-D8PqpqCz.js             178.10 kB │ gzip: 59.78 kB
 - Removed the duplicate `WolvesQrCodes` mount from `src/WolvesApp.vue` so the sidebar QR block is rendered exactly once via `src/components/wolves/WolvesLoreColumn.vue`.
 - Updated focused Wolves app/lore/QR tests to assert the single QR mount and placeholder donate CTA.
 - Verified with `npm run test:run -- src/tests/wolvesApp.test.ts src/tests/wolvesLoreColumn.test.ts src/tests/wolvesQrCodes.test.ts` and `npm run build`.
+
+## 2026-07-13 Gallery Playback Follow-up
+
+- Exiting the immersive experience now cancels pending Equinox and presentation handoffs, clears the presentation snapshot, and resets playback progress to Track 0.
+- Added a focused regression that exits from later-track gallery playback, re-enters before fresh player progress, and verifies the Track 0 split, lore, and reader state remains stable after the cancelled handoff would have fired.
+- Verified with `npm test -- --run src/tests/wolvesApp.test.ts`, `npx eslint src/WolvesApp.vue src/tests/wolvesApp.test.ts`, and `npm run typecheck`.
