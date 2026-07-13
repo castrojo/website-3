@@ -150,13 +150,6 @@ function seekToPosition(event: MouseEvent) {
   currentTime.value = targetTime // Optimistic update
 }
 
-defineExpose({
-  formattedCurrentTime,
-  formattedDuration,
-  progressPercent,
-  seekToPosition,
-})
-
 const currentSource = computed(() => manifest.value?.source ?? fallbackSource)
 const currentTrack = computed(() => manifest.value?.tracks[currentTrackIndex.value] ?? fallbackTrack)
 const isStarted = computed(() => status.value !== 'idle')
@@ -495,96 +488,95 @@ function prevTrack() {
         </div>
 
         <div class="soundtrack-copy">
-          <span class="soundtrack-label font-mono">RELEASE SOUNDTRACK TO HUNT BY</span>
-          <h2 class="soundtrack-title">
+          <span class="soundtrack-label font-mono">RELEASE SOUNDTRACK</span>
+          <h2 class="soundtrack-title truncate">
             {{ currentTrack.title }}
           </h2>
-          <p class="soundtrack-artist font-mono">
+          <p class="soundtrack-artist font-mono truncate">
             {{ currentTrack.artist }}
           </p>
-          <p class="soundtrack-status font-mono">
-            {{ statusCopy }}
-          </p>
 
-          <div class="soundtrack-links">
-            <a
-              :href="currentSource.playlistUrl"
-              aria-label="Open soundtrack playlist on YouTube"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="soundtrack-link"
+          <!-- Desktop Progress Bar -->
+          <div class="soundtrack-progress-container">
+            <span class="soundtrack-time font-mono">{{ formattedCurrentTime }}</span>
+            <div
+              class="soundtrack-progress-bar group"
+              role="slider"
+              tabindex="0"
+              :aria-valuenow="progressPercent"
+              @click="seekToPosition"
             >
-              YouTube playlist
-            </a>
-            <div class="soundtrack-music-group">
-              <a
-                :href="currentSource.musicUrl"
-                aria-label="Open soundtrack in YouTube Music"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="soundtrack-link"
-              >
-                YouTube Music
-              </a>
-              <span class="soundtrack-premium-note font-mono">
-                Ad-free playback requires YouTube Premium
-              </span>
+              <div class="soundtrack-progress-fill group-hover:bg-[#7dd3fc]" :style="{ width: `${progressPercent}%` }" />
             </div>
+            <span class="soundtrack-time font-mono">{{ formattedDuration }}</span>
           </div>
         </div>
 
+        <!-- Sleeker Controls -->
         <div class="soundtrack-controls-group">
           <button
             type="button"
-            class="quote-nav-btn prev"
-            aria-label="Previous transcript"
-            @click="emit('prevLore')"
-          >
-            &larr;
-          </button>
-          <button
-            type="button"
-            class="soundtrack-skip-btn prev"
+            class="soundtrack-icon-btn prev"
             aria-label="Previous track"
             :disabled="!isStarted"
             @click="prevTrack"
           >
-            |&lt;
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
           </button>
+
           <button
             type="button"
-            class="soundtrack-action"
+            class="soundtrack-icon-btn play-pause soundtrack-action"
             :aria-label="actionAriaLabel"
             :disabled="status === 'loading'"
             @click="handlePrimaryAction"
           >
-            {{ actionLabel }}
+            <svg v-if="isPlaying" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+            <svg v-else class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           </button>
+
           <button
             type="button"
-            class="soundtrack-skip-btn next"
+            class="soundtrack-icon-btn next"
             aria-label="Next track"
             :disabled="!isStarted"
             @click="nextTrack"
           >
-            &gt;|
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
           </button>
-          <button
-            type="button"
-            class="quote-nav-btn next"
-            aria-label="Next transcript"
-            @click="emit('nextLore')"
+        </div>
+      </div>
+
+      <!-- Status and Links below main track info -->
+      <div class="soundtrack-status-panel">
+        <p class="soundtrack-status font-mono">
+          {{ statusCopy }}
+        </p>
+
+        <div class="soundtrack-links">
+          <a
+            :href="currentSource.playlistUrl"
+            aria-label="Open soundtrack playlist on YouTube"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="soundtrack-link"
           >
-            &rarr;
-          </button>
-          <button
-            type="button"
-            class="quote-nav-btn share-btn font-mono"
-            :aria-label="loreCopied ? 'Transcript copied' : 'Share transcript'"
-            @click="emit('shareLore')"
-          >
-            {{ loreCopied ? 'COPIED!' : 'SHARE' }}
-          </button>
+            YouTube playlist
+          </a>
+          <div class="soundtrack-music-group">
+            <a
+              :href="currentSource.musicUrl"
+              aria-label="Open soundtrack in YouTube Music"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="soundtrack-link"
+            >
+              YouTube Music
+            </a>
+            <span class="soundtrack-premium-note font-mono">
+              Ad-free playback requires YouTube Premium
+            </span>
+          </div>
         </div>
       </div>
 
