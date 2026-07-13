@@ -556,6 +556,13 @@ watch(() => props.trackIndex, (trackIndex, previousTrackIndex) => {
   }
 }, { immediate: true })
 
+watch(flickrPhotos, (photos) => {
+  const trackIndex = props.trackIndex
+  if (photos.length > 0 && trackIndex !== undefined && trackIndex > 0) {
+    snapshotLaterTrackPhotos(trackIndex)
+  }
+})
+
 function getFlickrPhotoUrl(photo: any) {
   if (!photo) {
     return ''

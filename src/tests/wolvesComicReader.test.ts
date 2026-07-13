@@ -333,7 +333,7 @@ describe('wolvesComicReader', () => {
     expect(galleryCaption(wrapper)).toContain('BLUEFIN SHOWCASE //')
   })
 
-  it('keeps a later track fallback snapshot when Flickr finishes loading', async () => {
+  it('switches an active later track to Flickr when the cache finishes loading', async () => {
     const tracks = [
       coverTrack,
       {
@@ -375,7 +375,8 @@ describe('wolvesComicReader', () => {
 
     resolveFlickr(new Response(JSON.stringify(galleryPhotos)))
     await flushPromises()
-    expect(galleryCaption(wrapper)).toBe(fallbackCaption)
+    expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
+    expect(galleryCaption(wrapper)).not.toBe(fallbackCaption)
 
     await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 0 })
     expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
