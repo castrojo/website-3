@@ -51,6 +51,7 @@ const renderTasks = new Map<HTMLCanvasElement, any>()
 const page = ref(1) // 1-based
 const pdfLoading = ref(true)
 const pdfError = ref('')
+const isExperimental = ref(true)
 
 // Base path for public assets
 const baseUrl = import.meta.env.BASE_URL
@@ -194,6 +195,138 @@ const mixedPhotos = computed(() => {
   }
 })
 
+interface TimelineSlide {
+  id: string
+  isLocal: boolean
+  path: string
+  title: string
+  type: 'single' | 'daynight'
+  dayName?: string
+  nightName?: string
+  startTime: number
+  duration: number
+  endTime: number
+}
+
+const timelineSlides = computed<TimelineSlide[]>(() => {
+  const localShowcase = wallpapers.filter((wp) => {
+    const isPeople = wp.name?.includes('/people/') || wp.dayName?.includes('/people/') || wp.nightName?.includes('/people/')
+    return !isPeople
+  }).map(wp => ({
+    id: wp.name || wp.dayName || wp.nightName || '',
+    isLocal: true,
+    path: wp.name,
+    title: wp.title,
+    type: wp.type,
+    dayName: wp.dayName,
+    nightName: wp.nightName
+  }))
+
+  const localPeople = wallpapers.filter((wp) => {
+    const isPeople = wp.name?.includes('/people/') || wp.dayName?.includes('/people/') || wp.nightName?.includes('/people/')
+    return isPeople
+  }).map(wp => ({
+    id: wp.name || wp.dayName || wp.nightName || '',
+    isLocal: true,
+    path: wp.name,
+    title: wp.title,
+    type: wp.type,
+    dayName: wp.dayName,
+    nightName: wp.nightName
+  }))
+
+  const remotePeople = flickrPhotos.value.map(p => ({
+    id: p.id,
+    isLocal: false,
+    path: `https://live.staticflickr.com/${p.server}/${p.id}_${p.secret}_b.jpg`,
+    title: p.title,
+    type: 'single' as const,
+    dayName: undefined,
+    nightName: undefined
+  }))
+
+  const showcasePool = [...localShowcase]
+  const localPeoplePool = [...localPeople]
+  const remotePeoplePool = [...remotePeople]
+
+  const result: TimelineSlide[] = []
+  let currentTime = 0
+
+  while (currentTime < 201 && (showcasePool.length > 0 || localPeoplePool.length > 0)) {
+    const item = showcasePool.length > 0 ? showcasePool.shift()! : localPeoplePool.shift()!
+    const duration = item.type === 'daynight' ? 20 : 10
+    result.push({
+      ...item,
+      path: item.path || '',
+      startTime: currentTime,
+      duration,
+      endTime: currentTime + duration
+    })
+    currentTime += duration
+  }
+
+  while (currentTime < 257 && (localPeoplePool.length > 0 || remotePeoplePool.length > 0 || showcasePool.length > 0)) {
+    const item = localPeoplePool.length > 0
+      ? localPeoplePool.shift()!
+      : (remotePeoplePool.length > 0 ? remotePeoplePool.shift()! : showcasePool.shift()!)
+    const duration = 2
+    result.push({
+      ...item,
+      path: item.path || '',
+      startTime: currentTime,
+      duration,
+      endTime: currentTime + duration
+    })
+    currentTime += duration
+  }
+
+  while (currentTime < 423 && remotePeoplePool.length > 0) {
+    const item = remotePeoplePool.shift()!
+    const duration = 1
+    result.push({
+      ...item,
+      path: item.path || '',
+      startTime: currentTime,
+      duration,
+      endTime: currentTime + duration
+    })
+    currentTime += duration
+  }
+
+  return result
+})
+
+const activeTimelineSlide = computed(() => {
+  if (props.trackIndex !== 0 || !isExperimental.value || timelineSlides.value.length === 0) {
+    return null
+  }
+  const curTime = props.playlistCurrentTime ?? 0
+  const slide = timelineSlides.value.find(s => curTime >= s.startTime && curTime < s.endTime)
+  return slide || timelineSlides.value[timelineSlides.value.length - 1]
+})
+
+const daynightNightOpacity = computed(() => {
+  const slide = activeTimelineSlide.value
+  if (!slide || slide.type !== 'daynight') {
+    return 0
+  }
+  const curTime = props.playlistCurrentTime ?? 0
+  const elapsed = curTime - slide.startTime
+  const ratio = Math.min(1.0, Math.max(0.0, elapsed / slide.duration))
+  return ratio
+})
+
+const activeTimelineSlideIndex = computed(() => {
+  if (timelineSlides.value.length === 0) {
+    return 0
+  }
+  const slide = activeTimelineSlide.value
+  if (!slide) {
+    return 0
+  }
+  return timelineSlides.value.indexOf(slide)
+})
+
 const activeFlickrIndex = computed(() => {
   if (mixedPhotos.value.length === 0 || !currentTrack.value) {
     return 0
@@ -221,7 +354,21 @@ const activeFlickrIndex = computed(() => {
   return Math.floor(props.playlistCurrentTime / interval) % mixedPhotos.value.length
 })
 
-watch(activeFlickrIndex, (newVal, oldVal) => {
+const activeDisplayIndex = computed(() => {
+  if (props.trackIndex === 0 && isExperimental.value) {
+    return activeTimelineSlideIndex.value
+  }
+  return activeFlickrIndex.value
+})
+
+const mixedPhotosToUse = computed(() => {
+  if (props.trackIndex === 0 && isExperimental.value) {
+    return timelineSlides.value
+  }
+  return mixedPhotos.value
+})
+
+watch(activeDisplayIndex, (newVal, oldVal) => {
   if (oldVal !== undefined && newVal !== oldVal) {
     previousPhotoIndex.value = oldVal
     activePhotoIndex.value = newVal
@@ -603,19 +750,35 @@ onBeforeUnmount(() => {
       <div ref="flipViewport" class="comic-viewport">
         <div class="comic-content-area">
           <!-- Live Gallery Mode (Tracks 1-6) -->
-          <div v-if="props.trackIndex && props.trackIndex > 0" class="flickr-gallery-wrapper">
+          <div v-if="(props.trackIndex && props.trackIndex > 0) || (props.trackIndex === 0 && isExperimental)" class="flickr-gallery-wrapper">
             <!-- Previous Photo (fading out) -->
             <div
-              v-if="previousPhotoIndex !== null && mixedPhotos[previousPhotoIndex!]"
+              v-if="previousPhotoIndex !== null && mixedPhotosToUse[previousPhotoIndex!]"
               class="flickr-photo-layer fading-out"
               :style="{ animationDuration: `${currentTrack?.fadeDuration ?? 1500}ms` }"
             >
-              <img
-                :src="getFlickrPhotoUrl(mixedPhotos[previousPhotoIndex!])"
-                class="flickr-img"
-                :alt="mixedPhotos[previousPhotoIndex!]?.title"
-                @error="(e) => handleImageError(e, mixedPhotos[previousPhotoIndex!])"
-              >
+              <template v-if="mixedPhotosToUse[previousPhotoIndex!].type === 'daynight'">
+                <div class="wallpaper-container daynight" style="width: 100%; height: 100%;">
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[previousPhotoIndex!].dayName}`"
+                    class="flickr-img"
+                    alt="Bluefin Dusk - Day"
+                  >
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[previousPhotoIndex!].nightName}`"
+                    class="flickr-img night-overlay is-night"
+                    alt="Bluefin Dusk - Night"
+                  >
+                </div>
+              </template>
+              <template v-else>
+                <img
+                  :src="getFlickrPhotoUrl(mixedPhotosToUse[previousPhotoIndex!])"
+                  class="flickr-img"
+                  :alt="mixedPhotosToUse[previousPhotoIndex!]?.title"
+                  @error="(e) => handleImageError(e, mixedPhotosToUse[previousPhotoIndex!])"
+                >
+              </template>
             </div>
 
             <!-- Active Photo (fading in/visible) -->
@@ -624,21 +787,37 @@ onBeforeUnmount(() => {
               :class="{ 'is-transitioning': isPhotoTransitioning }"
               :style="{ animationDuration: `${currentTrack?.fadeDuration ?? 1500}ms` }"
             >
-              <img
-                v-if="mixedPhotos[activePhotoIndex]"
-                :src="getFlickrPhotoUrl(mixedPhotos[activePhotoIndex])"
-                class="flickr-img"
-                :alt="mixedPhotos[activePhotoIndex]?.title"
-                @error="(e) => handleImageError(e, mixedPhotos[activePhotoIndex])"
-              >
+              <template v-if="mixedPhotosToUse[activePhotoIndex] && mixedPhotosToUse[activePhotoIndex].type === 'daynight'">
+                <div class="wallpaper-container daynight" style="width: 100%; height: 100%;">
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[activePhotoIndex].dayName}`"
+                    class="flickr-img"
+                    alt="Bluefin Dusk - Day"
+                  >
+                  <img
+                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[activePhotoIndex].nightName}`"
+                    class="flickr-img night-overlay"
+                    :style="{ opacity: daynightNightOpacity }"
+                    alt="Bluefin Dusk - Night"
+                  >
+                </div>
+              </template>
+              <template v-else-if="mixedPhotosToUse[activePhotoIndex]">
+                <img
+                  :src="getFlickrPhotoUrl(mixedPhotosToUse[activePhotoIndex])"
+                  class="flickr-img"
+                  :alt="mixedPhotosToUse[activePhotoIndex]?.title"
+                  @error="(e) => handleImageError(e, mixedPhotosToUse[activePhotoIndex])"
+                >
+              </template>
             </div>
 
             <!-- Sleek photo caption -->
-            <div v-if="mixedPhotos[activePhotoIndex]" class="flickr-caption font-mono">
+            <div v-if="mixedPhotosToUse[activePhotoIndex]" class="flickr-caption font-mono">
               <span class="caption-label text-cyan">
-                {{ mixedPhotos[activePhotoIndex].isLocal ? 'BLUEFIN SHOWCASE //' : 'CNCF STREAM //' }}
+                {{ mixedPhotosToUse[activePhotoIndex].isLocal ? 'BLUEFIN SHOWCASE //' : 'CNCF STREAM //' }}
               </span>
-              {{ mixedPhotos[activePhotoIndex].title }}
+              {{ mixedPhotosToUse[activePhotoIndex].title }}
             </div>
           </div>
 
@@ -1029,6 +1208,9 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   opacity: 0;
   pointer-events: none;
 

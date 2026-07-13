@@ -202,4 +202,49 @@ describe('wolvesComicReader', () => {
     const layer = wrapper.find('.flickr-photo-layer.fading-out')
     expect(layer.exists()).toBe(true)
   })
+
+  it('correctly initializes the experimental timeline and resolves active slide details', async () => {
+    const wrapper = mount(WolvesComicReader, {
+      props: {
+        chapters: [],
+        trackIndex: 0,
+        playlistCurrentTime: 0,
+      },
+    })
+
+    const vm = wrapper.vm as any
+    expect(vm.isExperimental).toBe(true)
+
+    // Verify timeline is constructed
+    const timeline = vm.timelineSlides
+    expect(timeline.length).toBeGreaterThan(0)
+
+    // No duplicate slides across the timeline
+    const ids = timeline.map((s: any) => s.id)
+    const uniqueIds = new Set(ids)
+    expect(uniqueIds.size).toBe(ids.length)
+
+    // Check Phase 1 slide durations: Day/Night should be 20s, Single should be 10s
+    const daynightSlide = timeline.find((s: any) => s.type === 'daynight')
+    if (daynightSlide) {
+      expect(daynightSlide.duration).toBe(20)
+    }
+
+    const singleSlide = timeline.find((s: any) => s.type === 'single' && s.startTime < 201)
+    if (singleSlide) {
+      expect(singleSlide.duration).toBe(10)
+    }
+
+    // Verify opacity transitions for day/night slide
+    if (daynightSlide) {
+      await wrapper.setProps({ playlistCurrentTime: daynightSlide.startTime })
+      expect(vm.daynightNightOpacity).toBe(0)
+
+      await wrapper.setProps({ playlistCurrentTime: daynightSlide.startTime + 10 })
+      expect(vm.daynightNightOpacity).toBeCloseTo(0.5)
+
+      await wrapper.setProps({ playlistCurrentTime: daynightSlide.startTime + 19.99 })
+      expect(vm.daynightNightOpacity).toBeCloseTo(0.9995)
+    }
+  })
 })
