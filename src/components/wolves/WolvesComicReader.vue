@@ -1372,7 +1372,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0c1016;
+  background-color: transparent;
 }
 
 .wallpaper-img {
@@ -1449,7 +1449,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-color: #0c1016;
+  background-color: transparent;
 }
 
 .flickr-photo-layer {
