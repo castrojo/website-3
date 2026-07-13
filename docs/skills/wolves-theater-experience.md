@@ -80,6 +80,8 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 - Relying on pure deterministic shuffles for critical milestone images instead of explicit index/timeline assignment.
 - Modifying or shortening narrative messaging text to avoid layout/viewport resizing instead of split-sequencing.
 - Referencing generated image assets with outdated or incorrect extension names (e.g., using `.jpeg` instead of `.webp`).
+- Reusing the Become Legend finale image earlier in Track 0 or letting it advance before the song ends.
+- Inventing maintainer CTA copy or replacing visible source-action labels with icon-only links.
 
 ## Verification
 - [ ] No emojis in changed files or comments.
@@ -93,6 +95,8 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 - [ ] Timeline boundaries use a 1ms tolerance with \`findIndex(s => time < s.endTime - 0.001)\`.
 - [ ] Flex grids scale proportionally on 16:9 1080p, 1440p, and mobile views without overflowing the 100vh viewport due to missing \`min-height: 0\`.
 - [ ] Playlist Previous and Next controls are disabled before player readiness and at their respective first/last-track boundaries.
+- [ ] The selected finale image is active from `408.0s` through `423.0s`, with no repeated Track 0 image.
+- [ ] The soundtrack CTA renders its complete authored copy and retains visible, descriptive Playlist and Music actions.
 
 ### Additional Architectural Rules
 27. **Transparent Letterboxing:** When using `object-fit: contain` for wallpapers and Flickr photos, set the container `background-color: transparent` instead of a solid black or dark hex color. This allows the underlying seasonal wallpapers to remain visible through the letterbox gaps instead of being blocked by black bars.
@@ -111,3 +115,5 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 40. **SFX Rendering:** The lore parser marks angle-bracket-only blocks as `isSfx`. Render them in a dedicated conditional branch with the established centered `.sfx-message` / `.sfx-text` treatment and no speaker header. Preserve the parsed text exactly; do not rewrite sound effects into decorative glyphs.
 41. **Conversation Boundary Scrolling:** Scroll the lore viewport after conversational sentence punctuation and message completion, after Vue has committed the text. Never scroll on every character. This keeps a long active transmission visible without changing its typewriter pacing.
 42. **Track 0 Opening Lock:** The first 20 seconds use the deterministic day/night intro only: Collapse begins at `0:00`, Prey begins at `8.4s`, and Dusk begins at `16.8s`. Added People or showcase images must not affect this sequence.
+43. **Become Legend Finale Lock:** Extract `wolves/people/kubecon-55164466314.webp` from the Track 0 People pool before deterministic shuffling. It is the only final image: start it at `408.0s`, precisely with `Become Legend`, and hold it through Track 0 completion at `423.0s`. Compress every remaining climax image into `359.0–408.0s`; never alter the thesis sequence to change visual pacing.
+44. **Maintainer Soundtrack CTA:** During active soundtrack playback, use the user-authored maintainer CTA as the prominent, full status message. Do not truncate it. Keep Playlist and Music as visible, concise actions with symbolic SVGs and descriptive `aria-label` values; icon-only source links are not accessible. Additional CTA copy must be supplied by the user, never invented.
