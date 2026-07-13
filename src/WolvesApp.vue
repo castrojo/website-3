@@ -83,6 +83,13 @@ const playlistTrackIndex = ref(0)
 const isSoundtrackActive = ref(false)
 const pacingMode = ref<'normal' | 'fast' | 'hyper'>('normal')
 
+const isAnnouncementVisible = computed(() => {
+  if (!isSoundtrackActive.value || playlistTrackIndex.value !== 0) {
+    return false
+  }
+  return playlistCurrentTime.value >= 345 && playlistCurrentTime.value <= 423
+})
+
 watch([playlistTrackIndex, playlistCurrentTime], ([trackIdx, curTime]) => {
   if (trackIdx === 0) {
     if (curTime >= 257) {
@@ -472,6 +479,15 @@ onBeforeUnmount(() => {
             @share-lore="handleShareLore"
             @progress="handleProgress"
           />
+        </div>
+
+        <!-- Announcement Area -->
+        <div class="hud-announcement-area font-mono">
+          <transition name="flicker-glitch">
+            <div v-if="isAnnouncementVisible" class="announcement-message text-cyan">
+              We've got your back, welcome to the path.
+            </div>
+          </transition>
         </div>
 
         <!-- Telemetry & Controls (including comic autoplay toggle) -->
@@ -1987,6 +2003,75 @@ onBeforeUnmount(() => {
     border-radius: 50%;
     background-color: #5d5d5d;
     transition: all 0.2s ease;
+  }
+}
+
+/* Announcement Area */
+.hud-announcement-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 0 16px;
+  overflow: hidden;
+
+  .announcement-message {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.flicker-glitch-enter-active,
+.flicker-glitch-leave-active {
+  transition: opacity 0.3s ease;
+}
+.flicker-glitch-enter-from,
+.flicker-glitch-leave-to {
+  opacity: 0;
+}
+.flicker-glitch-enter-active {
+  animation: flicker-in 1.2s ease-in-out forwards;
+}
+
+@keyframes flicker-in {
+  0% {
+    opacity: 0;
+    text-shadow: none;
+  }
+  10% {
+    opacity: 1;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+  }
+  15% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    text-shadow: none;
+  }
+  35% {
+    opacity: 0.5;
+  }
+  45% {
+    opacity: 1;
+    text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
+  }
+  60% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
   }
 }
 
