@@ -48,6 +48,9 @@ interface YouTubeWindow extends Window {
     }
   }
   onYouTubeIframeAPIReady?: (() => void) | null
+  __WOLVES_PLAYER__?: YouTubePlayer | null
+  __WOLVES_PLAYER_MOUNT__?: HTMLDivElement | null
+  __WOLVES_PROXY_EVENTS__?: Record<string, (...args: any[]) => void>
 }
 
 const iframeApiSrc = 'https://www.youtube.com/iframe_api'
@@ -411,9 +414,7 @@ watch(() => props.playing, (newPlaying) => {
 onBeforeUnmount(() => {
   stopProgressTimer()
   syncRootPlayerClass(false)
-  player?.destroy?.()
-  player = null
-  playerMount = null
+  // Deliberately skipping player?.destroy() so the iframe survives Vite HMR during development.
 })
 
 function setPage(n: number) {
