@@ -189,18 +189,18 @@ describe('wolvesComicReader', () => {
     await wrapper.vm.$nextTick()
 
     const len = (wrapper.vm as any).mixedPhotos.length
-    expect((wrapper.vm as any).activePhotoIndex).toBe(0 % len)
-    expect((wrapper.vm as any).previousPhotoIndex).toBeNull()
+    expect((wrapper.vm as any).activeDisplayIndex).toBe(0 % len)
+    expect((wrapper.vm as any).activeBuffer).toBe('A')
+    expect((wrapper.vm as any).opacityA).toBe(1)
+    expect((wrapper.vm as any).opacityB).toBe(0)
 
     await wrapper.setProps({ playlistCurrentTime: 18 })
     await wrapper.vm.$nextTick()
 
-    expect((wrapper.vm as any).activePhotoIndex).toBe((2 % len))
-    expect((wrapper.vm as any).previousPhotoIndex).toBe(0 % len)
-    expect((wrapper.vm as any).isPhotoTransitioning).toBe(true)
-
-    const layer = wrapper.find('.flickr-photo-layer.fading-out')
-    expect(layer.exists()).toBe(true)
+    expect((wrapper.vm as any).activeDisplayIndex).toBe(2 % len)
+    expect((wrapper.vm as any).activeBuffer).toBe('B')
+    expect((wrapper.vm as any).opacityA).toBe(0)
+    expect((wrapper.vm as any).opacityB).toBe(1)
   })
 
   it('correctly initializes the experimental timeline and resolves active slide details', async () => {
@@ -224,27 +224,28 @@ describe('wolvesComicReader', () => {
     const uniqueIds = new Set(ids)
     expect(uniqueIds.size).toBe(ids.length)
 
-    // Check Section 1 slide durations: Day/Night should be 127/17 * 2, Single should be 127/17
+    // Check Section 1 slide durations: Day/Night should be 42/5, Single should be 85/22
     const daynightSlide = timeline.find((s: any) => s.type === 'daynight')
     if (daynightSlide) {
-      expect(daynightSlide.duration).toBeCloseTo((127 / 17) * 2)
+      expect(daynightSlide.duration).toBeCloseTo(42 / 5)
     }
 
     const singleSlide = timeline.find((s: any) => s.type === 'single' && s.startTime < 127)
     if (singleSlide) {
-      expect(singleSlide.duration).toBeCloseTo(127 / 17)
+      expect(singleSlide.duration).toBeCloseTo(85 / 22)
     }
 
     // Verify opacity transitions for day/night slide
     if (daynightSlide) {
       await wrapper.setProps({ playlistCurrentTime: daynightSlide.startTime })
-      expect(vm.daynightNightOpacity).toBe(0)
+      const activeOpacity = () => vm.activeBuffer === 'A' ? vm.daynightNightOpacityA : vm.daynightNightOpacityB
+      expect(activeOpacity()).toBe(0)
 
       await wrapper.setProps({ playlistCurrentTime: daynightSlide.startTime + (daynightSlide.duration / 2) })
-      expect(vm.daynightNightOpacity).toBeCloseTo(0.5)
+      expect(activeOpacity()).toBeCloseTo(0.5)
 
       await wrapper.setProps({ playlistCurrentTime: daynightSlide.startTime + daynightSlide.duration - 0.01 })
-      expect(vm.daynightNightOpacity).toBeCloseTo(0.999, 1)
+      expect(activeOpacity()).toBeCloseTo(0.999, 1)
     }
   })
 })

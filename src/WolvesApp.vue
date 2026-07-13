@@ -16,6 +16,7 @@ README: Bluefin Wolves Teaser Landing Page Component
   and `WolvesSoundtrack.vue` without redesigning page layout.
 -->
 <script setup lang="ts">
+import type { WolvesSoundtrackManifest } from './data/wolves-soundtrack'
 import type { WolvesChapter } from './data/wolves-story'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import TopNavbar from './components/TopNavbar.vue'
@@ -25,12 +26,17 @@ import WolvesLoreColumn from './components/wolves/WolvesLoreColumn.vue'
 import WolvesQrCodes from './components/wolves/WolvesQrCodes.vue'
 import WolvesSoundtrack from './components/wolves/WolvesSoundtrack.vue'
 import { LangLandingBluefinImageURLs } from './content'
+import { loadWolvesSoundtrack } from './data/wolves-soundtrack'
 import { wolvesRelease } from './data/wolves-story'
 
 import { getChapterForPage } from './utils/wolvesStory'
 
 // Soundtrack playback and comic autoplay state
 const isPlaying = ref(false)
+const isEquinoxActive = ref(false)
+const equinoxTrackTitle = ref('')
+const equinoxTrackArtist = ref('')
+const soundtrackManifest = ref<WolvesSoundtrackManifest | null>(null)
 
 // Current page (1-based) tracked here so the chapter can be passed to WolvesSoundtrack.
 const currentPage = ref(1)
@@ -92,6 +98,35 @@ watch([playlistTrackIndex, playlistCurrentTime], ([trackIdx, curTime]) => {
   else {
     pacingMode.value = 'normal'
   }
+})
+
+let equinoxTimeout: ReturnType<typeof setTimeout> | null = null
+
+watch(playlistTrackIndex, (newVal) => {
+  if (!isSoundtrackActive.value) {
+    return
+  }
+
+  if (soundtrackManifest.value && soundtrackManifest.value.tracks[newVal]) {
+    const track = soundtrackManifest.value.tracks[newVal]
+    equinoxTrackTitle.value = track.title
+    equinoxTrackArtist.value = track.artist
+  }
+  else {
+    equinoxTrackTitle.value = newVal === 0 ? '7 Days to the Wolves' : `Track ${newVal + 1}`
+    equinoxTrackArtist.value = 'Nightwish'
+  }
+
+  isEquinoxActive.value = true
+
+  if (equinoxTimeout) {
+    clearTimeout(equinoxTimeout)
+  }
+
+  equinoxTimeout = setTimeout(() => {
+    isEquinoxActive.value = false
+    equinoxTimeout = null
+  }, 6000)
 })
 
 function handleProgress(data: { currentTime: number, duration: number, playlistIndex: number }) {
@@ -289,8 +324,14 @@ function handleFullscreenChange() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
+  try {
+    soundtrackManifest.value = await loadWolvesSoundtrack()
+  }
+  catch (err) {
+    console.error('Failed to load wolves soundtrack manifest:', err)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -370,14 +411,14 @@ onBeforeUnmount(() => {
       </header>
 
       <!-- MIDDLE CONTENT AREA (WIDESCREEN SPLIT 2fr 1fr) -->
-      <div class="immersive-content-grid">
+      <div class="immersive-content-grid" :class="{ 'equinox-active': isEquinoxActive }">
         <div class="immersive-col-left">
           <WolvesComicReader
             v-model:autoplay="isComicAutoplay"
             :chapters="wolvesRelease.chapters"
             :pacing-mode="pacingMode"
             :page="currentPage"
-            :track-index="playlistTrackIndex"
+            :track-index="isSoundtrackActive ? playlistTrackIndex : undefined"
             :playlist-current-time="playlistCurrentTime"
             @update:page="currentPage = $event"
           />
@@ -392,6 +433,23 @@ onBeforeUnmount(() => {
           />
         </div>
       </div>
+
+      <!-- EQUINOX OVERLAY -->
+      <transition name="equinox-fade">
+        <div v-if="isEquinoxActive" class="equinox-overlay">
+          <div class="equinox-title-wrap font-mono">
+            <div class="equinox-label text-cyan animate-pulse-fast">
+              // EQUINOX SHIFT DETECTED //
+            </div>
+            <h1 class="equinox-track-title">
+              {{ equinoxTrackTitle }}
+            </h1>
+            <p class="equinox-track-artist text-gray">
+              {{ equinoxTrackArtist }}
+            </p>
+          </div>
+        </div>
+      </transition>
 
       <!-- BOTTOM CONTROLS HUD -->
       <footer class="immersive-hud-footer">
@@ -2020,5 +2078,68 @@ onBeforeUnmount(() => {
   50% {
     opacity: 0.35;
   }
+}
+
+/* Equinox transition styling */
+.immersive-content-grid {
+  transition: opacity 1.5s ease-in-out;
+  &.equinox-active {
+    opacity: 0 !important;
+    pointer-events: none;
+  }
+}
+
+.equinox-overlay {
+  position: absolute;
+  top: 80px; /* HUD header offset */
+  bottom: 120px; /* HUD footer offset */
+  left: 0;
+  width: 100vw;
+  z-index: 105;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(12, 16, 22, 0.4);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+.equinox-title-wrap {
+  text-align: center;
+  max-width: 800px;
+  padding: 32px;
+}
+
+.equinox-label {
+  font-size: 1.4rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  margin-bottom: 16px;
+}
+
+.equinox-track-title {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+}
+
+.equinox-track-artist {
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Vue equinox-fade transitions */
+.equinox-fade-enter-active,
+.equinox-fade-leave-active {
+  transition: opacity 1.5s ease-in-out;
+}
+
+.equinox-fade-enter-from,
+.equinox-fade-leave-to {
+  opacity: 0;
 }
 </style>

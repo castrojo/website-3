@@ -64,10 +64,17 @@ let duskTimer: ReturnType<typeof setInterval> | null = null
 const flickrPhotos = ref<{ id: string, server: string, secret: string, title: string }[]>([])
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
 
-const activePhotoIndex = ref(0)
-const previousPhotoIndex = ref<number | null>(null)
-const isPhotoTransitioning = ref(false)
-let photoTransitionTimeout: ReturnType<typeof setTimeout> | null = null
+const activeBuffer = ref<'A' | 'B'>('A')
+const photoA = ref<any>(null)
+const photoB = ref<any>(null)
+const opacityA = ref(1)
+const opacityB = ref(0)
+const slideAIndex = ref(-1)
+const slideBIndex = ref(-1)
+
+const activePhoto = computed(() => {
+  return activeBuffer.value === 'A' ? photoA.value : photoB.value
+})
 
 const currentTrack = computed<SoundtrackTrack | null>(() => {
   if (!manifest.value || props.trackIndex === undefined) {
@@ -249,33 +256,11 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
   const result: TimelineSlide[] = []
   let currentTime = 0
 
-  // Section 1 (Intro & Verse 1): [0, 127] seconds
-  // Target: 5 Day/Night and 7 normal showcase items
-  const numDn1 = Math.min(shuffledDaynight.length, 5)
-  const numNormal1 = Math.min(shuffledNormalShowcase.length, 7)
-
-  const sec1Items: any[] = []
-  const dnPool = shuffledDaynight.slice(0, numDn1)
-  const normalPool1 = shuffledNormalShowcase.slice(0, numNormal1)
-  const remainingShowcase = shuffledNormalShowcase.slice(numNormal1)
-
-  const totalSec1Items = numDn1 + numNormal1
-  for (let i = 0; i < totalSec1Items; i++) {
-    if (i % 2 === 1 && dnPool.length > 0) {
-      sec1Items.push(dnPool.shift()!)
-    }
-    else if (normalPool1.length > 0) {
-      sec1Items.push(normalPool1.shift()!)
-    }
-    else {
-      sec1Items.push(dnPool.shift()!)
-    }
-  }
-
-  const sec1Weight = numNormal1 + (numDn1 * 2)
-  const sec1BaseDuration = sec1Weight > 0 ? 127 / sec1Weight : 10
-  for (const item of sec1Items) {
-    const duration = item.type === 'daynight' ? sec1BaseDuration * 2 : sec1BaseDuration
+  // 1. Ambient Intro [0, 42] seconds (42s total) -> 5 Day/Night wallpapers shown slowly
+  const dnPool = shuffledDaynight.slice(0, 5)
+  const sec1BaseDuration = 42 / dnPool.length
+  for (const item of dnPool) {
+    const duration = sec1BaseDuration
     result.push({
       ...item,
       path: item.path || '',
@@ -286,14 +271,10 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime += duration
   }
 
-  // Section 2 (Chorus 1 & Verse 2 & Chorus 2): [127, 229] seconds
-  // Target: 25 normal showcase items
-  const numNormal2 = Math.min(remainingShowcase.length, 25)
-  const normalPool2 = remainingShowcase.slice(0, numNormal2)
-  const leftoverShowcase = remainingShowcase.slice(numNormal2)
-
-  const sec2BaseDuration = numNormal2 > 0 ? 102 / numNormal2 : 4.08
-  for (const item of normalPool2) {
+  // 2. Heavy Driving Verse 1 [42, 127] seconds (85s total) -> 22 normal showcase wallpapers
+  const normalPool1 = shuffledNormalShowcase.slice(0, 22)
+  const sec2BaseDuration = 85 / normalPool1.length
+  for (const item of normalPool1) {
     const duration = sec2BaseDuration
     result.push({
       ...item,
@@ -305,14 +286,11 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime += duration
   }
 
-  // Section 3 (Bridge): [229, 277] seconds
-  // Leftover showcase items and first few people item (to fill exactly 8 items)
-  const sec3Items: any[] = [...leftoverShowcase]
-  const numPeopleNeeded3 = Math.max(0, 8 - sec3Items.length)
-  const peoplePool3 = shuffledPeople.slice(0, Math.min(shuffledPeople.length, numPeopleNeeded3))
-  sec3Items.push(...peoplePool3)
-
-  const sec3BaseDuration = sec3Items.length > 0 ? 48 / sec3Items.length : 6
+  // 3. Heavy Chorus 1 / Verse 2 / Chorus 2 [127, 229] seconds (102s total) -> 17 leftover showcase + 15 people wallpapers
+  const normalPool2 = shuffledNormalShowcase.slice(22, 39)
+  const peoplePool1 = shuffledPeople.slice(0, 15)
+  const sec3Items = [...normalPool2, ...peoplePool1]
+  const sec3BaseDuration = 102 / sec3Items.length
   for (const item of sec3Items) {
     const duration = sec3BaseDuration
     result.push({
@@ -325,14 +303,10 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime += duration
   }
 
-  // Section 4 (Build-Up): [277, 345] seconds
-  // Target: 34 people items
-  const startPeopleIdx4 = peoplePool3.length
-  const endPeopleIdx4 = Math.min(shuffledPeople.length, startPeopleIdx4 + 34)
-  const sec4Items = shuffledPeople.slice(startPeopleIdx4, endPeopleIdx4)
-
-  const sec4BaseDuration = sec4Items.length > 0 ? 68 / sec4Items.length : 2
-  for (const item of sec4Items) {
+  // 4. Chanting Bridge [229, 277] seconds (48s total) -> 8 people wallpapers shown slowly
+  const peoplePool2 = shuffledPeople.slice(15, 23)
+  const sec4BaseDuration = 48 / peoplePool2.length
+  for (const item of peoplePool2) {
     const duration = sec4BaseDuration
     result.push({
       ...item,
@@ -344,13 +318,26 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime += duration
   }
 
-  // Section 5 (Climax & Outro): [345, 423] seconds
-  // Remaining people items
-  const sec5Items = shuffledPeople.slice(endPeopleIdx4)
-
-  const sec5BaseDuration = sec5Items.length > 0 ? 78 / sec5Items.length : 0.85
-  for (const item of sec5Items) {
+  // 5. Heavy Build-Up [277, 345] seconds (68s total) -> 34 people wallpapers
+  const peoplePool3 = shuffledPeople.slice(23, 57)
+  const sec5BaseDuration = 68 / peoplePool3.length
+  for (const item of peoplePool3) {
     const duration = sec5BaseDuration
+    result.push({
+      ...item,
+      path: item.path || '',
+      startTime: currentTime,
+      duration,
+      endTime: currentTime + duration
+    })
+    currentTime += duration
+  }
+
+  // 6. Fast Solo Climax & Outro [345, 423] seconds (78s total) -> remaining 66 people wallpapers shown fast (quick edit style!)
+  const peoplePool4 = shuffledPeople.slice(57)
+  const sec6BaseDuration = 78 / peoplePool4.length
+  for (const item of peoplePool4) {
+    const duration = sec6BaseDuration
     result.push({
       ...item,
       path: item.path || '',
@@ -373,8 +360,30 @@ const activeTimelineSlide = computed(() => {
   return slide || timelineSlides.value[timelineSlides.value.length - 1]
 })
 
-const daynightNightOpacity = computed(() => {
+const currentSlideTransitionDuration = computed(() => {
+  if (props.trackIndex !== 0) {
+    return currentTrack.value?.fadeDuration ?? 1500
+  }
   const slide = activeTimelineSlide.value
+  if (!slide) {
+    return 1000
+  }
+  return Math.min(800, slide.duration * 300)
+})
+
+const daynightNightOpacityA = computed(() => {
+  const slide = photoA.value
+  if (!slide || slide.type !== 'daynight') {
+    return 0
+  }
+  const curTime = props.playlistCurrentTime ?? 0
+  const elapsed = curTime - slide.startTime
+  const ratio = Math.min(1.0, Math.max(0.0, elapsed / slide.duration))
+  return ratio
+})
+
+const daynightNightOpacityB = computed(() => {
+  const slide = photoB.value
   if (!slide || slide.type !== 'daynight') {
     return 0
   }
@@ -436,27 +445,46 @@ const mixedPhotosToUse = computed(() => {
   return mixedPhotos.value
 })
 
-watch(activeDisplayIndex, (newVal, oldVal) => {
-  if (oldVal !== undefined && newVal !== oldVal) {
-    previousPhotoIndex.value = oldVal
-    activePhotoIndex.value = newVal
-    isPhotoTransitioning.value = true
+watch(activeDisplayIndex, (newVal) => {
+  const activePhotoObj = mixedPhotosToUse.value[newVal]
+  if (!activePhotoObj) {
+    return
+  }
 
-    if (photoTransitionTimeout) {
-      clearTimeout(photoTransitionTimeout)
-    }
+  if (photoA.value === null && photoB.value === null) {
+    photoA.value = activePhotoObj
+    slideAIndex.value = newVal
+    activeBuffer.value = 'A'
+    opacityA.value = 1
+    opacityB.value = 0
+    return
+  }
 
-    const duration = currentTrack.value?.fadeDuration ?? 1500
-    photoTransitionTimeout = setTimeout(() => {
-      previousPhotoIndex.value = null
-      isPhotoTransitioning.value = false
-      photoTransitionTimeout = null
-    }, duration)
+  if (activeBuffer.value === 'A') {
+    photoB.value = activePhotoObj
+    slideBIndex.value = newVal
+    activeBuffer.value = 'B'
+    opacityB.value = 1
+    opacityA.value = 0
   }
   else {
-    activePhotoIndex.value = newVal
+    photoA.value = activePhotoObj
+    slideAIndex.value = newVal
+    activeBuffer.value = 'A'
+    opacityA.value = 1
+    opacityB.value = 0
   }
 }, { immediate: true })
+
+watch(() => props.trackIndex, () => {
+  photoA.value = null
+  photoB.value = null
+  opacityA.value = 1
+  opacityB.value = 0
+  slideAIndex.value = -1
+  slideBIndex.value = -1
+  activeBuffer.value = 'A'
+})
 
 function getFlickrPhotoUrl(photo: any) {
   if (!photo) {
@@ -833,73 +861,80 @@ onBeforeUnmount(() => {
         <div class="comic-content-area">
           <!-- Live Gallery Mode (Tracks 1-6) -->
           <div v-if="(props.trackIndex && props.trackIndex > 0) || (props.trackIndex === 0 && isExperimental)" class="flickr-gallery-wrapper">
-            <!-- Previous Photo (fading out) -->
+            <!-- Layer A -->
             <div
-              v-if="previousPhotoIndex !== null && mixedPhotosToUse[previousPhotoIndex!]"
-              class="flickr-photo-layer fading-out"
-              :style="{ animationDuration: `${currentTrack?.fadeDuration ?? 1500}ms` }"
+              class="flickr-photo-layer"
+              :style="{
+                opacity: opacityA,
+                transition: `opacity ${currentSlideTransitionDuration}ms ease-in-out`,
+                zIndex: activeBuffer === 'A' ? 2 : 1,
+              }"
             >
-              <template v-if="mixedPhotosToUse[previousPhotoIndex!].type === 'daynight'">
+              <template v-if="photoA && photoA.type === 'daynight'">
                 <div class="wallpaper-container daynight" style="width: 100%; height: 100%;">
                   <img
-                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[previousPhotoIndex!].dayName}`"
+                    :src="`${baseUrl}img/wallpapers/${photoA.dayName}`"
                     class="flickr-img"
                     alt="Bluefin Dusk - Day"
                   >
                   <img
-                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[previousPhotoIndex!].nightName}`"
-                    class="flickr-img night-overlay is-night"
+                    :src="`${baseUrl}img/wallpapers/${photoA.nightName}`"
+                    class="flickr-img night-overlay"
+                    :style="{ opacity: daynightNightOpacityA }"
                     alt="Bluefin Dusk - Night"
                   >
                 </div>
               </template>
-              <template v-else>
+              <template v-else-if="photoA">
                 <img
-                  :src="getFlickrPhotoUrl(mixedPhotosToUse[previousPhotoIndex!])"
+                  :src="getFlickrPhotoUrl(photoA)"
                   class="flickr-img"
-                  :alt="mixedPhotosToUse[previousPhotoIndex!]?.title"
-                  @error="(e) => handleImageError(e, mixedPhotosToUse[previousPhotoIndex!])"
+                  :alt="photoA.title"
+                  @error="(e) => handleImageError(e, photoA)"
                 >
               </template>
             </div>
 
-            <!-- Active Photo (fading in/visible) -->
+            <!-- Layer B -->
             <div
               class="flickr-photo-layer"
-              :class="{ 'is-transitioning': isPhotoTransitioning }"
-              :style="{ animationDuration: `${currentTrack?.fadeDuration ?? 1500}ms` }"
+              :style="{
+                opacity: opacityB,
+                transition: `opacity ${currentSlideTransitionDuration}ms ease-in-out`,
+                zIndex: activeBuffer === 'B' ? 2 : 1,
+              }"
             >
-              <template v-if="mixedPhotosToUse[activePhotoIndex] && mixedPhotosToUse[activePhotoIndex].type === 'daynight'">
+              <template v-if="photoB && photoB.type === 'daynight'">
                 <div class="wallpaper-container daynight" style="width: 100%; height: 100%;">
                   <img
-                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[activePhotoIndex].dayName}`"
+                    :src="`${baseUrl}img/wallpapers/${photoB.dayName}`"
                     class="flickr-img"
                     alt="Bluefin Dusk - Day"
                   >
                   <img
-                    :src="`${baseUrl}img/wallpapers/${mixedPhotosToUse[activePhotoIndex].nightName}`"
+                    :src="`${baseUrl}img/wallpapers/${photoB.nightName}`"
                     class="flickr-img night-overlay"
-                    :style="{ opacity: daynightNightOpacity }"
+                    :style="{ opacity: daynightNightOpacityB }"
                     alt="Bluefin Dusk - Night"
                   >
                 </div>
               </template>
-              <template v-else-if="mixedPhotosToUse[activePhotoIndex]">
+              <template v-else-if="photoB">
                 <img
-                  :src="getFlickrPhotoUrl(mixedPhotosToUse[activePhotoIndex])"
+                  :src="getFlickrPhotoUrl(photoB)"
                   class="flickr-img"
-                  :alt="mixedPhotosToUse[activePhotoIndex]?.title"
-                  @error="(e) => handleImageError(e, mixedPhotosToUse[activePhotoIndex])"
+                  :alt="photoB.title"
+                  @error="(e) => handleImageError(e, photoB)"
                 >
               </template>
             </div>
 
             <!-- Sleek photo caption -->
-            <div v-if="mixedPhotosToUse[activePhotoIndex]" class="flickr-caption font-mono">
+            <div v-if="activePhoto" class="flickr-caption font-mono">
               <span class="caption-label text-cyan">
-                {{ mixedPhotosToUse[activePhotoIndex].isLocal ? 'BLUEFIN SHOWCASE //' : 'CNCF STREAM //' }}
+                {{ activePhoto.isLocal ? 'BLUEFIN SHOWCASE //' : 'CNCF STREAM //' }}
               </span>
-              {{ mixedPhotosToUse[activePhotoIndex].title }}
+              {{ activePhoto.title }}
             </div>
           </div>
 
@@ -1361,17 +1396,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background-color: #0c1016;
-  opacity: 1;
-
-  &.fading-out {
-    animation: fadeOutBuffer 1.5s ease-in-out forwards;
-    z-index: 1;
-  }
-
-  &.is-transitioning {
-    z-index: 2;
-    animation: fadeInBuffer 1.5s ease-in-out forwards;
-  }
+  will-change: opacity;
 }
 
 .flickr-img {
