@@ -157,22 +157,6 @@ const isPlaying = computed(() => status.value === 'playing')
 const artworkUrl = computed(() => `${import.meta.env.BASE_URL}${currentTrack.value.artwork}`)
 const currentLyricsUrl = computed(() => officialLyricsUrls[currentTrack.value.youtubeVideoId])
 
-const actionLabel = computed(() => {
-  switch (status.value) {
-    case 'loading':
-      return 'Loading Soundtrack'
-    case 'playing':
-      return 'Pause'
-    case 'ready':
-    case 'paused':
-      return 'Resume'
-    case 'error':
-      return 'Retry Soundtrack'
-    default:
-      return 'Start Soundtrack'
-  }
-})
-
 const actionAriaLabel = computed(() => {
   switch (status.value) {
     case 'playing':
@@ -614,6 +598,34 @@ function prevTrack() {
       </div>
     </section>
 
+    <!-- Lore Navigation Controls -->
+    <div class="lore-nav-controls">
+      <button
+        type="button"
+        class="quote-nav-btn prev"
+        aria-label="Previous transcript"
+        @click="emit('prevLore')"
+      >
+        &larr;
+      </button>
+      <button
+        type="button"
+        class="quote-nav-btn next"
+        aria-label="Next transcript"
+        @click="emit('nextLore')"
+      >
+        &rarr;
+      </button>
+      <button
+        type="button"
+        class="quote-nav-btn share-btn font-mono"
+        :aria-label="loreCopied ? 'Transcript copied' : 'Share transcript'"
+        @click="emit('shareLore')"
+      >
+        {{ loreCopied ? 'COPIED!' : 'SHARE' }}
+      </button>
+    </div>
+
     <!-- Fused Comic Slideshow Controls -->
     <div v-if="page && totalPages" class="soundtrack-comic-controls">
       <button
@@ -657,6 +669,11 @@ function prevTrack() {
       class="soundtrack-mobile-bar"
       :class="{ 'is-playing': isPlaying }"
     >
+      <!-- Mobile Progress Indicator pinned to top -->
+      <div class="soundtrack-mobile-progress-wrap">
+        <div class="soundtrack-progress-fill" :style="{ width: `${progressPercent}%` }" />
+      </div>
+
       <img
         :src="artworkUrl"
         :alt="`${currentTrack.title} artwork`"
@@ -666,14 +683,16 @@ function prevTrack() {
         <span class="soundtrack-mobile-title">{{ currentTrack.title }}</span>
         <span class="soundtrack-mobile-artist font-mono">{{ currentTrack.artist }}</span>
       </div>
+
       <button
         type="button"
-        class="soundtrack-mobile-action"
+        class="soundtrack-icon-btn mobile-play-pause"
         :aria-label="actionAriaLabel"
         :disabled="status === 'loading'"
         @click="handlePrimaryAction"
       >
-        {{ actionLabel }}
+        <svg v-if="isPlaying" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+        <svg v-else class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
       </button>
     </div>
   </div>
