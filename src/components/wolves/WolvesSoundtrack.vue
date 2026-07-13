@@ -150,6 +150,21 @@ function seekToPosition(event: MouseEvent) {
   currentTime.value = targetTime // Optimistic update
 }
 
+function handleSeekKeydown(event: KeyboardEvent) {
+  if (!player || typeof player.seekTo !== 'function' || duration.value === 0) {
+    return
+  }
+
+  if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+    event.preventDefault()
+    const step = 5 // Seek 5 seconds per keypress
+    const targetTime = Math.max(0, Math.min(duration.value, currentTime.value + (event.key === 'ArrowRight' ? step : -step)))
+
+    player.seekTo(targetTime, true)
+    currentTime.value = targetTime
+  }
+}
+
 const currentSource = computed(() => manifest.value?.source ?? fallbackSource)
 const currentTrack = computed(() => manifest.value?.tracks[currentTrackIndex.value] ?? fallbackTrack)
 const isStarted = computed(() => status.value !== 'idle')
@@ -488,7 +503,10 @@ function prevTrack() {
               role="slider"
               tabindex="0"
               :aria-valuenow="progressPercent"
+              aria-valuemin="0"
+              aria-valuemax="100"
               @click="seekToPosition"
+              @keydown="handleSeekKeydown"
             >
               <div class="soundtrack-progress-fill group-hover:bg-[#7dd3fc]" :style="{ width: `${progressPercent}%` }" />
             </div>
