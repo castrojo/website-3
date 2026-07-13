@@ -33,10 +33,10 @@ export function getWolvesThesisState(time: number): WolvesThesisState {
   if (time < 349) {
     return active('welcome', 'Welcome to the path.', '', '', true)
   }
-  if (time < 359) {
+  if (time < 350.5) {
     return active('corruption')
   }
-  if (time < 362) {
+  if (time < 359) {
     return active('universal-blue', 'We are Universal Blue.')
   }
   if (time < 365) {
