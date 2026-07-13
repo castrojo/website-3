@@ -180,18 +180,24 @@ function stopLoreTimer() {
 
 function getDynamicDelay(entry: WolvesLoreEntry): number {
   let charCount = 0
+  let isSlow = false
   if (entry.type === 'quote') {
     charCount = entry.data.quote.length
   }
   else {
     charCount = entry.data.messages.reduce((sum, msg) => sum + msg.text.length, 0)
+    isSlow = entry.data.messages.some(msg => msg.speaker === 'BUR//S' || msg.speaker === 'SARAH')
   }
 
   // Base reading/pacing buffer: 8000ms
   // Plus 45ms per character (realistic reading pace and typing time)
-  // Clamp between 10 seconds and 45 seconds to ensure clean user experience
-  const delay = 8000 + charCount * 45
-  return Math.max(10000, Math.min(45000, delay))
+  // Slow speakers type at ~1/3 speed with massive punctuation pauses, so we increase their multiplier and base.
+  const multiplier = isSlow ? 180 : 45
+  const baseDelay = isSlow ? 12000 : 8000
+  const delay = baseDelay + charCount * multiplier
+
+  // Clamp between 10 seconds and 120 seconds to ensure the slow, dramatic conversations finish
+  return Math.max(10000, Math.min(120000, delay))
 }
 
 function startLoreTimer() {
