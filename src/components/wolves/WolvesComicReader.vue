@@ -718,21 +718,64 @@ watch(() => props.playlistCurrentTime, (newTime) => {
   if (props.trackIndex === 0) {
     // Master track 0 playhead mapping
     if (newTime <= 127) {
-      const pct = Math.min(1, Math.max(0, newTime / 127))
-      targetPage = Math.min(7, Math.floor(pct * 7) + 1)
+      if (newTime < 18) {
+        targetPage = 1
+      }
+      else if (newTime < 36) {
+        targetPage = 2
+      }
+      else if (newTime < 54) {
+        targetPage = 3
+      }
+      else if (newTime < 72) {
+        targetPage = 4
+      }
+      else if (newTime < 90) {
+        targetPage = 5
+      }
+      else if (newTime < 108) {
+        targetPage = 6
+      }
+      else { targetPage = 7 }
     }
     else if (newTime <= 277) {
       if (newTime < 180) {
         targetPage = 8
       }
-      else {
-        const pct = Math.min(1, Math.max(0, (newTime - 180) / 97))
-        targetPage = Math.min(14, Math.floor(pct * 6) + 9)
+      else if (newTime < 220) {
+        targetPage = 9
       }
+      else if (newTime < 231) {
+        targetPage = 10
+      }
+      else if (newTime < 242) {
+        targetPage = 11
+      }
+      else if (newTime < 253) {
+        targetPage = 12
+      }
+      else if (newTime < 265) {
+        targetPage = 13
+      }
+      else { targetPage = 14 }
     }
     else {
-      const pct = Math.min(1, Math.max(0, (newTime - 277) / 146))
-      targetPage = Math.min(20, Math.floor(pct * 6) + 15)
+      if (newTime < 301) {
+        targetPage = 15
+      }
+      else if (newTime < 325) {
+        targetPage = 16
+      }
+      else if (newTime < 350) {
+        targetPage = 17
+      }
+      else if (newTime < 374) {
+        targetPage = 18
+      }
+      else if (newTime < 398) {
+        targetPage = 19
+      }
+      else { targetPage = 20 }
     }
   }
 

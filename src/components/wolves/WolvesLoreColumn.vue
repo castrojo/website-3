@@ -106,10 +106,41 @@ function runTypewriter() {
     return
   }
 
+  const pageDurationsMap: Record<number, number> = {
+    1: 18000,
+    2: 18000,
+    3: 18000,
+    4: 18000,
+    5: 18000,
+    6: 18000,
+    7: 19000,
+    8: 53000,
+    9: 40000,
+    10: 11000,
+    11: 11000,
+    12: 11000,
+    13: 12000,
+    14: 12000,
+    15: 24000,
+    16: 24000,
+    17: 25000,
+    18: 24000,
+    19: 24000,
+    20: 25000
+  }
+
+  let stepTime = 35
+
   if (entry.type === 'quote') {
     typedQuoteText.value = ''
     typedMessagesText.value = []
     const targetText = entry.data.quote
+
+    if (props.page !== undefined) {
+      const D = pageDurationsMap[props.page] ?? 15000
+      stepTime = Math.max(5, Math.min(50, (D * 0.7) / targetText.length))
+    }
+
     let index = 0
 
     typewriterTimer = setInterval(() => {
@@ -123,13 +154,37 @@ function runTypewriter() {
         const randChar = cyberChars[Math.floor(Math.random() * cyberChars.length)]
         typedQuoteText.value = targetText.slice(0, index) + randChar
       }
-    }, 35)
+    }, stepTime)
     return
   }
 
   typedQuoteText.value = ''
   activeMessageIndex.value = 0
   typedMessagesText.value = entry.data.messages.map(() => '')
+
+  if (props.page !== undefined) {
+    const D = pageDurationsMap[props.page] ?? 15000
+    let totalTicks = 0
+    entry.data.messages.forEach((message) => {
+      const isSlow = message.speaker === 'BUR//S' || message.speaker === 'SARAH'
+      totalTicks += message.text.length
+      const text = message.text
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i]
+        if (char === '.' || char === '?' || char === '!') {
+          totalTicks += isSlow ? 40 : 12
+        }
+        else if (char === '…') {
+          totalTicks += isSlow ? 30 : 15
+        }
+        else if (char === ',') {
+          totalTicks += isSlow ? 15 : 5
+        }
+      }
+      totalTicks += isSlow ? 50 : 20
+    })
+    stepTime = Math.max(5, Math.min(50, (D * 0.7) / totalTicks))
+  }
 
   // Track which message index we are currently typing. We type sequentially.
   let currentLength = 0
@@ -197,7 +252,7 @@ function runTypewriter() {
     if (quoteViewportRef.value) {
       quoteViewportRef.value.scrollTop = quoteViewportRef.value.scrollHeight
     }
-  }, 35)
+  }, stepTime)
 }
 
 function skipTypewriter() {
