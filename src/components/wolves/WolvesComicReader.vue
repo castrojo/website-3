@@ -668,9 +668,6 @@ onMounted(async () => {
     if (response.ok) {
       const rawPhotos = await response.json()
       flickrPhotos.value = Array.isArray(rawPhotos) ? rawPhotos : []
-      if (props.trackIndex !== undefined && props.trackIndex > 0) {
-        snapshotLaterTrackPhotos(props.trackIndex)
-      }
     }
   }
   catch (err) {

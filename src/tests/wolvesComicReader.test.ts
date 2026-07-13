@@ -130,9 +130,10 @@ describe('wolvesComicReader', () => {
       },
     ])
     const wrapper = mount(WolvesComicReader, {
-      props: { trackIndex: 1, playlistCurrentTime: 0 },
+      props: { trackIndex: 0, playlistCurrentTime: 0 },
     })
     await flushPromises()
+    await wrapper.setProps({ trackIndex: 1, playlistCurrentTime: 0 })
 
     const firstTrackStart = galleryCaption(wrapper)
     expect(firstTrackStart).toContain('CNCF STREAM //')
@@ -169,6 +170,54 @@ describe('wolvesComicReader', () => {
     await flushPromises()
 
     expect(galleryCaption(wrapper)).toContain('BLUEFIN SHOWCASE //')
+  })
+
+  it('keeps a later track fallback snapshot when Flickr finishes loading', async () => {
+    const tracks = [
+      coverTrack,
+      {
+        id: 'later-track-one',
+        title: 'Later Track One',
+        artist: 'Artist 1',
+        artwork: 'wolves-artwork/later-track-one.jpg',
+        youtubeVideoId: '1',
+      },
+      {
+        id: 'later-track-two',
+        title: 'Later Track Two',
+        artist: 'Artist 2',
+        artwork: 'wolves-artwork/later-track-two.jpg',
+        youtubeVideoId: '2',
+      },
+    ]
+    let resolveFlickr!: (response: Response) => void
+    const flickrResponse = new Promise<Response>((resolve) => {
+      resolveFlickr = resolve
+    })
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes('wolves-playlist.json')) {
+        return Promise.resolve(new Response(JSON.stringify({ source, tracks })))
+      }
+      if (url.includes('flickr-photos.json')) {
+        return flickrResponse
+      }
+      return Promise.resolve(new Response(JSON.stringify({})))
+    }))
+
+    const wrapper = mount(WolvesComicReader, {
+      props: { trackIndex: 1, playlistCurrentTime: 0 },
+    })
+    await flushPromises()
+
+    const fallbackCaption = galleryCaption(wrapper)
+    expect(fallbackCaption).toContain('BLUEFIN SHOWCASE //')
+
+    resolveFlickr(new Response(JSON.stringify(galleryPhotos)))
+    await flushPromises()
+    expect(galleryCaption(wrapper)).toBe(fallbackCaption)
+
+    await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 0 })
+    expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
   })
 
   it('keeps BPM-aligned slide holds above the approved minimum', async () => {
