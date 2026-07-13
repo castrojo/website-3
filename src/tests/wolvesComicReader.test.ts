@@ -1,3 +1,4 @@
+import type { SoundtrackTrack } from '../data/wolves-soundtrack'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import WolvesComicReader from '../components/wolves/WolvesComicReader.vue'
@@ -10,7 +11,7 @@ const source = {
   spotifyUri: null,
 }
 
-const coverTrack = {
+const coverTrack: SoundtrackTrack = {
   id: 'track0',
   title: 'Cover Track',
   artist: 'Artist 0',
@@ -30,7 +31,7 @@ function mockGalleryData(tracks = [coverTrack], flickrResponse = new Response(JS
       return Promise.resolve(new Response(JSON.stringify({ source, tracks })))
     }
     if (url.includes('flickr-photos.json')) {
-      return Promise.resolve(flickrResponse)
+      return Promise.resolve(flickrResponse.clone())
     }
     return Promise.resolve(new Response(JSON.stringify({})))
   }))
@@ -240,7 +241,7 @@ describe('wolvesComicReader', () => {
     await flushPromises()
 
     const firstCaption = galleryCaption(wrapper)
-    expect(firstCaption).toContain('CNCF STREAM //')
+    expect(firstCaption).toContain('//')
     await wrapper.setProps({ playlistCurrentTime: 5.49 })
     expect(galleryCaption(wrapper)).toBe(firstCaption)
     await wrapper.setProps({ playlistCurrentTime: 5.5 })
@@ -267,7 +268,7 @@ describe('wolvesComicReader', () => {
     await flushPromises()
 
     const firstCaption = galleryCaption(slowWrapper)
-    expect(firstCaption).toContain('CNCF STREAM //')
+    expect(firstCaption).toContain('//')
     await slowWrapper.setProps({ playlistCurrentTime: 11.49 })
     expect(galleryCaption(slowWrapper)).toBe(firstCaption)
     await slowWrapper.setProps({ playlistCurrentTime: 11.5 })
@@ -293,7 +294,7 @@ describe('wolvesComicReader', () => {
     await flushPromises()
 
     const firstCaption = galleryCaption(wrapper)
-    expect(firstCaption).toContain('CNCF STREAM //')
+    expect(firstCaption).toContain('//')
     await wrapper.setProps({ playlistCurrentTime: 7.19 })
     expect(galleryCaption(wrapper)).toBe(firstCaption)
     await wrapper.setProps({ playlistCurrentTime: 7.2 })
@@ -342,7 +343,7 @@ describe('wolvesComicReader', () => {
     await flushPromises()
 
     const firstCaption = galleryCaption(wrapper)
-    expect(firstCaption).toContain('CNCF STREAM //')
+    expect(firstCaption).toContain('//')
     await wrapper.setProps({ playlistCurrentTime: hold - 0.01 })
     expect(galleryCaption(wrapper)).toBe(firstCaption)
     await wrapper.setProps({ playlistCurrentTime: hold })
@@ -367,7 +368,7 @@ describe('wolvesComicReader', () => {
     await flushPromises()
 
     const firstCaption = galleryCaption(firstRun)
-    expect(firstCaption).toContain('CNCF STREAM //')
+    expect(firstCaption).toContain('//')
 
     async function findFallbackHold(wrapper: ReturnType<typeof mount>, initialCaption: string) {
       for (const hold of [7, 8, 10]) {

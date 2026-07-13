@@ -388,9 +388,24 @@ const activeTimelineSlide = computed(() => {
   return timelineSlides.value[index]
 })
 
+const laterTrackSlideHold = computed(() => {
+  const trackIndex = props.trackIndex ?? 0
+  if (trackIndex <= 0) {
+    return null
+  }
+
+  const track = currentTrack.value
+  if (track?.bpm && track.phraseBeats) {
+    return Math.min(11.5, Math.max(5.5, track.phraseBeats * 60 / track.bpm))
+  }
+
+  return [7, 8, 10][trackIndex % 3]
+})
+
 const currentSlideTransitionDuration = computed(() => {
-  if (props.trackIndex !== 0) {
-    return currentTrack.value?.fadeDuration ?? 1500
+  if ((props.trackIndex ?? 0) > 0) {
+    const hold = laterTrackSlideHold.value ?? 7
+    return Math.min(currentTrack.value?.fadeDuration ?? 1500, hold * 250)
   }
   const slide = activeTimelineSlide.value
   if (!slide) {
@@ -437,26 +452,11 @@ const activeFlickrIndex = computed(() => {
     return 0
   }
 
-  // Precomputed interval in seconds per slide (avoiding double-floor snapping)
-  let interval = currentTrack.value.slideInterval
-    || (currentTrack.value.bpm ? (currentTrack.value.phraseBeats || 32) * 60 / currentTrack.value.bpm : 19.2)
-
-  // Enforce minimal and maximum bounds while keeping changes beat-aligned
-  const minTime = 5.0
-  const maxTime = 12.0
-
-  while (interval > maxTime) {
-    interval /= 2
-  }
-  while (interval < minTime) {
-    interval *= 2
-  }
-
   if (props.playlistCurrentTime === undefined) {
     return 0
   }
 
-  return Math.floor(props.playlistCurrentTime / interval) % mixedPhotos.value.length
+  return Math.floor(props.playlistCurrentTime / (laterTrackSlideHold.value ?? 7)) % mixedPhotos.value.length
 })
 
 const activeDisplayIndex = computed(() => {
@@ -688,7 +688,11 @@ onBeforeUnmount(() => {
       <div ref="flipViewport" class="comic-viewport">
         <div class="comic-content-area">
           <!-- Live Gallery Mode (Tracks 1-6) -->
-          <div v-if="(props.trackIndex && props.trackIndex > 0) || (props.trackIndex === 0 && isExperimental)" class="flickr-gallery-wrapper">
+          <div
+            v-if="(props.trackIndex && props.trackIndex > 0) || (props.trackIndex === 0 && isExperimental)"
+            class="flickr-gallery-wrapper"
+            :data-crossfade-ms="currentSlideTransitionDuration"
+          >
             <!-- Layer A -->
             <div
               class="flickr-photo-layer"
