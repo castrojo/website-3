@@ -31,6 +31,7 @@ interface YouTubePlayer {
   getPlaylistIndex?: () => number
   getCurrentTime?: () => number
   getDuration?: () => number
+  seekTo?: (seconds: number, allowSeekAhead: boolean) => void
   destroy?: () => void
   nextVideo?: () => void
   previousVideo?: () => void
@@ -81,6 +82,26 @@ const status = ref<PlayerStatus>('idle')
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
 const currentTrackIndex = ref(0)
 const playerHost = ref<HTMLElement | null>(null)
+const currentTime = ref(0)
+const duration = ref(0)
+
+const formattedCurrentTime = computed(() => formatTime(currentTime.value))
+const formattedDuration = computed(() => formatTime(duration.value))
+const progressPercent = computed(() => {
+  if (duration.value === 0) {
+    return 0
+  }
+  return Math.min(100, Math.max(0, (currentTime.value / duration.value) * 100))
+})
+
+function formatTime(seconds: number): string {
+  if (!seconds || Number.isNaN(seconds)) {
+    return '0:00'
+  }
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
 
 let player: YouTubePlayer | null = null
 let playerMount: HTMLDivElement | null = null
@@ -94,11 +115,14 @@ function startProgressTimer() {
   }
   progressTimer = setInterval(() => {
     if (player && typeof player.getCurrentTime === 'function' && typeof player.getDuration === 'function') {
-      const currentTime = player.getCurrentTime()
-      const duration = player.getDuration()
+      const current = player.getCurrentTime()
+      const total = player.getDuration()
       const playlistIndex = typeof player.getPlaylistIndex === 'function' ? player.getPlaylistIndex() : currentTrackIndex.value
-      if (typeof currentTime === 'number' && typeof duration === 'number' && duration > 0) {
-        emit('progress', { currentTime, duration, playlistIndex })
+
+      if (typeof current === 'number' && typeof total === 'number' && total > 0) {
+        currentTime.value = current
+        duration.value = total
+        emit('progress', { currentTime: current, duration: total, playlistIndex })
       }
     }
   }, 100)
@@ -110,6 +134,28 @@ function stopProgressTimer() {
     progressTimer = null
   }
 }
+
+function seekToPosition(event: MouseEvent) {
+  if (!player || typeof player.seekTo !== 'function' || duration.value === 0) {
+    return
+  }
+
+  const target = event.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const clickX = event.clientX - rect.left
+  const percentage = clickX / rect.width
+
+  const targetTime = duration.value * percentage
+  player.seekTo(targetTime, true)
+  currentTime.value = targetTime // Optimistic update
+}
+
+defineExpose({
+  formattedCurrentTime,
+  formattedDuration,
+  progressPercent,
+  seekToPosition,
+})
 
 const currentSource = computed(() => manifest.value?.source ?? fallbackSource)
 const currentTrack = computed(() => manifest.value?.tracks[currentTrackIndex.value] ?? fallbackTrack)
