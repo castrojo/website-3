@@ -14,13 +14,13 @@ describe('wolves story manifest', () => {
     expect(getArtifactsForChapter('prologue').map(artifact => artifact.id))
       .toEqual([
         'arthur-c-clarke-4',
-        'arthur-c-clarke-1',
         'lorem-prologue-1',
+        'arthur-c-clarke-1',
         'lorem-prologue-2',
-        'forbidden-factory',
-        'maintenance-window',
         'arthur-c-clarke-2',
-        'arthur-c-clarke-3'
+        'forbidden-factory',
+        'arthur-c-clarke-3',
+        'maintenance-window'
       ])
   })
 

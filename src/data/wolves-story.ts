@@ -65,7 +65,6 @@ export const wolvesRelease: WolvesRelease = {
     },
   ],
   artifacts: [
-    // --- Prologue: Arthur C. Clarke Quotes ---
     {
       id: 'arthur-c-clarke-4',
       chapterId: 'prologue',
@@ -75,17 +74,6 @@ export const wolvesRelease: WolvesRelease = {
       body: parseBody(loreFiles['./lore/arthur-c-clarke-4.md'] || ''),
       sourceLabel: 'Arthur C. Clarke — Childhood\'s End',
     },
-
-    {
-      id: 'arthur-c-clarke-1',
-      chapterId: 'prologue',
-      type: 'quote',
-      publishedAt: '1953-07-09',
-      title: 'Childhood\'s End',
-      body: parseBody(loreFiles['./lore/arthur-c-clarke-1.md'] || ''),
-      sourceLabel: 'Arthur C. Clarke — Childhood\'s End',
-    },
-    // --- Prologue: transmissions ---
     {
       id: 'lorem-prologue-1',
       channel: 'EXPLORATION//TEAM-ALPHA',
@@ -94,6 +82,15 @@ export const wolvesRelease: WolvesRelease = {
       publishedAt: '2326-06-16',
       title: 'The Artifact',
       body: parseBody(loreFiles['./lore/lorem-prologue-1.md'] || ''),
+    },
+    {
+      id: 'arthur-c-clarke-1',
+      chapterId: 'prologue',
+      type: 'quote',
+      publishedAt: '1953-07-09',
+      title: 'Childhood\'s End',
+      body: parseBody(loreFiles['./lore/arthur-c-clarke-1.md'] || ''),
+      sourceLabel: 'Arthur C. Clarke — Childhood\'s End',
     },
     {
       id: 'lorem-prologue-2',
@@ -105,6 +102,15 @@ export const wolvesRelease: WolvesRelease = {
       body: parseBody(loreFiles['./lore/lorem-prologue-2.md'] || ''),
     },
     {
+      id: 'arthur-c-clarke-2',
+      chapterId: 'prologue',
+      type: 'quote',
+      publishedAt: '1953-07-09',
+      title: 'Childhood\'s End',
+      body: parseBody(loreFiles['./lore/arthur-c-clarke-2.md'] || ''),
+      sourceLabel: 'Arthur C. Clarke — Childhood\'s End',
+    },
+    {
       id: 'forbidden-factory',
       channel: 'GNME-3//JORDAN//PRIVATE',
       chapterId: 'prologue',
@@ -112,6 +118,15 @@ export const wolvesRelease: WolvesRelease = {
       publishedAt: '2326-07-09',
       title: 'Forbidden Factory',
       body: parseBody(loreFiles['./lore/forbidden-factory.md'] || ''),
+    },
+    {
+      id: 'arthur-c-clarke-3',
+      chapterId: 'prologue',
+      type: 'quote',
+      publishedAt: '1953-07-09',
+      title: 'Childhood\'s End',
+      body: parseBody(loreFiles['./lore/arthur-c-clarke-3.md'] || ''),
+      sourceLabel: 'Arthur C. Clarke — Inspired by: Childhood\'s End',
     },
     {
       id: 'maintenance-window',
@@ -123,15 +138,13 @@ export const wolvesRelease: WolvesRelease = {
       body: parseBody(loreFiles['./lore/maintenance-window.md'] || ''),
     },
     {
-      id: 'arthur-c-clarke-2',
-      chapterId: 'prologue',
+      id: 'quote-childhoods-end-future',
+      chapterId: 'pursuit',
       type: 'quote',
-      publishedAt: '1953-07-09',
+      publishedAt: '2326-07-09',
       title: 'Childhood\'s End',
-      body: parseBody(loreFiles['./lore/arthur-c-clarke-2.md'] || ''),
-      sourceLabel: 'Arthur C. Clarke — Childhood\'s End',
+      body: parseBody(loreFiles['./lore/quote-childhoods-end-future.md'] || ''),
     },
-    // --- Pursuit: transmissions ---
     {
       id: 'lorem-pursuit-1',
       channel: 'ANCIENT//RECORDS',
@@ -142,15 +155,6 @@ export const wolvesRelease: WolvesRelease = {
       body: parseBody(loreFiles['./lore/lorem-pursuit-1.md'] || ''),
     },
     {
-      id: 'do-not-reply',
-      chapterId: 'pursuit',
-      type: 'transmission',
-      publishedAt: '2326-05-24',
-      title: 'Do Not Reply',
-      body: parseBody(loreFiles['./lore/do-not-reply.md'] || ''),
-    },
-    // --- Pursuit: quotes ---
-    {
       id: 'quote-natasha-woods',
       chapterId: 'pursuit',
       type: 'quote',
@@ -160,21 +164,12 @@ export const wolvesRelease: WolvesRelease = {
       sourceLabel: 'Natasha Woods VI — CNCF Marketing Material, Circa 2349',
     },
     {
-      id: 'childhoods-end-wager',
-      channel: 'ZONKER//ARCHIVE-033',
+      id: 'do-not-reply',
       chapterId: 'pursuit',
       type: 'transmission',
-      publishedAt: '2326-07-09',
-      title: 'The Wager',
-      body: parseBody(loreFiles['./lore/childhoods-end-wager.md'] || ''),
-    },
-    {
-      id: 'quote-childhoods-end-future',
-      chapterId: 'pursuit',
-      type: 'quote',
-      publishedAt: '2326-07-09',
-      title: 'Childhood\'s End',
-      body: parseBody(loreFiles['./lore/quote-childhoods-end-future.md'] || ''),
+      publishedAt: '2326-05-24',
+      title: 'Do Not Reply',
+      body: parseBody(loreFiles['./lore/do-not-reply.md'] || ''),
     },
     {
       id: 'quote-berkus',
@@ -184,6 +179,15 @@ export const wolvesRelease: WolvesRelease = {
       title: 'The Cosmos',
       body: parseBody(loreFiles['./lore/quote-berkus.md'] || ''),
       sourceLabel: 'Berkus the Wise — The Cosmos, Volume 3 (Blue Universal Red Letter Edition)',
+    },
+    {
+      id: 'childhoods-end-wager',
+      channel: 'ZONKER//ARCHIVE-033',
+      chapterId: 'pursuit',
+      type: 'transmission',
+      publishedAt: '2326-07-09',
+      title: 'The Wager',
+      body: parseBody(loreFiles['./lore/childhoods-end-wager.md'] || ''),
     },
     {
       id: 'quote-unmarked-grave',
@@ -204,16 +208,6 @@ export const wolvesRelease: WolvesRelease = {
       sourceLabel: 'Third Disciple of Renner — The Chronicles of Blue Universal',
     },
     {
-      id: 'arthur-c-clarke-3',
-      chapterId: 'prologue',
-      type: 'quote',
-      publishedAt: '1953-07-09',
-      title: 'Childhood\'s End',
-      body: parseBody(loreFiles['./lore/arthur-c-clarke-3.md'] || ''),
-      sourceLabel: 'Arthur C. Clarke — Inspired by: Childhood\'s End',
-    },
-    // --- Awakening: archival transmissions ---
-    {
       id: 'lorem-awakening-1',
       channel: 'SECURITY//INCIDENT',
       chapterId: 'awakening',
@@ -223,52 +217,6 @@ export const wolvesRelease: WolvesRelease = {
       body: parseBody(loreFiles['./lore/lorem-awakening-1.md'] || ''),
     },
     {
-      id: 'glorious-eggroll',
-      channel: 'NBR-3/0//GLORIOUS-EGGROLL//PRIVATE-LOG',
-      chapterId: 'awakening',
-      type: 'transmission',
-      publishedAt: '2326-07-12',
-      title: 'Glorious Eggroll',
-      body: parseBody(loreFiles['./lore/glorious-eggroll.md'] || ''),
-    },
-    {
-      id: 'john-seager',
-      channel: 'UBUNTU//SECURE',
-      chapterId: 'awakening',
-      type: 'transmission',
-      publishedAt: '2326-08-01',
-      title: 'The Warthog and the Raptor',
-      body: parseBody(loreFiles['./lore/john-seager.md'] || ''),
-    },
-    {
-      id: 'reckoning-of-the-three',
-      channel: 'HARBRINGER//ARCHIVE-01',
-      chapterId: 'awakening',
-      type: 'transmission',
-      publishedAt: '2326-01-01',
-      title: 'Reckoning of the Three',
-      body: parseBody(loreFiles['./lore/reckoning-of-the-three.md'] || ''),
-    },
-    {
-      id: 'committee-report-personal-transmission',
-      channel: 'TOPH//ARCHIVE-072',
-      chapterId: 'awakening',
-      type: 'transmission',
-      publishedAt: '2326-01-01',
-      title: 'COMMITEE REPORT: Personal Transmission',
-      body: parseBody(loreFiles['./lore/committee-report-personal-transmission.md'] || ''),
-    },
-    {
-      id: 'john-bazzite-interview',
-      channel: 'ZONKER//ARCHIVE-032',
-      chapterId: 'awakening',
-      type: 'news',
-      publishedAt: '2326-01-01',
-      title: 'John Bazzite Exclusive Interview',
-      body: parseBody(loreFiles['./lore/john-bazzite-interview.md'] || ''),
-    },
-    // --- Source: Ishtar Collective / Unveiling (archival) ---
-    {
       id: 'ishtar-gardener-and-winnower',
       chapterId: 'awakening',
       type: 'source',
@@ -276,6 +224,15 @@ export const wolvesRelease: WolvesRelease = {
       title: 'The Garden Before Time',
       body: parseBody(loreFiles['./lore/ishtar-gardener-and-winnower.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/gardener-and-winnower',
+    },
+    {
+      id: 'glorious-eggroll',
+      channel: 'NBR-3/0//GLORIOUS-EGGROLL//PRIVATE-LOG',
+      chapterId: 'awakening',
+      type: 'transmission',
+      publishedAt: '2326-07-12',
+      title: 'Glorious Eggroll',
+      body: parseBody(loreFiles['./lore/glorious-eggroll.md'] || ''),
     },
     {
       id: 'ishtar-flower-game',
@@ -288,6 +245,15 @@ export const wolvesRelease: WolvesRelease = {
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-flower-game',
     },
     {
+      id: 'project-neptune',
+      channel: 'BLUE-UNIVERSAL//PRJ-TM//DIRECTIVE',
+      chapterId: 'awakening',
+      type: 'transmission',
+      publishedAt: '2326-07-15',
+      title: 'Project Neptune',
+      body: parseBody(loreFiles['./lore/project-neptune.md'] || ''),
+    },
+    {
       id: 'ishtar-first-knife',
       channel: 'ISHTAR//UNVEILING-03',
       chapterId: 'awakening',
@@ -298,6 +264,15 @@ export const wolvesRelease: WolvesRelease = {
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-first-knife',
     },
     {
+      id: 'john-seager',
+      channel: 'UBUNTU//SECURE',
+      chapterId: 'awakening',
+      type: 'transmission',
+      publishedAt: '2326-08-01',
+      title: 'The Warthog and the Raptor',
+      body: parseBody(loreFiles['./lore/john-seager.md'] || ''),
+    },
+    {
       id: 'ishtar-the-wager',
       channel: 'ISHTAR//UNVEILING-04',
       chapterId: 'awakening',
@@ -306,6 +281,15 @@ export const wolvesRelease: WolvesRelease = {
       title: 'The Wager',
       body: parseBody(loreFiles['./lore/ishtar-the-wager.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-wager',
+    },
+    {
+      id: 'reckoning-of-the-three',
+      channel: 'HARBRINGER//ARCHIVE-01',
+      chapterId: 'awakening',
+      type: 'transmission',
+      publishedAt: '2326-01-01',
+      title: 'Reckoning of the Three',
+      body: parseBody(loreFiles['./lore/reckoning-of-the-three.md'] || ''),
     },
     {
       id: 'ishtar-patternfall',
@@ -319,6 +303,15 @@ export const wolvesRelease: WolvesRelease = {
 
     },
     {
+      id: 'committee-report-personal-transmission',
+      channel: 'TOPH//ARCHIVE-072',
+      chapterId: 'awakening',
+      type: 'transmission',
+      publishedAt: '2326-01-01',
+      title: 'COMMITEE REPORT: Personal Transmission',
+      body: parseBody(loreFiles['./lore/committee-report-personal-transmission.md'] || ''),
+    },
+    {
       id: 'ishtar-cambrian-explosion',
       channel: 'ISHTAR//UNVEILING-06',
       chapterId: 'awakening',
@@ -327,6 +320,15 @@ export const wolvesRelease: WolvesRelease = {
       title: 'The Cambrian Explosion',
       body: parseBody(loreFiles['./lore/ishtar-cambrian-explosion.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-cambrian-explosion',
+    },
+    {
+      id: 'john-bazzite-interview',
+      channel: 'ZONKER//ARCHIVE-032',
+      chapterId: 'awakening',
+      type: 'news',
+      publishedAt: '2326-01-01',
+      title: 'John Bazzite Exclusive Interview',
+      body: parseBody(loreFiles['./lore/john-bazzite-interview.md'] || ''),
     },
     {
       id: 'ishtar-final-shape',
