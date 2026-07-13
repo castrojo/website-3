@@ -4,44 +4,14 @@ import {
   lockedNarrativeSlots,
   wolvesNarrativeTimeline,
 } from '../data/wolves-narrative-timeline'
+import { wolvesRelease } from '../data/wolves-story'
 
 describe('wolves narrative timeline', () => {
-  it('contains every release artifact exactly once in release order', () => {
-    expect(wolvesNarrativeTimeline).toHaveLength(31)
+  it('contains every release artifact exactly once', () => {
+    expect(wolvesNarrativeTimeline).toHaveLength(wolvesRelease.artifacts.length)
     expect(new Set(wolvesNarrativeTimeline.map(slot => slot.artifactId))).toHaveLength(wolvesNarrativeTimeline.length)
-    expect(wolvesNarrativeTimeline.map(slot => slot.artifactId)).toEqual([
-      'arthur-c-clarke-4',
-      'lorem-prologue-1',
-      'arthur-c-clarke-1',
-      'lorem-prologue-2',
-      'arthur-c-clarke-2',
-      'forbidden-factory',
-      'arthur-c-clarke-3',
-      'maintenance-window',
-      'quote-childhoods-end-future',
-      'lorem-pursuit-1',
-      'quote-natasha-woods',
-      'do-not-reply',
-      'quote-berkus',
-      'childhoods-end-wager',
-      'quote-unmarked-grave',
-      'quote-third-disciple',
-      'lorem-awakening-1',
-      'ishtar-gardener-and-winnower',
-      'glorious-eggroll',
-      'ishtar-flower-game',
-      'project-neptune',
-      'ishtar-first-knife',
-      'john-seager',
-      'ishtar-the-wager',
-      'reckoning-of-the-three',
-      'ishtar-patternfall',
-      'committee-report-personal-transmission',
-      'ishtar-cambrian-explosion',
-      'john-bazzite-interview',
-      'ishtar-final-shape',
-      'blue-universal-acquires-wayland-yutani',
-    ])
+    expect(new Set(wolvesNarrativeTimeline.map(slot => slot.artifactId)))
+      .toEqual(new Set(wolvesRelease.artifacts.map(artifact => artifact.id)))
   })
 
   it('preserves the approved first, middle, and final anchors', () => {
@@ -72,9 +42,28 @@ describe('wolves narrative timeline', () => {
     }
   })
 
+  it('orders the non-anchor lore pool by metadata date', () => {
+    const lockedArtifactIds = new Set(lockedNarrativeSlots.map(slot => slot.artifactId))
+    const manifestIndexes = new Map(wolvesRelease.artifacts.map((artifact, index) => [artifact.id, index]))
+    const pool = wolvesNarrativeTimeline
+      .map(slot => wolvesRelease.artifacts.find(artifact => artifact.id === slot.artifactId)!)
+      .filter(artifact => !lockedArtifactIds.has(artifact.id))
+
+    for (let index = 1; index < pool.length; index++) {
+      const previous = pool[index - 1]
+      const current = pool[index]
+
+      expect(previous.publishedAt <= current.publishedAt).toBe(true)
+      if (previous.publishedAt === current.publishedAt) {
+        expect(manifestIndexes.get(previous.id)).toBeLessThan(manifestIndexes.get(current.id)!)
+      }
+    }
+  })
+
   it('uses the next slot at exact boundaries and holds the final entry afterward', () => {
-    expect(getNarrativeSlotForTime(20)?.artifactId).toBe('lorem-prologue-1')
-    expect(getNarrativeSlotForTime(220)?.artifactId).toBe('quote-natasha-woods')
+    expect(getNarrativeSlotForTime(150)?.artifactId).toBe('lorem-pursuit-1')
+    expect(getNarrativeSlotForTime(220)?.artifactId)
+      .toBe(wolvesNarrativeTimeline.find(slot => slot.startTime === 220)?.artifactId)
     expect(getNarrativeSlotForTime(425)?.artifactId).toBe('blue-universal-acquires-wayland-yutani')
     expect(getNarrativeSlotForTime(1_000)?.artifactId).toBe('blue-universal-acquires-wayland-yutani')
   })

@@ -1,3 +1,5 @@
+import { load as loadYaml } from 'js-yaml'
+
 export type WolvesArtifactType = 'transmission' | 'quote' | 'news' | 'source'
 
 export interface WolvesChapter {
@@ -28,12 +30,51 @@ export interface WolvesRelease {
   artifacts: WolvesArtifact[]
 }
 
-function parseBody(raw: string) {
+interface LoreMetadata {
+  channel?: string
+  date?: string
+}
+
+interface LoreDocument {
+  body: string
+  metadata: LoreMetadata
+}
+
+function parseLoreDocument(raw: string): LoreDocument {
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
-  return match ? match[2].trim() : raw.trim()
+  if (!match) {
+    return { body: raw.trim(), metadata: {} }
+  }
+
+  const metadata = loadYaml(match[1])
+  if (metadata === null || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    throw new TypeError('Lore front matter must be a mapping')
+  }
+
+  const { channel, date } = metadata as Record<string, unknown>
+  return {
+    body: match[2].trim(),
+    metadata: {
+      channel: typeof channel === 'string' ? channel : undefined,
+      date: typeof date === 'string' ? date : undefined,
+    },
+  }
+}
+
+function parseBody(raw: string) {
+  return parseLoreDocument(raw).body
+}
+
+function requiredMetadata(metadata: LoreMetadata, field: keyof LoreMetadata) {
+  const value = metadata[field]
+  if (!value) {
+    throw new TypeError(`Lore front matter is missing ${field}`)
+  }
+  return value
 }
 
 const loreFiles = import.meta.glob('./lore/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+const jordanAdrian = parseLoreDocument(loreFiles['./lore/sidebar-comm-forbidden-factory-14.md'] || '')
 
 export const wolvesRelease: WolvesRelease = {
   id: '2026-07-11-r1',
@@ -118,6 +159,15 @@ export const wolvesRelease: WolvesRelease = {
       publishedAt: '2326-07-09',
       title: 'Forbidden Factory',
       body: parseBody(loreFiles['./lore/forbidden-factory.md'] || ''),
+    },
+    {
+      id: 'jordan-adrian',
+      channel: requiredMetadata(jordanAdrian.metadata, 'channel'),
+      chapterId: 'prologue',
+      type: 'transmission',
+      publishedAt: requiredMetadata(jordanAdrian.metadata, 'date'),
+      title: 'Forbidden Factory',
+      body: jordanAdrian.body,
     },
     {
       id: 'arthur-c-clarke-3',

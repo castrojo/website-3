@@ -1,3 +1,4 @@
+import type { WolvesArtifact } from './wolves-story'
 import { wolvesRelease } from './wolves-story'
 
 export interface WolvesNarrativeSlot {
@@ -18,8 +19,7 @@ export const lockedNarrativeSlots: readonly WolvesNarrativeLock[] = [
   { artifactId: 'blue-universal-acquires-wayland-yutani', startTime: 398, endTime: 425 },
 ]
 
-function createWeightedSlots(startIndex: number, endIndex: number, startTime: number, endTime: number) {
-  const artifacts = wolvesRelease.artifacts.slice(startIndex, endIndex)
+function createWeightedSlots(artifacts: readonly WolvesArtifact[], startTime: number, endTime: number) {
   const totalWeight = artifacts.reduce((sum, artifact) => sum + Math.max(artifact.body.length, 1), 0)
   let currentTime = startTime
 
@@ -34,38 +34,69 @@ function createWeightedSlots(startIndex: number, endIndex: number, startTime: nu
   })
 }
 
-function getArtifactIndex(artifactId: string): number {
-  const index = wolvesRelease.artifacts.findIndex(artifact => artifact.id === artifactId)
-  if (index === -1) {
+function getArtifact(artifactId: string): WolvesArtifact {
+  const artifact = wolvesRelease.artifacts.find(artifact => artifact.id === artifactId)
+  if (!artifact) {
     throw new Error(`Missing locked narrative artifact: ${artifactId}`)
   }
-  return index
+  return artifact
+}
+
+function getMetadataOrderedPool() {
+  const lockedArtifactIds = new Set(lockedNarrativeSlots.map(lock => lock.artifactId))
+
+  return wolvesRelease.artifacts
+    .map((artifact, index) => ({ artifact, index }))
+    .filter(({ artifact }) => !lockedArtifactIds.has(artifact.id))
+    .sort((left, right) => left.artifact.publishedAt.localeCompare(right.artifact.publishedAt) || left.index - right.index)
+    .map(({ artifact }) => artifact)
 }
 
 function createNarrativeTimeline(): WolvesNarrativeSlot[] {
   const [firstLock, ...fixedLocks] = lockedNarrativeSlots
-  if (!firstLock) {
-    throw new Error('At least one narrative lock is required')
+  if (!firstLock || fixedLocks.length === 0) {
+    throw new Error('A starting lock and at least one fixed lock are required')
   }
 
-  const timeline: WolvesNarrativeSlot[] = []
-  let startIndex = getArtifactIndex(firstLock.artifactId)
-  let startTime = firstLock.startTime
-
-  for (const lock of fixedLocks) {
+  const firstArtifact = getArtifact(firstLock.artifactId)
+  const pool = getMetadataOrderedPool()
+  const windows = fixedLocks.map((lock, index) => {
     if (lock.endTime === undefined) {
       throw new Error(`Locked narrative artifact requires an end time: ${lock.artifactId}`)
     }
 
-    const lockIndex = getArtifactIndex(lock.artifactId)
-    timeline.push(...createWeightedSlots(startIndex, lockIndex, startTime, lock.startTime))
+    return {
+      startTime: index === 0 ? firstLock.startTime : fixedLocks[index - 1].endTime!,
+      endTime: lock.startTime,
+      lock,
+    }
+  })
+
+  const timeline: WolvesNarrativeSlot[] = []
+  let poolIndex = 0
+  let remainingDuration = windows.reduce((sum, window) => sum + window.endTime - window.startTime, 0)
+
+  for (const [index, window] of windows.entries()) {
+    const remainingPool = pool.length - poolIndex
+    const windowDuration = window.endTime - window.startTime
+    const poolCount = index === windows.length - 1
+      ? remainingPool
+      : Math.round((remainingPool * windowDuration) / remainingDuration)
+    const artifacts = pool.slice(poolIndex, poolIndex + poolCount)
+
+    if (index === 0) {
+      artifacts.unshift(firstArtifact)
+    }
+
+    timeline.push(...createWeightedSlots(artifacts, window.startTime, window.endTime))
     timeline.push({
-      artifactId: lock.artifactId,
-      startTime: lock.startTime,
-      endTime: lock.endTime,
+      artifactId: window.lock.artifactId,
+      startTime: window.lock.startTime,
+      endTime: window.lock.endTime!,
     })
-    startIndex = lockIndex + 1
-    startTime = lock.endTime
+
+    poolIndex += poolCount
+    remainingDuration -= windowDuration
   }
 
   return timeline

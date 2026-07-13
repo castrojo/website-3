@@ -19,9 +19,21 @@ describe('wolves story manifest', () => {
         'lorem-prologue-2',
         'arthur-c-clarke-2',
         'forbidden-factory',
+        'jordan-adrian',
         'arthur-c-clarke-3',
         'maintenance-window'
       ])
+  })
+
+  it('preserves the Jordan-Adrian dialogue as distinct metadata-backed lore', () => {
+    const jordanAdrian = wolvesRelease.artifacts.find(artifact => artifact.id === 'jordan-adrian')
+
+    expect(jordanAdrian).toMatchObject({
+      channel: 'GNME-3//JORDAN//PRIVATE',
+      publishedAt: '2326-07-09',
+      title: 'Forbidden Factory',
+    })
+    expect(jordanAdrian?.body).toContain('They fight like demons.')
   })
 
   it('identifies artifacts added after a stored release', () => {
