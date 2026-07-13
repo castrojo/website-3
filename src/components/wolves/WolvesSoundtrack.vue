@@ -445,7 +445,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="soundtrack-copy">
-          <span class="soundtrack-label font-mono">RELEASE SOUNDTRACK</span>
+          <span class="soundtrack-label font-mono">MUSIC TO HUNT BY</span>
           <h2 class="soundtrack-title truncate">
             {{ currentTrack.title }}
           </h2>

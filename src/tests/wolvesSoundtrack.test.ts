@@ -151,6 +151,12 @@ afterEach(() => {
 })
 
 describe('wolves soundtrack', () => {
+  it('labels the release soundtrack as music to hunt by', () => {
+    const wrapper = mount(WolvesSoundtrack)
+
+    expect(wrapper.get('.soundtrack-label').text()).toBe('MUSIC TO HUNT BY')
+  })
+
   it('does not expose controls that can change narrative position', () => {
     const wrapper = mount(WolvesSoundtrack)
 
