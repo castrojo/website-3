@@ -496,6 +496,22 @@ watch(activeDisplayIndex, (newVal) => {
     return
   }
 
+  // Preload the next image to prevent decode/network stutter during exact beat crossfades
+  const nextIndex = (newVal + 1) % mixedPhotosToUse.value.length
+  const nextPhoto = mixedPhotosToUse.value[nextIndex]
+  if (nextPhoto) {
+    if (nextPhoto.type === 'daynight') {
+      const imgDay = new Image()
+      imgDay.src = `${baseUrl}img/wallpapers/${nextPhoto.dayName}`
+      const imgNight = new Image()
+      imgNight.src = `${baseUrl}img/wallpapers/${nextPhoto.nightName}`
+    }
+    else {
+      const img = new Image()
+      img.src = getFlickrPhotoUrl(nextPhoto)
+    }
+  }
+
   if (photoA.value === null && photoB.value === null) {
     photoA.value = activePhotoObj
     slideAIndex.value = newVal
@@ -1363,7 +1379,9 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: opacity 3s ease-in-out;
+  transition: opacity 3s linear;
+  will-change: opacity;
+  transform: translateZ(0);
 }
 
 .night-overlay {
@@ -1375,6 +1393,9 @@ onBeforeUnmount(() => {
   object-fit: contain;
   opacity: 0;
   pointer-events: none;
+  transition: opacity 150ms linear;
+  will-change: opacity;
+  transform: translateZ(0);
 
   &.is-night {
     opacity: 1;
@@ -1428,6 +1449,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background-color: #0c1016;
 }
 
 .flickr-photo-layer {
@@ -1440,7 +1462,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0c1016;
   will-change: opacity;
   transform: translateZ(0);
 }
