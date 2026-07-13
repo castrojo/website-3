@@ -217,6 +217,12 @@ function startLoreTimer() {
     if (currentLoreIndex.value === 0 && isInitialQuote.value) {
       emit('firstFinished')
     }
+
+    // Stop rotating if we hit the final Wayland Yutani article in the awakening chapter
+    if (currentLoreIndex.value === filteredLoreEntries.value.length - 1) {
+      return // Lock in place
+    }
+
     isInitialQuote.value = false
     currentLoreIndex.value = (currentLoreIndex.value + 1) % filteredLoreEntries.value.length
   }, delay)
@@ -229,6 +235,11 @@ function restartLoreTimer() {
 
 function nextLore() {
   if (filteredLoreEntries.value.length <= 1) {
+    return
+  }
+
+  // Prevent manual nexting past the final locked slide
+  if (currentLoreIndex.value === filteredLoreEntries.value.length - 1) {
     return
   }
 
