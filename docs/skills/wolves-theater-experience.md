@@ -56,7 +56,7 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 |---|---|
 | "A 50/50 desktop split is fine for the Wolves page." | The Wolves page desktop layout has a strict mandate to use a \`2fr 1fr\` grid template to allocate 66% width to the slides and 33% width to the lore column. |
 | "It's fine to bind \`import.meta.env\` directly in the template." | This causes fragile VFC parser compiler failures on specific bundlers/minifiers. Expose it via a script-level constant. |
-| "We can let the user go back to the cover page." | The cover is an essential part of the presentation that must remain accessible for reading the first quote and viewing the coloring book, so all standard navigation back to page 1 must be preserved. |
+| "The cover needs separate navigation controls." | The cover is the opening Track 0 presentation, not a separately navigable page. |
 | "A randomized array in-place is good enough for shuffling." | Mutation of a global constant array breaks Vue reactivity and causes severe repeats or missed slides. Local reactive loop-back shuffle is required. |
 | "Solid backgrounds are safer for text readability." | Completely solid backgrounds hide the seasonal fading artworks that are critical to the theater experience. Use rgba(16, 21, 31, 0.45) with blur(12px) to maximize both artwork visibility and text contrast. |
 | "Maintaining a static array is simpler and doesn't require a script." | A static list is prone to rot, mismatched paths, and requires editing code to add or remove images. An automated build-time generator is completely robust, matches the folder structure on disk automatically, and lets non-developers edit the slideshow by just managing files in Nautilus. |
