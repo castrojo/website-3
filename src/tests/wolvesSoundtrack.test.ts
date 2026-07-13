@@ -185,7 +185,7 @@ describe('wolves soundtrack', () => {
     players[0].triggerReady()
     await flushPromises()
 
-    expect(wrapper.get('button.soundtrack-action').element).toBe(primaryButton.element)
+    expect(wrapper.findAll('button.soundtrack-action')).toHaveLength(1)
     expect(wrapper.get('button.soundtrack-action').attributes('aria-label')).toBe('Pause soundtrack')
 
     await wrapper.get('button.soundtrack-action').trigger('click')

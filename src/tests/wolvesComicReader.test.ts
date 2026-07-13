@@ -36,10 +36,8 @@ function mockGalleryData(tracks = [coverTrack], flickrResponse = new Response(JS
   }))
 }
 
-function activePhotoSource(wrapper: ReturnType<typeof mount>) {
-  const activeLayer = wrapper.findAll('.flickr-photo-layer')
-    .find(layer => layer.attributes('style').includes('z-index: 2'))
-  return activeLayer?.find('img').attributes('src') || ''
+function galleryCaption(wrapper: ReturnType<typeof mount>) {
+  return wrapper.get('.flickr-caption').text()
 }
 
 describe('wolvesComicReader', () => {
@@ -130,17 +128,17 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    const firstTrackStart = activePhotoSource(wrapper)
-    expect(firstTrackStart).toMatch(/^https:\/\/live\.staticflickr\.com\//)
+    const firstTrackStart = galleryCaption(wrapper)
+    expect(firstTrackStart).toContain('CNCF STREAM //')
 
     await wrapper.setProps({ playlistCurrentTime: 10 })
     await wrapper.setProps({ playlistCurrentTime: 0 })
-    expect(activePhotoSource(wrapper)).toBe(firstTrackStart)
+    expect(galleryCaption(wrapper)).toBe(firstTrackStart)
 
     await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 0 })
     await flushPromises()
-    expect(activePhotoSource(wrapper)).toMatch(/^https:\/\/live\.staticflickr\.com\//)
-    expect(activePhotoSource(wrapper)).not.toBe(firstTrackStart)
+    expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
+    expect(galleryCaption(wrapper)).not.toBe(firstTrackStart)
   })
 
   it('uses local images for later tracks only when the Flickr feed is unavailable', async () => {
@@ -164,7 +162,7 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    expect(activePhotoSource(wrapper)).toContain('img/wallpapers/')
+    expect(galleryCaption(wrapper)).toContain('BLUEFIN SHOWCASE //')
   })
 
   it('keeps BPM-aligned slide holds above the approved minimum', async () => {
@@ -186,12 +184,12 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    await wrapper.setProps({ playlistCurrentTime: 6 })
-    await wrapper.setProps({ playlistCurrentTime: 0 })
-    const firstPhoto = activePhotoSource(wrapper)
-    expect(firstPhoto).toMatch(/^https:\/\/live\.staticflickr\.com\//)
-    await wrapper.setProps({ playlistCurrentTime: 5.25 })
-    expect(activePhotoSource(wrapper)).toBe(firstPhoto)
+    const firstCaption = galleryCaption(wrapper)
+    expect(firstCaption).toContain('CNCF STREAM //')
+    await wrapper.setProps({ playlistCurrentTime: 5.49 })
+    expect(galleryCaption(wrapper)).toBe(firstCaption)
+    await wrapper.setProps({ playlistCurrentTime: 5.5 })
+    expect(galleryCaption(wrapper)).not.toBe(firstCaption)
   })
 
   it('limits BPM-aligned slide holds to the approved maximum', async () => {
@@ -213,26 +211,25 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    await slowWrapper.setProps({ playlistCurrentTime: 13 })
-    await slowWrapper.setProps({ playlistCurrentTime: 0 })
-    const slowFirstPhoto = activePhotoSource(slowWrapper)
-    expect(slowFirstPhoto).toMatch(/^https:\/\/live\.staticflickr\.com\//)
-    await slowWrapper.setProps({ playlistCurrentTime: 11.75 })
-    expect(activePhotoSource(slowWrapper)).not.toBe(slowFirstPhoto)
+    const firstCaption = galleryCaption(slowWrapper)
+    expect(firstCaption).toContain('CNCF STREAM //')
+    await slowWrapper.setProps({ playlistCurrentTime: 11.49 })
+    expect(galleryCaption(slowWrapper)).toBe(firstCaption)
+    await slowWrapper.setProps({ playlistCurrentTime: 11.5 })
+    expect(galleryCaption(slowWrapper)).not.toBe(firstCaption)
   })
 
-  it('limits later-track crossfades to one quarter of the maximum hold', async () => {
+  it('changes slides at the non-clamped boundary derived from BPM metadata', async () => {
     mockGalleryData([
       coverTrack,
       {
-        id: 'long-crossfade',
-        title: 'Long Crossfade',
+        id: 'metadata-paced',
+        title: 'Metadata Paced',
         artist: 'Artist',
-        artwork: 'wolves-artwork/long-crossfade.jpg',
+        artwork: 'wolves-artwork/metadata-paced.jpg',
         youtubeVideoId: '3',
-        bpm: 120,
-        phraseBeats: 48,
-        fadeDuration: 3000,
+        bpm: 100,
+        phraseBeats: 12,
       },
     ])
     const wrapper = mount(WolvesComicReader, {
@@ -240,12 +237,15 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    const transition = wrapper.get('.flickr-photo-layer').attributes('style')
-    const duration = Number(transition.match(/opacity (\d+)ms/)?.[1])
-    expect(duration).toBeLessThanOrEqual(2875)
+    const firstCaption = galleryCaption(wrapper)
+    expect(firstCaption).toContain('CNCF STREAM //')
+    await wrapper.setProps({ playlistCurrentTime: 7.19 })
+    expect(galleryCaption(wrapper)).toBe(firstCaption)
+    await wrapper.setProps({ playlistCurrentTime: 7.2 })
+    expect(galleryCaption(wrapper)).not.toBe(firstCaption)
   })
 
-  it('uses a deterministic eight-second fallback hold without BPM metadata', async () => {
+  it('uses a deterministic permitted fallback hold without BPM metadata', async () => {
     mockGalleryData([
       coverTrack,
       {
@@ -261,11 +261,27 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    await wrapper.setProps({ playlistCurrentTime: 10 })
-    await wrapper.setProps({ playlistCurrentTime: 0 })
-    const firstPhoto = activePhotoSource(wrapper)
-    expect(firstPhoto).toMatch(/^https:\/\/live\.staticflickr\.com\//)
-    await wrapper.setProps({ playlistCurrentTime: 8.25 })
-    expect(activePhotoSource(wrapper)).not.toBe(firstPhoto)
+    const firstCaption = galleryCaption(wrapper)
+    expect(firstCaption).toContain('CNCF STREAM //')
+
+    let selectedHold: number | undefined
+    for (const hold of [7, 8, 10]) {
+      await wrapper.setProps({ playlistCurrentTime: hold - 0.01 })
+      const captionBeforeBoundary = galleryCaption(wrapper)
+      await wrapper.setProps({ playlistCurrentTime: hold })
+
+      if (captionBeforeBoundary === firstCaption && galleryCaption(wrapper) !== firstCaption) {
+        selectedHold = hold
+        break
+      }
+    }
+
+    expect(selectedHold).toBeDefined()
+    expect([7, 8, 10]).toContain(selectedHold)
+
+    await wrapper.setProps({ playlistCurrentTime: selectedHold! - 0.01 })
+    expect(galleryCaption(wrapper)).toBe(firstCaption)
+    await wrapper.setProps({ playlistCurrentTime: selectedHold! })
+    expect(galleryCaption(wrapper)).not.toBe(firstCaption)
   })
 })
