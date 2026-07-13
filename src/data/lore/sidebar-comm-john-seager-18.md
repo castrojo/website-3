@@ -7,7 +7,7 @@ _editor_prompt: >-
   acts as a prompt for your editing.
 ---
 
-**JON**: I must say I appreciate the ... banter between us. 
+**JON**: I must say I appreciate the ... banter between us.
 
 **LAKSHMI**: Is he really the First African in Space?
 I think I travelled more today than Kalpana Chawla!
@@ -31,9 +31,9 @@ It is the end the Harbringer will come to all the things in this world that are 
 
 **AMBER**: What, let you do what? Take charge of your own destiny?
 
-**POPEY**: Don't apologize for being different. 
+**POPEY**: Don't apologize for being different.
 
-**JON**: We will of course meet you for The Final Shape, but I assure your path will be first. And you'll miss out on all the fun. I appreciate the tac sync, let's get moving. 
+**JON**: We will of course meet you for The Final Shape, but I assure your path will be first. And you'll miss out on all the fun. I appreciate the tac sync, let's get moving.
 
 **POPEY**: I am thoroughly enjoying this English banter!
 
