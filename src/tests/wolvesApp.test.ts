@@ -84,6 +84,20 @@ describe('wolvesApp.vue', () => {
     expect(wrapper.find('.lore-artifact').text()).toBe('lorem-pursuit-1')
   })
 
+  it('renders thesis callouts as a reader-local bottom third', async () => {
+    const wrapper = mount(WolvesApp)
+
+    await wrapper.get('.experience-cta-btn').trigger('click')
+    await wrapper.findComponent({ name: 'WolvesSoundtrack' }).vm.$emit('progress', {
+      currentTime: 345,
+      duration: 423,
+      playlistIndex: 0,
+    })
+
+    expect(wrapper.find('.immersive-col-left .thesis-overlay').exists()).toBe(true)
+    expect(wrapper.find('.immersive-content-grid > .thesis-overlay').exists()).toBe(false)
+  })
+
   it('keeps the Track 0 reader time and lore under the entering Equinox overlay', async () => {
     vi.useFakeTimers()
 

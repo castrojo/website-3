@@ -327,6 +327,15 @@ onBeforeUnmount(() => {
             :track-index="isSoundtrackActive ? presentationTrackIndex : undefined"
             :playlist-current-time="presentationCurrentTime"
           />
+          <div v-if="thesisState.active" class="thesis-overlay font-mono" :class="`is-${thesisState.mode}`">
+            <p v-if="thesisState.subtitle">
+              {{ thesisState.subtitle }}
+            </p>
+            <h1 v-if="thesisState.text">
+              {{ thesisState.text }}
+            </h1>
+            <span v-if="thesisState.mode === 'corruption' || thesisState.mode === 'growing-corruption'">!&lt;&gt;-_\\/[]{}—=+*^?#________X01</span>
+          </div>
         </div>
 
         <div v-if="!isGalleryPresentation" class="immersive-col-right">
@@ -335,16 +344,6 @@ onBeforeUnmount(() => {
             :duration="currentNarrativeSlot.endTime - currentNarrativeSlot.startTime"
             :warning="thesisState.warning"
           />
-        </div>
-
-        <div v-if="thesisState.active" class="thesis-overlay font-mono" :class="`is-${thesisState.mode}`">
-          <p v-if="thesisState.subtitle">
-            {{ thesisState.subtitle }}
-          </p>
-          <h1 v-if="thesisState.text">
-            {{ thesisState.text }}
-          </h1>
-          <span v-if="thesisState.mode === 'corruption' || thesisState.mode === 'growing-corruption'">!&lt;&gt;-_\\/[]{}—=+*^?#________X01</span>
         </div>
       </div>
 
@@ -1419,8 +1418,9 @@ onBeforeUnmount(() => {
   }
 
   .thesis-overlay {
-    position: fixed;
-    inset: 80px 0 140px;
+    position: absolute;
+    inset: auto 0 0;
+    height: 33.333%;
     z-index: 30;
     display: flex;
     flex-direction: column;
@@ -1526,6 +1526,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
 
   :deep(#comic-reader) {
     height: 100% !important;
