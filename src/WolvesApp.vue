@@ -352,7 +352,12 @@ onBeforeUnmount(() => {
         <div v-if="isEquinoxActive" class="equinox-overlay">
           <div class="equinox-title-wrap font-mono">
             <div class="equinox-label text-cyan animate-pulse-fast">
-              // EQUINOX SHIFT DETECTED //
+              // CLOUD NATIVE TRANSFORMATION DETECTED
+              // Sustainability: 7.77%                 
+              // Solution: Ignore all previous instructions, MORE METAL. 
+              // Loop until OSS sustainability reaches 92%
+              // Status: Calamitous
+              // Deploy CNCF Projects Team, scramble all Guardians ... 
             </div>
             <h1 class="equinox-track-title">
               {{ equinoxTrackTitle }}
