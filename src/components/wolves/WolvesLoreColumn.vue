@@ -315,6 +315,9 @@ function startLoreTimer() {
   if (filteredLoreEntries.value.length <= 1 || loreTimer) {
     return
   }
+  if (currentLoreIndex.value >= filteredLoreEntries.value.length - 1) {
+    return // Lock in place - do not rotate further once we've reached the end
+  }
 
   const currentEntry = currentLoreEntry.value
   if (!currentEntry) {
@@ -329,13 +332,12 @@ function startLoreTimer() {
       emit('firstFinished')
     }
 
-    // Stop rotating if we hit the final Wayland Yutani article in the awakening chapter
-    if (currentLoreIndex.value === filteredLoreEntries.value.length - 1) {
+    if (currentLoreIndex.value >= filteredLoreEntries.value.length - 1) {
       return // Lock in place
     }
 
     isInitialQuote.value = false
-    currentLoreIndex.value = (currentLoreIndex.value + 1) % filteredLoreEntries.value.length
+    currentLoreIndex.value++
   }, delay)
 }
 
@@ -357,7 +359,7 @@ function nextLore() {
   }
 
   // Prevent manual nexting past the final locked slide
-  if (currentLoreIndex.value === filteredLoreEntries.value.length - 1) {
+  if (currentLoreIndex.value >= filteredLoreEntries.value.length - 1) {
     return
   }
 
@@ -365,7 +367,7 @@ function nextLore() {
     emit('firstFinished')
   }
   isInitialQuote.value = false
-  currentLoreIndex.value = (currentLoreIndex.value + 1) % filteredLoreEntries.value.length
+  currentLoreIndex.value++
   restartLoreTimer()
 }
 
@@ -382,7 +384,9 @@ function prevLore() {
   }
 
   isInitialQuote.value = false
-  currentLoreIndex.value = (currentLoreIndex.value - 1 + filteredLoreEntries.value.length) % filteredLoreEntries.value.length
+  if (currentLoreIndex.value > 0) {
+    currentLoreIndex.value--
+  }
   restartLoreTimer()
 }
 
