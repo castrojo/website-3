@@ -235,6 +235,13 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     bkPhoto = localPeople.splice(bkTargetIndex, 1)[0]
   }
 
+  const heartTarget = 'wolves/people/kubecon-55168460993.webp'
+  const heartTargetIndex = localPeople.findIndex(wp => wp.id === heartTarget)
+  let heartPhoto: any = null
+  if (heartTargetIndex !== -1) {
+    heartPhoto = localPeople.splice(heartTargetIndex, 1)[0]
+  }
+
   const shuffledDaynight = deterministicShuffle(daynightShowcase, 101)
   const shuffledNormalShowcase = deterministicShuffle(normalShowcase, 202)
   const shuffledPeople = deterministicShuffle(localPeople, 303)
@@ -306,6 +313,9 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
 
   // 5. Heavy Build-Up [277, 345] seconds (68s total) -> 34 people wallpapers
   const peoplePool3 = shuffledPeople.slice(23, 57)
+  if (heartPhoto) {
+    peoplePool3[21] = heartPhoto
+  }
   const sec5BaseDuration = 68 / peoplePool3.length
   for (const item of peoplePool3) {
     const duration = sec5BaseDuration

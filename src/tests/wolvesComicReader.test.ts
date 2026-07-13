@@ -54,4 +54,17 @@ describe('wolvesComicReader', () => {
     const srcs = wrapper.findAll('.flickr-img').map(el => el.attributes('src') || '')
     expect(srcs.some(src => src.includes('bketelsen.webp'))).toBe(true)
   })
+
+  it('enforces and codifies the alignment of the heart picture at 5:19', async () => {
+    const wrapper = mount(WolvesComicReader, {
+      props: {
+        trackIndex: 0,
+        playlistCurrentTime: 319, // Exactly 5:19 on Track 0
+      },
+    })
+
+    // At 319s (5:19), the active slide should correspond to the heart picture (kubecon-55168460993.webp)
+    const srcs = wrapper.findAll('.flickr-img').map(el => el.attributes('src') || '')
+    expect(srcs.some(src => src.includes('kubecon-55168460993.webp'))).toBe(true)
+  })
 })
