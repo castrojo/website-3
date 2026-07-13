@@ -340,16 +340,34 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime += duration
   }
 
-  // 6. Fast Solo Climax & Outro [345, 423] seconds (78s total) -> Pivotal photo frozen for the entire climax
+  // 6. Fast Solo Climax & Outro [345, 423] seconds (78s total)
+  let remainingSec6 = 78
+
   if (pivotalPhoto) {
+    const freezeDuration = 10
     result.push({
       ...pivotalPhoto,
       path: pivotalPhoto.path || '',
       startTime: currentTime,
-      duration: 78,
-      endTime: currentTime + 78
+      duration: freezeDuration,
+      endTime: currentTime + freezeDuration
     })
-    currentTime += 78
+    currentTime += freezeDuration
+    remainingSec6 -= freezeDuration
+  }
+
+  const peoplePool4 = shuffledPeople.slice(57)
+  const sec6BaseDuration = remainingSec6 / peoplePool4.length
+  for (const item of peoplePool4) {
+    const duration = sec6BaseDuration
+    result.push({
+      ...item,
+      path: item.path || '',
+      startTime: currentTime,
+      duration,
+      endTime: currentTime + duration
+    })
+    currentTime += duration
   }
 
   return result
@@ -361,7 +379,17 @@ const activeTimelineSlide = computed(() => {
   }
   const curTime = props.playlistCurrentTime ?? 0
   const slide = timelineSlides.value.find(s => curTime >= s.startTime && curTime < s.endTime)
-  return slide || timelineSlides.value[timelineSlides.value.length - 1]
+  if (slide) {
+    return slide
+  }
+
+  // Floating point gap fallback: find the last slide that started before curTime
+  for (let i = timelineSlides.value.length - 1; i >= 0; i--) {
+    if (curTime >= timelineSlides.value[i].startTime) {
+      return timelineSlides.value[i]
+    }
+  }
+  return timelineSlides.value[0]
 })
 
 const currentSlideTransitionDuration = computed(() => {

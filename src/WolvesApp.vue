@@ -87,7 +87,7 @@ const isAnnouncementVisible = computed(() => {
   if (!isSoundtrackActive.value || playlistTrackIndex.value !== 0) {
     return false
   }
-  return playlistCurrentTime.value >= 345 && playlistCurrentTime.value <= 423
+  return playlistCurrentTime.value >= 345 && playlistCurrentTime.value <= 355
 })
 
 watch([playlistTrackIndex, playlistCurrentTime], ([trackIdx, curTime]) => {
@@ -483,6 +483,9 @@ onBeforeUnmount(() => {
 
         <!-- Announcement Area -->
         <div class="hud-announcement-area font-mono">
+          <div v-if="!isAnnouncementVisible" class="announcement-standby text-gray">
+            [ COMM-LINK STANDBY ]
+          </div>
           <transition name="flicker-glitch">
             <div v-if="isAnnouncementVisible" class="announcement-message text-cyan">
               We've got your back, welcome to the path.
@@ -2019,6 +2022,18 @@ onBeforeUnmount(() => {
   flex: 1;
   padding: 0 16px;
   overflow: hidden;
+  height: 48px;
+  border: 1px dashed rgba(102, 179, 255, 0.15);
+  border-radius: 4px;
+  margin: 0 16px;
+  background: rgba(16, 21, 31, 0.3);
+  position: relative;
+
+  .announcement-standby {
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+  }
 
   .announcement-message {
     font-size: 0.95rem;
@@ -2027,6 +2042,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    position: absolute;
   }
 }
 
