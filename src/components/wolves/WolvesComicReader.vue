@@ -722,8 +722,13 @@ watch(() => props.playlistCurrentTime, (newTime) => {
       targetPage = Math.min(7, Math.floor(pct * 7) + 1)
     }
     else if (newTime <= 277) {
-      const pct = Math.min(1, Math.max(0, (newTime - 127) / 150))
-      targetPage = Math.min(14, Math.floor(pct * 7) + 8)
+      if (newTime < 180) {
+        targetPage = 8
+      }
+      else {
+        const pct = Math.min(1, Math.max(0, (newTime - 180) / 97))
+        targetPage = Math.min(14, Math.floor(pct * 6) + 9)
+      }
     }
     else {
       const pct = Math.min(1, Math.max(0, (newTime - 277) / 146))
