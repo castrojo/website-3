@@ -81,22 +81,6 @@ export const wolvesRelease: WolvesRelease = {
       title: 'Maintenance Window',
       body: parseBody(loreFiles['./lore/maintenance-window.md'] || ''),
     },
-    {
-      id: 'lorem-prologue-1',
-      chapterId: 'prologue',
-      type: 'transmission',
-      publishedAt: '2326-06-16',
-      title: 'The Artifact',
-      body: parseBody(loreFiles['./lore/lorem-prologue-1.md'] || ''),
-    },
-    {
-      id: 'lorem-prologue-2',
-      chapterId: 'prologue',
-      type: 'transmission',
-      publishedAt: '2326-06-17',
-      title: 'The Children',
-      body: parseBody(loreFiles['./lore/lorem-prologue-2.md'] || ''),
-    },
     // --- Pursuit: transmissions ---
     {
       id: 'do-not-reply',
@@ -159,14 +143,6 @@ export const wolvesRelease: WolvesRelease = {
       body: parseBody(loreFiles['./lore/quote-third-disciple.md'] || ''),
       sourceLabel: 'Third Disciple of Renner — The Chronicles of Blue Universal',
     },
-    {
-      id: 'lorem-pursuit-1',
-      chapterId: 'pursuit',
-      type: 'transmission',
-      publishedAt: '2326-05-26',
-      title: 'The Golden Era',
-      body: parseBody(loreFiles['./lore/lorem-pursuit-1.md'] || ''),
-    },
     // --- Awakening: archival transmissions ---
     {
       id: 'reckoning-of-the-three',
@@ -191,14 +167,6 @@ export const wolvesRelease: WolvesRelease = {
       publishedAt: '2326-01-01',
       title: 'John Bazzite Exclusive Interview',
       body: parseBody(loreFiles['./lore/john-bazzite-interview.md'] || ''),
-    },
-    {
-      id: 'lorem-awakening-1',
-      chapterId: 'awakening',
-      type: 'transmission',
-      publishedAt: '2326-01-02',
-      title: 'Betrayal',
-      body: parseBody(loreFiles['./lore/lorem-awakening-1.md'] || ''),
     },
     // --- Source: Ishtar Collective / Unveiling (archival) ---
     {
