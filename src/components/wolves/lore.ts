@@ -39,8 +39,8 @@ function parseMarkdown<T>(rawContent: string): { metadata: T, body: string } {
   return { metadata: {} as T, body: rawContent.trim() }
 }
 
-const rawQuotesFiles = import.meta.glob('../../data/lore/quotes/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
-const rawCommsFiles = import.meta.glob('../../data/lore/communications/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+const rawQuotesFiles = import.meta.glob('../../data/lore/sidebar-quote-*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+const rawCommsFiles = import.meta.glob('../../data/lore/sidebar-comm-*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 
 export const bazziteQuotes: BazziteQuote[] = Object.values(rawQuotesFiles).map((raw) => {
   const { metadata, body } = parseMarkdown<Omit<BazziteQuote, 'quote'>>(raw)

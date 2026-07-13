@@ -2,8 +2,10 @@
 title: Childhood's End Wager
 channel: ZONKER//ARCHIVE-033
 date: '2326-07-09'
+_editor_prompt: >-
+  STORY CONTEXT: General Lore (Appears in the Lore sidebar / Chat window). This
+  acts as a prompt for your editing.
 ---
-
 **JOHN BAZZITE**: Can you deny that they have brought security, peace, and prosperity to the world?
 
 **JZB**: That is true, but they have taken our liberty. Man does not live—

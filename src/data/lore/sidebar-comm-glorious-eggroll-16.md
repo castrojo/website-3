@@ -2,8 +2,10 @@
 title: Glorious Eggroll
 channel: NBR-3/0//GLORIOUS-EGGROLL//PRIVATE-LOG
 date: '2326-07-12'
+_editor_prompt: >-
+  STORY CONTEXT: General Lore (Appears in the Lore sidebar / Chat window). This
+  acts as a prompt for your editing.
 ---
-
 **Thomas** [14:22:05]: I'm glad we ran into each other, this trip is usually much harder alone.
 
 **Kyle** [14:22:18]: Thanks man I don't know what I would have done back there without you.

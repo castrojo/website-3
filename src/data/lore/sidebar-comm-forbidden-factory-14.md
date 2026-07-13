@@ -2,8 +2,10 @@
 title: Forbidden Factory
 channel: GNME-3//JORDAN//PRIVATE
 date: '2326-07-09'
+_editor_prompt: >-
+  STORY CONTEXT: General Lore (Appears in the Lore sidebar / Chat window). This
+  acts as a prompt for your editing.
 ---
-
 **Adrian** [03:14:22]: I'm not covering for you this time, the strangers have NO BUSINESS bringing that clanker here. People are furious, why do you sabotage us with this? And you indulge them to our most advanced tech like we're ...
 
 **Jordan** [03:14:29]: Desperate?

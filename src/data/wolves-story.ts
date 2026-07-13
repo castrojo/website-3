@@ -27,6 +27,11 @@ export interface WolvesRelease {
   artifacts: WolvesArtifact[]
 }
 
+function parseBody(raw: string) {
+  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
+  return match ? match[2].trim() : raw.trim()
+}
+
 const loreFiles = import.meta.glob('./lore/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 
 export const wolvesRelease: WolvesRelease = {
@@ -66,7 +71,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'transmission',
       publishedAt: '2326-07-09',
       title: 'Forbidden Factory',
-      body: loreFiles['./lore/forbidden-factory.md'] || '',
+      body: parseBody(loreFiles['./lore/forbidden-factory.md'] || ''),
     },
     {
       id: 'maintenance-window',
@@ -74,7 +79,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'transmission',
       publishedAt: '2326-06-15',
       title: 'Maintenance Window',
-      body: loreFiles['./lore/maintenance-window.md'] || '',
+      body: parseBody(loreFiles['./lore/maintenance-window.md'] || ''),
     },
     {
       id: 'lorem-prologue-1',
@@ -82,7 +87,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'transmission',
       publishedAt: '2326-06-16',
       title: 'Placeholder Transmission',
-      body: loreFiles['./lore/lorem-prologue-1.md'] || '',
+      body: parseBody(loreFiles['./lore/lorem-prologue-1.md'] || ''),
     },
     {
       id: 'lorem-prologue-2',
@@ -90,7 +95,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'quote',
       publishedAt: '2326-06-17',
       title: 'Placeholder Quote',
-      body: loreFiles['./lore/lorem-prologue-2.md'] || '',
+      body: parseBody(loreFiles['./lore/lorem-prologue-2.md'] || ''),
     },
     // --- Pursuit: transmissions ---
     {
@@ -99,7 +104,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'transmission',
       publishedAt: '2326-05-24',
       title: 'Do Not Reply',
-      body: loreFiles['./lore/do-not-reply.md'] || '',
+      body: parseBody(loreFiles['./lore/do-not-reply.md'] || ''),
     },
     // --- Pursuit: quotes ---
     {
@@ -108,7 +113,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'quote',
       publishedAt: '2326-07-09',
       title: 'Marketing Material',
-      body: loreFiles['./lore/quote-natasha-woods.md'] || '',
+      body: parseBody(loreFiles['./lore/quote-natasha-woods.md'] || ''),
       sourceLabel: 'Natasha Woods VI — CNCF Marketing Material, Circa 2349',
     },
     {
@@ -117,7 +122,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'transmission',
       publishedAt: '2326-07-09',
       title: 'The Wager',
-      body: loreFiles['./lore/childhoods-end-wager.md'] || '',
+      body: parseBody(loreFiles['./lore/childhoods-end-wager.md'] || ''),
     },
     {
       id: 'quote-childhoods-end-future',
@@ -125,7 +130,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'quote',
       publishedAt: '2326-07-09',
       title: 'Childhood\'s End',
-      body: loreFiles['./lore/quote-childhoods-end-future.md'] || '',
+      body: parseBody(loreFiles['./lore/quote-childhoods-end-future.md'] || ''),
     },
     {
       id: 'quote-berkus',
@@ -133,7 +138,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'quote',
       publishedAt: '2326-06-15',
       title: 'The Cosmos',
-      body: loreFiles['./lore/quote-berkus.md'] || '',
+      body: parseBody(loreFiles['./lore/quote-berkus.md'] || ''),
       sourceLabel: 'Berkus the Wise — The Cosmos, Volume 3 (Blue Universal Red Letter Edition)',
     },
     {
@@ -142,7 +147,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'quote',
       publishedAt: '2326-05-24',
       title: 'The Horror of Thousands',
-      body: loreFiles['./lore/quote-unmarked-grave.md'] || '',
+      body: parseBody(loreFiles['./lore/quote-unmarked-grave.md'] || ''),
       sourceLabel: 'Unmarked Grave — Eulogy: The Horror of Thousands',
     },
     {
@@ -151,7 +156,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'quote',
       publishedAt: '2326-05-25',
       title: 'The Chronicles of Blue Universal',
-      body: loreFiles['./lore/quote-third-disciple.md'] || '',
+      body: parseBody(loreFiles['./lore/quote-third-disciple.md'] || ''),
       sourceLabel: 'Third Disciple of Renner — The Chronicles of Blue Universal',
     },
     {
@@ -160,7 +165,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'news',
       publishedAt: '2326-05-26',
       title: 'Placeholder News',
-      body: loreFiles['./lore/lorem-pursuit-1.md'] || '',
+      body: parseBody(loreFiles['./lore/lorem-pursuit-1.md'] || ''),
     },
     // --- Awakening: archival transmissions ---
     {
@@ -169,7 +174,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'transmission',
       publishedAt: '2326-01-01',
       title: 'Reckoning of the Three',
-      body: loreFiles['./lore/reckoning-of-the-three.md'] || '',
+      body: parseBody(loreFiles['./lore/reckoning-of-the-three.md'] || ''),
     },
     {
       id: 'committee-report-personal-transmission',
@@ -177,7 +182,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'transmission',
       publishedAt: '2326-01-01',
       title: 'COMMITEE REPORT: Personal Transmission',
-      body: loreFiles['./lore/committee-report-personal-transmission.md'] || '',
+      body: parseBody(loreFiles['./lore/committee-report-personal-transmission.md'] || ''),
     },
     {
       id: 'john-bazzite-interview',
@@ -185,7 +190,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'news',
       publishedAt: '2326-01-01',
       title: 'John Bazzite Exclusive Interview',
-      body: loreFiles['./lore/john-bazzite-interview.md'] || '',
+      body: parseBody(loreFiles['./lore/john-bazzite-interview.md'] || ''),
     },
     {
       id: 'lorem-awakening-1',
@@ -193,7 +198,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'quote',
       publishedAt: '2326-01-02',
       title: 'Placeholder Insight',
-      body: loreFiles['./lore/lorem-awakening-1.md'] || '',
+      body: parseBody(loreFiles['./lore/lorem-awakening-1.md'] || ''),
     },
     // --- Source: Ishtar Collective / Unveiling (archival) ---
     {
@@ -202,7 +207,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'source',
       publishedAt: '2326-01-01',
       title: 'The Garden Before Time',
-      body: loreFiles['./lore/ishtar-gardener-and-winnower.md'] || '',
+      body: parseBody(loreFiles['./lore/ishtar-gardener-and-winnower.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/gardener-and-winnower',
     },
     {
@@ -211,7 +216,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'source',
       publishedAt: '2326-01-01',
       title: 'Rules of the Flower Game',
-      body: loreFiles['./lore/ishtar-flower-game.md'] || '',
+      body: parseBody(loreFiles['./lore/ishtar-flower-game.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-flower-game',
     },
     {
@@ -220,7 +225,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'source',
       publishedAt: '2326-01-01',
       title: 'The First Knife',
-      body: loreFiles['./lore/ishtar-first-knife.md'] || '',
+      body: parseBody(loreFiles['./lore/ishtar-first-knife.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-first-knife',
     },
     {
@@ -229,7 +234,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'source',
       publishedAt: '2326-01-01',
       title: 'The Wager',
-      body: loreFiles['./lore/ishtar-the-wager.md'] || '',
+      body: parseBody(loreFiles['./lore/ishtar-the-wager.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-wager',
     },
     {
@@ -238,7 +243,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'source',
       publishedAt: '2326-01-01',
       title: 'Patternfall',
-      body: loreFiles['./lore/ishtar-patternfall.md'] || '',
+      body: parseBody(loreFiles['./lore/ishtar-patternfall.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/patternfall',
 
     },
@@ -248,7 +253,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'source',
       publishedAt: '2326-01-01',
       title: 'The Cambrian Explosion',
-      body: loreFiles['./lore/ishtar-cambrian-explosion.md'] || '',
+      body: parseBody(loreFiles['./lore/ishtar-cambrian-explosion.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-cambrian-explosion',
     },
     {
@@ -257,7 +262,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'source',
       publishedAt: '2326-01-01',
       title: 'The Final Shape',
-      body: loreFiles['./lore/ishtar-final-shape.md'] || '',
+      body: parseBody(loreFiles['./lore/ishtar-final-shape.md'] || ''),
       sourceUrl: 'https://www.ishtar-collective.net/entries/the-final-shape',
     },
     {
@@ -266,7 +271,7 @@ export const wolvesRelease: WolvesRelease = {
       type: 'news',
       publishedAt: '2326-01-01',
       title: 'Blue Universal to Acquire Wayland-Yutani',
-      body: loreFiles['./lore/blue-universal-acquires-wayland-yutani.md'] || '',
+      body: parseBody(loreFiles['./lore/blue-universal-acquires-wayland-yutani.md'] || ''),
     },
   ],
 }

@@ -6,8 +6,10 @@ sourceTitle: Gardener and Winnower
 sourceCollection: Ishtar Collective / Unveiling
 sourceUrl: https://www.ishtar-collective.net/entries/gardener-and-winnower
 attribution: Paraphrased from Destiny lore
+_editor_prompt: >-
+  STORY CONTEXT: General Lore (Appears in the Lore sidebar / Chat window). This
+  acts as a prompt for your editing.
 ---
-
 **THE GARDENER**: I plant possibilities and watch what they become.
 
 **THE WINNOWER**: I separate what can endure from what cannot.
