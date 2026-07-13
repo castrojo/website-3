@@ -233,6 +233,22 @@ describe('wolves soundtrack', () => {
     expect(players[0].pauseVideo).toHaveBeenCalledTimes(1)
   })
 
+  it('shows the full maintainer CTA with concise source actions during playback', async () => {
+    const wrapper = mount(WolvesSoundtrack)
+
+    await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
+    await flushPromises()
+    resolveIframeApi()
+    await flushPromises()
+    players[0].triggerReady()
+    await flushPromises()
+
+    expect(wrapper.get('.soundtrack-cta').text()).toBe('Open Source is about supporting maintainers. Prove it.')
+    expect(wrapper.get('.soundtrack-cta').classes()).not.toContain('truncate')
+    expect(wrapper.get('a[aria-label="Open soundtrack playlist on YouTube"]').text()).toBe('Playlist')
+    expect(wrapper.get('a[aria-label="Open soundtrack in YouTube Music"]').text()).toBe('Music')
+  })
+
   it('keeps the same player while unrelated reader events occur', async () => {
     const wrapper = mount(WolvesSoundtrack)
     const persistentHost = wrapper.get('[data-testid="wolves-player-host"]').element
@@ -363,6 +379,6 @@ describe('wolves soundtrack', () => {
     await flushPromises()
 
     expect(players[1].playVideo).toHaveBeenCalledTimes(1)
-    expect(wrapper.text()).toContain('Persistent soundtrack playback is active for this session.')
+    expect(wrapper.text()).toContain('Open Source is about supporting maintainers. Prove it.')
   })
 })

@@ -158,7 +158,7 @@ const statusCopy = computed(() => {
     case 'loading':
       return 'Loading local playlist metadata and the YouTube player.'
     case 'playing':
-      return 'Persistent soundtrack playback is active for this session.'
+      return 'Open Source is about supporting maintainers. Prove it.'
     case 'ready':
     case 'paused':
       return 'Playback is ready. Resume when you want the soundtrack back.'
@@ -524,7 +524,7 @@ onBeforeUnmount(() => {
 
       <!-- Status and Links below main track info -->
       <div class="soundtrack-status-panel">
-        <p class="soundtrack-status font-mono">
+        <p class="soundtrack-status soundtrack-cta">
           {{ statusCopy }}
         </p>
 
@@ -534,24 +534,28 @@ onBeforeUnmount(() => {
             aria-label="Open soundtrack playlist on YouTube"
             target="_blank"
             rel="noopener noreferrer"
-            class="soundtrack-link"
+            class="soundtrack-link soundtrack-source-action"
           >
-            YouTube playlist
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M8 5v14l11-7z" />
+            </svg>
+            Playlist
           </a>
-          <div class="soundtrack-music-group">
-            <a
-              :href="currentSource.musicUrl"
-              aria-label="Open soundtrack in YouTube Music"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="soundtrack-link"
-            >
-              YouTube Music
-            </a>
-            <span class="soundtrack-premium-note font-mono">
-              Ad-free playback requires YouTube Premium
-            </span>
-          </div>
+          <a
+            :href="currentSource.musicUrl"
+            aria-label="Open soundtrack in YouTube Music"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="soundtrack-link soundtrack-source-action"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M9 18V5l11-2v13a3 3 0 1 1-2-2.83V7.04l-7 1.27V16a3 3 0 1 1-2-2.83V18z" />
+            </svg>
+            Music
+          </a>
+          <span class="soundtrack-premium-note font-mono">
+            Ad-free playback requires YouTube Premium
+          </span>
         </div>
       </div>
 
@@ -769,6 +773,13 @@ onBeforeUnmount(() => {
   color: #94a3b8;
 }
 
+.soundtrack-cta {
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .soundtrack-links {
   display: flex;
   flex-wrap: wrap;
@@ -786,11 +797,26 @@ onBeforeUnmount(() => {
   }
 }
 
-.soundtrack-music-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
+.soundtrack-source-action {
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid rgba(125, 211, 252, 0.5);
+  border-radius: 999px;
+  background: rgba(14, 116, 144, 0.16);
+  color: #e0f2fe;
+  font-size: 0.78rem;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover {
+    border-color: #7dd3fc;
+    background: rgba(14, 116, 144, 0.3);
+  }
 }
 
 .soundtrack-premium-note {
