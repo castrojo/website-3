@@ -165,7 +165,7 @@ const curatedTitles = {
   'flickr-55343977496': '0R0A9009',
   'flickr-55344127313': '0R0A9020',
   'flickr-55344186409': 'DSC04181',
-  'topheememe': 'Brazil we see you! #diolinux #tulip',
+  'brazil-homage': 'Brazil we see you! #diolinux #tulip',
 }
 
 function formatTitle(filename) {

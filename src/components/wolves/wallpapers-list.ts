@@ -280,6 +280,11 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     type: 'single',
+    name: 'wolves/people/brazil-homage.webp',
+    title: 'Brazil we see you! #diolinux #tulip'
+  },
+  {
+    type: 'single',
     name: 'wolves/people/enthusiasts.png',
     title: 'Enthusiasts'
   },
@@ -872,10 +877,5 @@ export const wallpapers: Wallpaper[] = [
     type: 'single',
     name: 'wolves/people/summit-15.webp',
     title: 'Summit 15'
-  },
-  {
-    type: 'single',
-    name: 'wolves/people/topheememe.webp',
-    title: 'Brazil we see you! #diolinux #tulip'
   }
 ]
