@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  getWolvesHudLabel,
   getWolvesThesisState,
   parseIncomingSignalMessages,
   wolvesIncomingSignalMessages,
@@ -70,6 +71,14 @@ describe('wolves thesis sequence', () => {
     expect(getWolvesThesisState(405).text).toBe('You have ascended ...')
     expect(getWolvesThesisState(408).text).toBe('Become Legend')
     expect(getWolvesThesisState(425).text).toBe('Become Legend')
+  })
+
+  it('keeps authored HUD notifications active through thesis-overlay gaps', () => {
+    expect(getWolvesHudLabel(344.999)).toBe('INCOMING SIGNAL:')
+    expect(getWolvesHudLabel(370)).toBe('KDE Plasma Couplings: ENGAGED')
+    expect(getWolvesHudLabel(408)).toBe('Bazzite Mk6 Units: Prepare for Titanfall.')
+    expect(getWolvesHudLabel(425)).toBe('Bazzite Mk6 Units: Prepare for Titanfall.')
+    expect(getWolvesHudLabel(425.001)).toBe('Bazzite Mk6 Units: Prepare for Titanfall.')
   })
 
   it('preserves the approved thesis window, HUD, and visual modes', () => {

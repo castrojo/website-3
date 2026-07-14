@@ -26,7 +26,7 @@ import WolvesSoundtrack from './components/wolves/WolvesSoundtrack.vue'
 import { getNarrativeSlotForTime } from './data/wolves-narrative-timeline'
 import { loadWolvesSoundtrack } from './data/wolves-soundtrack'
 import { wolvesRelease } from './data/wolves-story'
-import { getWolvesThesisState } from './data/wolves-thesis-sequence'
+import { getWolvesHudLabel, getWolvesThesisState } from './data/wolves-thesis-sequence'
 
 const isPlaying = ref(false)
 const isEquinoxActive = ref(false)
@@ -48,6 +48,9 @@ const currentNarrativeSlot = computed(() =>
 )
 const thesisState = computed(() =>
   presentationTrackIndex.value === 0 ? getWolvesThesisState(presentationCurrentTime.value) : getWolvesThesisState(-1),
+)
+const hudLabel = computed(() =>
+  presentationTrackIndex.value === 0 ? getWolvesHudLabel(presentationCurrentTime.value) : getWolvesHudLabel(-1),
 )
 
 const activeNarrativeArtifact = computed(() =>
@@ -310,7 +313,7 @@ onBeforeUnmount(() => {
       <header class="immersive-hud-header" :class="{ 'is-thesis-active': thesisState.active }">
         <div class="hud-left font-mono">
           <span class="hud-indicator-dot animate-pulse-fast" />
-          {{ thesisState.hudLabel || 'kubectl get pods -n wolves --selector=app=seven-days-to-the-wolves --watch' }}
+          {{ hudLabel }}
         </div>
         <button class="hud-exit-btn font-mono" @click="exitImmersiveExperience">
           [ EXIT EXPERIENCE ]

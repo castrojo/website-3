@@ -23,6 +23,7 @@ const EVOLVE_TEXT = 'Evolve or die ...'
 const ASCENDED_TEXT = 'You have ascended ...'
 const LEGEND_TEXT = 'Become Legend'
 const TITANFALL_HUD_LABEL = 'Bazzite Mk6 Units: Prepare for Titanfall.'
+const DEFAULT_HUD_LABEL = 'Incoming Signal: Universal Blue'
 
 const inactive: WolvesThesisState = { active: false, mode: 'inactive', text: '', subtitle: '', warning: '', dayPulse: false, hudLabel: '' }
 
@@ -58,7 +59,7 @@ export const wolvesIncomingSignalMessages = parseIncomingSignalMessages(incoming
 
 function incomingSignalLabel(time: number): string {
   if (wolvesIncomingSignalMessages.length === 0) {
-    return 'Incoming Signal: Universal Blue'
+    return DEFAULT_HUD_LABEL
   }
 
   const phraseIndex = Math.floor(
@@ -67,30 +68,40 @@ function incomingSignalLabel(time: number): string {
   return wolvesIncomingSignalMessages[Math.min(phraseIndex, wolvesIncomingSignalMessages.length - 1)]
 }
 
+export function getWolvesHudLabel(time: number): string {
+  if (time >= 408) {
+    return TITANFALL_HUD_LABEL
+  }
+  if (time < THESIS_START_SECONDS) {
+    return wolvesIncomingSignalMessages[0] ?? DEFAULT_HUD_LABEL
+  }
+  return incomingSignalLabel(time)
+}
+
 export function getWolvesThesisState(time: number): WolvesThesisState {
   if (time < THESIS_START_SECONDS || time > THESIS_END_SECONDS) {
     return inactive
   }
   if (time < 347.75) {
-    return active('welcome', WELCOME_TEXT, '', '', true, incomingSignalLabel(time))
+    return active('welcome', WELCOME_TEXT, '', '', true, getWolvesHudLabel(time))
   }
   if (time < 350.5) {
-    return active('welcome', SUPPORT_TEXT, '', '', true, incomingSignalLabel(time))
+    return active('welcome', SUPPORT_TEXT, '', '', true, getWolvesHudLabel(time))
   }
   if (time < 359) {
-    return active('universal-blue', UNIVERSAL_BLUE_TEXT, '', '', false, incomingSignalLabel(time))
+    return active('universal-blue', UNIVERSAL_BLUE_TEXT, '', '', false, getWolvesHudLabel(time))
   }
   if (time < 365) {
-    return active('evolve', EVOLVE_TEXT, '', '', false, incomingSignalLabel(time))
+    return active('evolve', EVOLVE_TEXT, '', '', false, getWolvesHudLabel(time))
   }
   if (time < 395) {
     return inactive
   }
   if (time < 405) {
-    return active('growing-corruption', '', '', '', false, incomingSignalLabel(time))
+    return active('growing-corruption', '', '', '', false, getWolvesHudLabel(time))
   }
   if (time < 408) {
-    return active('legend', ASCENDED_TEXT, '', 'truly a great loss for humanity.', false, incomingSignalLabel(time))
+    return active('legend', ASCENDED_TEXT, '', 'truly a great loss for humanity.', false, getWolvesHudLabel(time))
   }
-  return active('legend', LEGEND_TEXT, '', 'truly a great loss for humanity.', false, TITANFALL_HUD_LABEL)
+  return active('legend', LEGEND_TEXT, '', 'truly a great loss for humanity.', false, getWolvesHudLabel(time))
 }

@@ -98,6 +98,22 @@ describe('wolvesApp.vue', () => {
     expect(wrapper.find('.immersive-content-grid > .thesis-overlay').exists()).toBe(false)
   })
 
+  it('preserves the complete authored finale state', async () => {
+    const wrapper = mount(WolvesApp)
+
+    await wrapper.get('.experience-cta-btn').trigger('click')
+    await wrapper.findComponent({ name: 'WolvesSoundtrack' }).vm.$emit('progress', {
+      currentTime: 408,
+      duration: 423,
+      playlistIndex: 0,
+    })
+
+    expect(wrapper.get('.hud-left').text()).toContain('Bazzite Mk6 Units: Prepare for Titanfall.')
+    expect(wrapper.get('.thesis-overlay h1').text()).toBe('Become Legend')
+    expect(wrapper.get('.comic-reader').attributes('data-current-time')).toBe('408')
+    expect(wrapper.get('.lore-artifact').text()).toBe('blue-universal-acquires-wayland-yutani')
+  })
+
   it('uses Track 0 playback time for thesis state and disables it for other tracks', async () => {
     vi.useFakeTimers()
 
@@ -117,6 +133,15 @@ describe('wolvesApp.vue', () => {
       expect(wrapper.get('.thesis-overlay h1').text()).toBe('We\'ve got your back.')
 
       await soundtrack.vm.$emit('progress', {
+        currentTime: 370,
+        duration: 423,
+        playlistIndex: 0,
+      })
+
+      expect(wrapper.get('.hud-left').text()).toContain('KDE Plasma Couplings: ENGAGED')
+      expect(wrapper.find('.thesis-overlay').exists()).toBe(false)
+
+      await soundtrack.vm.$emit('progress', {
         currentTime: 345,
         duration: 423,
         playlistIndex: 1,
@@ -124,7 +149,7 @@ describe('wolvesApp.vue', () => {
       await vi.advanceTimersByTimeAsync(1500)
 
       expect(wrapper.get('.immersive-hud-header').classes()).not.toContain('is-thesis-active')
-      expect(wrapper.get('.hud-left').text()).toContain('kubectl get pods')
+      expect(wrapper.get('.hud-left').text()).toContain('INCOMING SIGNAL:')
       expect(wrapper.find('.thesis-overlay').exists()).toBe(false)
     }
     finally {
