@@ -22,6 +22,21 @@ function sourceBody(raw: string): string {
   return match[1]
 }
 
+function authoredBody(raw: string): string {
+  const newline = raw.includes('\r\n') ? '\r\n' : '\n'
+  const openingDelimiter = `---${newline}`
+  const closingDelimiter = `${newline}---${newline}`
+  const closingOffset = raw.indexOf(closingDelimiter, openingDelimiter.length)
+  if (!raw.startsWith(openingDelimiter) || closingOffset === -1) {
+    throw new Error('Expected lore source frontmatter')
+  }
+
+  const bodyOffset = closingOffset + closingDelimiter.length
+  return raw.startsWith(newline, bodyOffset)
+    ? raw.slice(bodyOffset + newline.length)
+    : raw.slice(bodyOffset)
+}
+
 describe('wolves lore records', () => {
   it('normalizes the legacy transmission kind to chatlog with a diagnostic', () => {
     const record = parseLoreRecord('lorem-prologue-1', 'prologue', './lore/lorem-prologue-1.md', [
@@ -92,6 +107,17 @@ describe('wolves lore records', () => {
 
     expect(createHash('sha256').update(sourceBodies.join('\0')).digest('hex'))
       .toBe('2974fce6ad475690b2a0382515c5e1e82910b2a4f9d0c6c27f646d7fa3443079')
+  })
+
+  it('preserves every loaded record body from its authored Markdown, including terminal newlines', () => {
+    for (const record of loadAllLoreRecords()) {
+      const raw = loreSources[`../data${record.relativePath.slice(1)}`]
+      if (raw === undefined) {
+        throw new Error(`Missing lore source ${record.relativePath}`)
+      }
+
+      expect(record.body, record.relativePath).toBe(authoredBody(raw))
+    }
   })
 
   it('exposes normalized staged record identity through the Wolves release', () => {

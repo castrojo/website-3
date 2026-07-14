@@ -63,6 +63,7 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 - Dinosaur artwork must resolve only through an authored species ID and explicit cited registry entry. Prefix the registry path with `import.meta.env.BASE_URL`; do not infer filenames, rotate assets, or supply a generic fallback.
 - Use type-based Vue props and computed derivations in view components: `const props = defineProps<LoreViewProps>()` and `const value = computed(() => derive(props.record))`. Source: `/vuejs/vue`.
 - The locked final news view (398–425 seconds) must render its passed nonempty `warning` separately from `record.body`. Never substitute thesis `text` or `hudLabel`; cover the actual 405- and 425-second final-slot states.
+- Cover frontmatter migrations with a direct per-record comparison between `record.body` and independently extracted raw Markdown bodies from an eager `?raw` Vite glob. Preserve terminal newlines; a source-body hash alone does not verify parser output. Keep this separate from the Track 0 scheduler regression, which locks pre-migration `body.trim().length` boundaries.
 
 ## Common Rationalizations
 

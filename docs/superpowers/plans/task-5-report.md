@@ -49,3 +49,13 @@ The following commits form the complete, direct-to-main development history for 
 * `6fa709a` feat(wolves): add progress state and seek logic to soundtrack
 * `521cb96` docs: add implementation plan for wolves soundtrack redesign
 * `20ea481` docs: add spec for wolves soundtrack redesign
+
+---
+
+## 2026-07-14: Lore body regression coverage
+
+- Added a per-record assertion that compares each loaded `record.body` with an independently extracted Markdown body, preserving terminal newlines.
+- Kept the Track 0 scheduler-boundary regression in `wolvesNarrativeTimeline.test.ts` unchanged, locking its pre-migration trimmed-body behavior separately.
+- **PASS:** `npm run test:run -- src/tests/wolvesLoreRecords.test.ts src/tests/wolvesNarrativeTimeline.test.ts src/tests/wolvesApp.test.ts src/tests/wolvesLore.test.ts` — 4 files, 32 tests.
+- **PASS:** `npm run typecheck`
+- **PASS:** `npx eslint src/tests/wolvesLoreRecords.test.ts`
