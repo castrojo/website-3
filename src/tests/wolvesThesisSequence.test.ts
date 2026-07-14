@@ -6,7 +6,6 @@ import {
 } from '../data/wolves-thesis-sequence'
 
 const THESIS_START_SECONDS = 345
-const PHRASE_SECONDS = 16 * 60 / 152
 
 describe('wolves thesis sequence', () => {
   it('reads ordered non-empty messages from the editable source', () => {
@@ -37,7 +36,7 @@ describe('wolves thesis sequence', () => {
     }).toThrow(TypeError)
   })
 
-  it('keeps thesis state text empty when the incoming signal source has no messages', async () => {
+  it('does not allow an empty editable signal source to erase the thesis story text', async () => {
     const sourceModule = '../data/wolves-incoming-signal.txt?raw'
     const sequenceModule = '../data/wolves-thesis-sequence'
 
@@ -48,13 +47,12 @@ describe('wolves thesis sequence', () => {
       const reloadedSequence = await import(sequenceModule)
 
       expect(reloadedSequence.wolvesIncomingSignalMessages).toEqual([])
-      expect(getWolvesThesisState(THESIS_START_SECONDS).text).toBe(wolvesIncomingSignalMessages[0])
       expect(reloadedSequence.getWolvesThesisState(THESIS_START_SECONDS)).toMatchObject({
         active: true,
-        text: '',
+        text: 'We\'ve got your back, welcome to the path.',
         hudLabel: 'Incoming Signal: Universal Blue',
       })
-      expect(reloadedSequence.getWolvesThesisState(365).text).toBe('')
+      expect(reloadedSequence.getWolvesThesisState(350.5).text).toBe('We are Universal Blue.')
     }
     finally {
       vi.doUnmock(sourceModule)
@@ -62,13 +60,16 @@ describe('wolves thesis sequence', () => {
     }
   })
 
-  it('plays the signal sequence once in sixteen-beat phrases through the finale', () => {
-    expect(getWolvesThesisState(THESIS_START_SECONDS).text).toBe(wolvesIncomingSignalMessages[0])
-    expect(getWolvesThesisState(THESIS_START_SECONDS + PHRASE_SECONDS - 0.001).text).toBe(wolvesIncomingSignalMessages[0])
-    expect(getWolvesThesisState(THESIS_START_SECONDS + PHRASE_SECONDS).text).toBe(wolvesIncomingSignalMessages[1])
-    expect(getWolvesThesisState(THESIS_START_SECONDS + PHRASE_SECONDS * 11).text).toBe('Execute Request Order: You have ascended.')
-    expect(getWolvesThesisState(THESIS_START_SECONDS + PHRASE_SECONDS * 12).text).toBe('Bazzite Mk6 Units: Prepare for Titanfall.')
-    expect(getWolvesThesisState(425).text).toBe('Bazzite Mk6 Units: Prepare for Titanfall.')
+  it('restores the complete approved thesis sequence through the finale', () => {
+    expect(getWolvesThesisState(THESIS_START_SECONDS).text).toBe('We\'ve got your back, welcome to the path.')
+    expect(getWolvesThesisState(348.999).text).toBe('We\'ve got your back, welcome to the path.')
+    expect(getWolvesThesisState(349).text).toBe('')
+    expect(getWolvesThesisState(350.5).text).toBe('We are Universal Blue.')
+    expect(getWolvesThesisState(353.5).text).toBe('')
+    expect(getWolvesThesisState(355).text).toBe('Evolve or die ...')
+    expect(getWolvesThesisState(405).text).toBe('You have ascended ...')
+    expect(getWolvesThesisState(408).text).toBe('Become Legend')
+    expect(getWolvesThesisState(425).text).toBe('Become Legend')
   })
 
   it('preserves the approved thesis window, HUD, and visual modes', () => {
@@ -79,7 +80,7 @@ describe('wolves thesis sequence', () => {
       dayPulse: true,
       hudLabel: 'Incoming Signal: Universal Blue',
     })
-    expect(getWolvesThesisState(365)).toMatchObject({
+    expect(getWolvesThesisState(349)).toMatchObject({
       active: true,
       mode: 'corruption',
       hudLabel: 'Incoming Signal: Universal Blue',
