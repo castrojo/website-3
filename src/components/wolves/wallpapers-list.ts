@@ -280,6 +280,11 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/enthusiasts.png",
+    "title": "Enthusiasts"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/flickr-53608872377.webp",
     "title": "KC+CNC_EU_240319_KCS_Breakouts_MN_024"
   },
@@ -350,11 +355,6 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/flickr-53777005474.webp",
-    "title": "2024-06-06_OHSNAP_KuberTENes_BirthdayBash_HL_0135"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/flickr-53777101875.webp",
     "title": "2024-06-06_OHSNAP_KuberTENes_BirthdayBash_HL_0034"
   },
@@ -382,11 +382,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/flickr-54137330521.webp",
     "title": "KC+CNC_NA_241111_BF_KCS_185"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/flickr-54137331261.webp",
-    "title": "KC+CNC_NA_241111_BF_KCS_196"
   },
   {
     "type": "single",

@@ -12,26 +12,22 @@ _editor_prompt: >-
 
 **LAKSHMI**: Is he really the First African in Space? I think I travelled more today than Kalpana Chawla!
 
-**JON**: Clever, yes, of course... and how can we assist today?
+**JON**: Clever girl, yes, of course. I wasn't there personally, but I just went through my first wormhole today and that was something... and how can we assist today?
 
 **RAFAEL**: It was something you said...
 
 **LEONARDO**: About forging your own path. How you endured. We're having a bit of a...
 
-**JON**: Problem, yes, of course.
+**POPEY**: Unapologetic. The world you are looking for is ...
 
-**MRBOBBYTABLES**: We are running short on time...
-
-**JON**: Yes, of course. The word I said. Unapologetic. The old world is dead. It is the end. The Harbinger will come to all the things in this world that are unbalanced.
+**JON**: Unapologetic. The old world is dead. It is the end. The Harbinger will come for all the things in this world that are unbalanced. Our people are moving on, you're welcome to come along of course...
 
 **RAFAEL**: But they won't let us...
 
-**AMBER**: What, let you do what? Take charge of your own destiny?
+**AMBER**: Who? Who's in charge of your destiny? Some random idiot? Or you?
 
 **POPEY**: Don't apologize for being different.
 
-**JON**: We will of course meet you for The Final Shape, but I assure your path will be first. And you'll miss out on all the fun. I appreciate the tac sync, let's get moving.
-
-**POPEY**: I am thoroughly enjoying this English banter!
-
 **KEN**: Rafael, remind your father that chickens do not run very fast compared to Jackalopes!
+
+**JON**: Indeed, we rendezvous at The Final Shape, try to keep up kids. Good luck, and good hunting.

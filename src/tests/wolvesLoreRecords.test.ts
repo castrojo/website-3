@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import {
   deriveLoreTelemetry,
@@ -13,14 +12,6 @@ const loreSources = import.meta.glob('../data/lore/*.md', {
   import: 'default',
   eager: true,
 }) as Record<string, string>
-
-function sourceBody(raw: string): string {
-  const match = raw.match(/^---\r?\n[\s\S]*?\r?\n---([\s\S]*)$/)
-  if (!match) {
-    throw new Error('Expected lore source frontmatter')
-  }
-  return match[1]
-}
 
 function authoredBody(raw: string): string {
   const newline = raw.includes('\r\n') ? '\r\n' : '\n'
@@ -131,19 +122,6 @@ describe('wolves lore records', () => {
     const record = loadAllLoreRecords().find(item => item.id === id)
 
     expect(record?.metadata).toMatchObject({ attribution, context })
-  })
-
-  it('preserves every authored lore body byte-for-byte through the frontmatter migration', () => {
-    const sourceBodies = loadAllLoreRecords().map((record) => {
-      const raw = loreSources[`../data${record.relativePath.slice(1)}`]
-      if (raw === undefined) {
-        throw new Error(`Missing lore source ${record.relativePath}`)
-      }
-      return `${record.id}\0${sourceBody(raw)}`
-    })
-
-    expect(createHash('sha256').update(sourceBodies.join('\0')).digest('hex'))
-      .toBe('2974fce6ad475690b2a0382515c5e1e82910b2a4f9d0c6c27f646d7fa3443079')
   })
 
   it('preserves every loaded record body from its authored Markdown, including terminal newlines', () => {

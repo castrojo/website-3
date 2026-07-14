@@ -10,6 +10,8 @@ _editor_prompt: >-
 
 **HARBRINGER**: You knew, the three of you always knew. Why didn't you stop me? I've already killed you. WHY?!
 
-**SABOT-6**: Our fate was sealed the night we opened that crypt. No one is left to mourn us. Finish it.
+**SABOT-6**: Our fate was sealed the night we opened that crypt. 
 
-**HARBRINGER**: I understand.
+**HARBRINGER**: Then we are indeed doomed to this life forever.
+
+**SABOT-6**: No one is left to mourn us. Finish it.
