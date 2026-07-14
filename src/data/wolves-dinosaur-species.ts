@@ -27,7 +27,7 @@ export const dinosaurSpecies = [
   {
     id: 'dolly',
     scientificName: 'Dimetrodon limbatus',
-    documentationUrl: 'https://docs.projectbluefin.io/dinosaurs/#homebrew',
+    documentationUrl: 'https://docs.projectbluefin.io/dinosaurs/#flathub',
     artwork: './characters/dolly.webp',
   },
   {
