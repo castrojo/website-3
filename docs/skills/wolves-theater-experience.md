@@ -55,6 +55,14 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 25. **Legacy Markdown Speaker/SFX Standardization:** Legacy lore files lacking proper markdown formatting (missing bold **SPEAKER** tags or lacking double-newlines) will collapse into Monolithic "SYSTEM" dumps. Run a fast normalization regex across the body before split (`/\\n(?=(?:\\*\\*[^*]+\\*\\*|[A-Z0-9-]+)(?:\\s+\\[[^\\]]+\\])?:|<[^>]+>)/gi`) to insert \`\\n\\n\` padding, guaranteeing proper speaker mapping.
 26. **Immersive HUD Layout Aspect-Ratio Avoidance:** Do not let a fixed-aspect-ratio child component (like a 16:10 \`.comic-viewport\`) dictate the size of its parent grid row and force sibling rows off-screen on extreme viewports. Cascade \`min-height: 0\` and \`min-width: 0\` down the DOM hierarchy of all flex/grid parents enclosing it to ensure flex containers compress correctly. Absolute UI widgets (e.g. \`.hud-announcement-area\`) should use absolute centering (\`left: 50%; top: 50%; transform: translate(-50%, -50%)\`) within padded footers to prevent flex-box squeezing/truncation of peers like the soundtrack dock.
 
+### Typed Lore Records
+
+- Keep `WolvesLoreColumn` a thin typed router. Full-column record views own their presentation; pass the complete record collection only when a view must resolve explicit GuardianBond references.
+- Parse authored Guardian class values as `titan`, `warlock`, or `hunter`, and preserve authored epic names as strings without defaults. Keep deterministic telemetry in status rails, not authored Markdown.
+- Resolve source provenance from the corresponding `wolvesRelease` artifact's canonical `sourceUrl`: staged source Markdown may legitimately contain only an editor prompt and body.
+- Dinosaur artwork must resolve only through an authored species ID and explicit cited registry entry. Prefix the registry path with `import.meta.env.BASE_URL`; do not infer filenames, rotate assets, or supply a generic fallback.
+- Use type-based Vue props and computed derivations in view components: `const props = defineProps<LoreViewProps>()` and `const value = computed(() => derive(props.record))`. Source: `/vuejs/vue`.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -84,6 +92,9 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 - Reusing the Become Legend finale image earlier in Track 0 or letting it advance before the song ends.
 - Inventing maintainer CTA copy or replacing visible source-action labels with icon-only links.
 - Truncating visible signal, soundtrack, caption, navigation, or demo copy instead of allowing it to wrap.
+- Routing every record kind through a transcript view instead of preserving dedicated full-column record boundaries.
+- Treating a missing source frontmatter sender as permission to invent provenance or reuse the lore body.
+- Deriving dinosaur artwork from a record ID or filename instead of an explicit cited species registry entry.
 
 ## Verification
 - [ ] No emojis in changed files or comments.
@@ -99,6 +110,8 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 - [ ] Playlist Previous and Next controls are disabled before player readiness and at their respective first/last-track boundaries.
 - [ ] The selected finale image is active from `408.0s` through `423.0s`, with no repeated Track 0 image.
 - [ ] The soundtrack CTA renders its complete authored copy and retains visible, descriptive Playlist and Music actions.
+- [ ] Record views render authored bodies unchanged, while status rails contain only derived telemetry.
+- [ ] Source provenance uses the canonical artifact URL; GuardianBond and dinosaur artwork resolve only explicit records and registry entries.
 
 ### Additional Architectural Rules
 27. **Transparent Letterboxing:** When using `object-fit: contain` for wallpapers and Flickr photos, set the container `background-color: transparent` instead of a solid black or dark hex color. This allows the underlying seasonal wallpapers to remain visible through the letterbox gaps instead of being blocked by black bars.
