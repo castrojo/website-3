@@ -67,3 +67,12 @@ The following commits form the complete, direct-to-main development history for 
 - **PASS:** `npm run test:run -- src/tests/wolvesLore.test.ts src/tests/wolvesLoreRecords.test.ts src/tests/wolvesLoreColumn.test.ts` — 3 files, 35 tests.
 - **PASS:** `npm run typecheck`
 - **PASS:** `npx eslint src/data/wolves-lore-records.ts src/components/wolves/lore.ts src/tests/wolvesLoreColumn.test.ts`
+
+## 2026-07-14: Final whole-series review follow-up
+
+- Restored the final news warning's local `thesis-warning-fade` animation: it fades from full opacity to `0.35` over 20 seconds only when the separately passed warning is present. The Track 0 HUD and lower thesis text remain separate.
+- Migrated the remaining quote identities into Markdown frontmatter, including the legacy source-label attribution and context values. Quote rendering now requires authored attribution, renders authored context, and has no source-label fallback. The remaining URL lookup is limited to source provenance records.
+- Added regressions for quote-attribution diagnostics, all nine authored quote identities, rendered authored attribution/context, removed legacy quote labels, the missing-attribution rendering guard, the final warning animation class, and the existing finale state.
+- **PASS:** focused Wolves suites — 76 tests across 6 files; `npm run typecheck`; scoped ESLint.
+- **PASS:** local real-player verification at Track 0 405 and 408 seconds plus the terminal state: HUD, lower thesis overlay, and right-column warning were asserted independently on desktop and 390px mobile. Desktop/mobile screenshots were reviewed and removed.
+- **Concern:** the live Track 0 reports 424 seconds while the authored timeline ends at 425; its terminal state was verified at the real 7:03/7:04 endpoint without changing authored timing.

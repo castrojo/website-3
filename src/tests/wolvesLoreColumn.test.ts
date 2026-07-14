@@ -99,7 +99,7 @@ describe('wolvesLoreColumn Logic', () => {
   })
 
   it('rejects quote rendering without authored attribution instead of falling back to a legacy label', () => {
-    const record = parseLoreRecord('legacy-quote', 'prologue', './lore/legacy-quote.md', [
+    const record = parseLoreRecord('quote-natasha-woods', 'prologue', './lore/quote-natasha-woods.md', [
       '---',
       'kind: quote',
       'title: Legacy source label',
