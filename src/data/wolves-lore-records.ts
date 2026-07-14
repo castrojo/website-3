@@ -50,6 +50,16 @@ export interface LoreRecord {
   diagnostics: readonly string[]
 }
 
+export interface DerivedLoreTelemetry {
+  resourceName: string
+  namespace: 'wolves-lore'
+  controller: 'lore-indexer'
+  archiveNode: string
+  observedGeneration: 1
+  phase: 'Indexed'
+  recordFingerprint: `fnv1a:${string}`
+}
+
 export interface LegacyLoreIdentity {
   kind: LoreKind
   title: string
@@ -250,6 +260,70 @@ export function parseLoreRecord(
     body,
     kind: kind ?? 'chatlog',
     diagnostics: Object.freeze(diagnostics),
+  }
+}
+
+function fnv1a(value: string): string {
+  let hash = 0x811C9DC5
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 0x01000193)
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0')
+}
+
+export function deriveLoreTelemetry(record: LoreRecord): DerivedLoreTelemetry {
+  const fingerprint = fnv1a([record.id, record.relativePath, record.kind].join('\0'))
+
+  return {
+    resourceName: `lore-${fingerprint}`,
+    namespace: 'wolves-lore',
+    controller: 'lore-indexer',
+    archiveNode: `archive-${fingerprint.slice(-6)}`,
+    observedGeneration: 1,
+    phase: 'Indexed',
+    recordFingerprint: `fnv1a:${fingerprint}`,
+  }
+}
+
+function isSubjectProfileReference(reference: string | undefined): reference is string {
+  return reference !== undefined && /^subjectprofile\/[^/]+$/.test(reference)
+}
+
+function findSubjectRecord(records: readonly LoreRecord[], reference: string): LoreRecord | undefined {
+  return records.find(record => record.id === reference || record.metadata.subject === reference)
+}
+
+export function validateGuardianBonds(records: readonly LoreRecord[]): void {
+  for (const bond of records) {
+    if (bond.kind !== 'guardian-bond') {
+      continue
+    }
+
+    const guardianReference = bond.metadata.relations?.guardian
+    const dinosaurReference = bond.metadata.relations?.dinosaur
+    if (!isSubjectProfileReference(guardianReference)) {
+      throw new TypeError(`${bond.id} has invalid guardian reference "${guardianReference ?? 'missing'}"`)
+    }
+    if (!isSubjectProfileReference(dinosaurReference)) {
+      throw new TypeError(`${bond.id} has invalid dinosaur reference "${dinosaurReference ?? 'missing'}"`)
+    }
+
+    const guardian = findSubjectRecord(records, guardianReference)
+    if (guardian === undefined) {
+      throw new TypeError(`${bond.id} references missing guardian "${guardianReference}"`)
+    }
+    if (guardian.metadata.relations?.dinosaur !== dinosaurReference) {
+      throw new TypeError(`${bond.id} does not match guardian "${guardianReference}" dinosaur reference`)
+    }
+
+    const dinosaur = findSubjectRecord(records, dinosaurReference)
+    if (dinosaur === undefined) {
+      throw new TypeError(`${bond.id} references missing dinosaur "${dinosaurReference}"`)
+    }
+    if (!dinosaur.metadata.relations?.riders?.includes(bond.id)) {
+      throw new TypeError(`${bond.id} is missing from dinosaur riders`)
+    }
   }
 }
 

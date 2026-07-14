@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { loadAllLoreRecords, parseLoreRecord } from '../data/wolves-lore-records'
+import {
+  deriveLoreTelemetry,
+  loadAllLoreRecords,
+  parseLoreRecord,
+  validateGuardianBonds,
+} from '../data/wolves-lore-records'
 import { wolvesRelease } from '../data/wolves-story'
 
 describe('wolves lore records', () => {
@@ -75,5 +80,50 @@ describe('wolves lore records', () => {
       channel: record?.metadata.channel,
       body: record?.body,
     })
+  })
+
+  it('derives deterministic FNV-1a telemetry from record identity', () => {
+    const record = parseLoreRecord('record', 'prologue', './lore/record.md', 'body')
+
+    expect(deriveLoreTelemetry(record)).toEqual({
+      resourceName: 'lore-9e13a7a0',
+      namespace: 'wolves-lore',
+      controller: 'lore-indexer',
+      archiveNode: 'archive-13a7a0',
+      observedGeneration: 1,
+      phase: 'Indexed',
+      recordFingerprint: 'fnv1a:9e13a7a0',
+    })
+  })
+
+  it('rejects a bond whose dinosaur does not list that bond as a rider', () => {
+    const guardianRecord = parseLoreRecord('subjectprofile/kat-cosgrove', 'awakening', './lore/kat-cosgrove.md', [
+      '---',
+      'subject_kind: person',
+      'relations:',
+      '  dinosaur: subjectprofile/karl',
+      '---',
+      '',
+    ].join('\n'))
+    const dinosaurRecord = parseLoreRecord('subjectprofile/karl', 'awakening', './lore/karl.md', [
+      '---',
+      'subject_kind: dinosaur',
+      'relations:',
+      '  riders: []',
+      '---',
+      '',
+    ].join('\n'))
+    const bondRecord = parseLoreRecord('guardian-bond/kat-cosgrove-karl', 'awakening', './lore/kat-cosgrove-karl.md', [
+      '---',
+      'kind: guardian-bond',
+      'relations:',
+      '  guardian: subjectprofile/kat-cosgrove',
+      '  dinosaur: subjectprofile/karl',
+      '---',
+      '',
+    ].join('\n'))
+
+    expect(() => validateGuardianBonds([guardianRecord, dinosaurRecord, bondRecord]))
+      .toThrow('guardian-bond/kat-cosgrove-karl is missing from dinosaur riders')
   })
 })
