@@ -1,34 +1,39 @@
 import { describe, expect, it } from 'vitest'
-import { loreEntries } from '../components/wolves/lore'
+import { getChatlogLore, loreRecords } from '../components/wolves/lore'
+import { wolvesRelease } from '../data/wolves-story'
 
 describe('wolves Lore Parser', () => {
   it('should parse legacy single-newline speaker blocks correctly (The Garden Before Time)', () => {
-    const ishtar = loreEntries.find(
-      e => e.type === 'conversation' && e.data.title === 'The Garden Before Time'
-    )
+    const record = loreRecords.find(record => record.id === 'ishtar-gardener-and-winnower')
 
-    expect(ishtar).toBeDefined()
-    if (ishtar && ishtar.type === 'conversation') {
+    expect(record?.kind).toBe('source')
+    if (record) {
+      const ishtar = getChatlogLore(record)
       // It should have multiple messages, not just 1 monolithic block
-      expect(ishtar.data.messages.length).toBeGreaterThan(1)
-      expect(ishtar.data.messages[0].speaker).toBe('THE GARDENER')
-      expect(ishtar.data.messages[0].text).toBe('I plant possibilities and watch what they become.')
-      expect(ishtar.data.messages[1].speaker).toBe('THE WINNOWER')
-      expect(ishtar.data.messages[1].text).toBe('I separate what can endure from what cannot.')
+      expect(ishtar.messages.length).toBeGreaterThan(1)
+      expect(ishtar.messages[0].speaker).toBe('THE GARDENER')
+      expect(ishtar.messages[0].text).toBe('I plant possibilities and watch what they become.')
+      expect(ishtar.messages[1].speaker).toBe('THE WINNOWER')
+      expect(ishtar.messages[1].text).toBe('I separate what can endure from what cannot.')
     }
   })
 
   it('should correctly parse <SFX> single-newline blocks', () => {
-    // We mock a conversation that would be parsed to verify the regex locally if needed,
-    // but testing against the real loreEntries is a good integration test.
-    const theChildren = loreEntries.find(
-      e => e.type === 'conversation' && e.data.title === 'The Children'
-    )
-    expect(theChildren).toBeDefined()
-    if (theChildren && theChildren.type === 'conversation') {
+    const record = loreRecords.find(record => record.id === 'lorem-prologue-2')
+
+    expect(record?.kind).toBe('chatlog')
+    if (record) {
+      const theChildren = getChatlogLore(record)
       // Check that SFX are present somewhere
-      const hasSfx = theChildren.data.messages.some(m => m.isSfx)
+      const hasSfx = theChildren.messages.some(m => m.isSfx)
       expect(hasSfx).toBe(true)
     }
+  })
+
+  it('keeps LoreRecord bodies byte-for-byte while adapting transcripts', () => {
+    const record = loreRecords.find(record => record.id === 'lorem-prologue-1')
+    const artifact = wolvesRelease.artifacts.find(artifact => artifact.id === 'lorem-prologue-1')
+
+    expect(record?.body).toBe(artifact?.body)
   })
 })

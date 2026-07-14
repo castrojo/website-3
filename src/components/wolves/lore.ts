@@ -1,4 +1,6 @@
+import type { LoreRecord } from '../../data/wolves-lore-records'
 import type { WolvesChapter } from '../../data/wolves-story'
+import { loadAllLoreRecords } from '../../data/wolves-lore-records'
 import { wolvesRelease } from '../../data/wolves-story'
 
 export interface BazziteQuote {
@@ -27,64 +29,81 @@ export interface InterceptedConversation {
 }
 
 export type WolvesLoreEntry
-  = { id: string, chapterId: string, type: 'quote', data: BazziteQuote }
-    | { id: string, chapterId: string, type: 'conversation', data: InterceptedConversation }
+  = { id: string, chapterId: string, record: LoreRecord, type: 'quote', data: BazziteQuote }
+    | { id: string, chapterId: string, record: LoreRecord, type: 'conversation', data: InterceptedConversation }
 
-// Map wolvesRelease artifacts directly to Lore Entries
-export const loreEntries: WolvesLoreEntry[] = wolvesRelease.artifacts.map((artifact) => {
-  if (artifact.type === 'quote') {
-    const parts = (artifact.sourceLabel || artifact.title || '').split('—')
-    return {
-      id: artifact.id,
-      chapterId: artifact.chapterId,
-      type: 'quote',
-      data: {
-        quote: artifact.body,
-        attribution: parts[0]?.trim() || artifact.title,
-        context: parts[1]?.trim() || '',
-        date: artifact.publishedAt
+export interface LoreViewProps {
+  record: LoreRecord
+  duration: number
+  warning?: string
+}
+
+export const loreRecords = loadAllLoreRecords()
+
+function artifactFor(record: LoreRecord) {
+  return wolvesRelease.artifacts.find(artifact => artifact.id === record.id)
+}
+
+export function getQuoteLore(record: LoreRecord): BazziteQuote {
+  const artifact = artifactFor(record)
+  const parts = (artifact?.sourceLabel || record.metadata.title || '').split('—')
+  return {
+    quote: record.body,
+    attribution: parts[0]?.trim() || record.metadata.title || '',
+    context: parts[1]?.trim() || '',
+    date: record.metadata.timestamp,
+  }
+}
+
+export function getChatlogLore(record: LoreRecord): InterceptedConversation {
+  const normalizedBody = record.body.replace(/\n(?=(?:\*\*[^*]+\*\*|[A-Z0-9-]+)(?:\s+\[[^\]]+\])?:|<[^>]+>)/gi, '\n\n')
+  const messageBlocks = normalizedBody.split(/\n{2,}/)
+  const messages = messageBlocks.map((block) => {
+    const trimmedBlock = block.trim()
+    const sfxMatch = trimmedBlock.match(/^<([^>]+)>$/)
+    if (sfxMatch) {
+      return {
+        isSfx: true,
+        text: sfxMatch[1].trim()
       }
+    }
+
+    const match = trimmedBlock.match(/^(?:\*\*([^*]+)\*\*|([A-Z0-9-]+))(?:\s+\[([^\]]+)\])?:\s*(\S[\s\S]*)$/i)
+    if (match) {
+      return {
+        speaker: (match[1] || match[2]).trim(),
+        timestamp: match[3] || undefined,
+        text: match[4].replace(/<br>/g, '\n').trim()
+      }
+    }
+    return { text: trimmedBlock.replace(/<br>/g, '\n') }
+  })
+
+  return {
+    title: record.metadata.title || '',
+    channel: record.metadata.channel || 'ARCHIVE//LOG',
+    date: record.metadata.timestamp || '',
+    messages
+  }
+}
+
+export const loreEntries: WolvesLoreEntry[] = loreRecords.map((record) => {
+  if (record.kind === 'quote') {
+    return {
+      id: record.id,
+      chapterId: record.chapterId,
+      record,
+      type: 'quote',
+      data: getQuoteLore(record),
     }
   }
-  else {
-    // parse body into messages
-    // To support legacy files that only use single newlines between speakers or SFX,
-    // we normalize them by inserting a double newline before any recognized speaker or SFX tag.
-    const normalizedBody = artifact.body.replace(/\n(?=(?:\*\*[^*]+\*\*|[A-Z0-9-]+)(?:\s+\[[^\]]+\])?:|<[^>]+>)/gi, '\n\n')
-    const messageBlocks = normalizedBody.split(/\n{2,}/)
-    const messages = messageBlocks.map((block) => {
-      const trimmedBlock = block.trim()
-      const sfxMatch = trimmedBlock.match(/^<([^>]+)>$/)
-      if (sfxMatch) {
-        return {
-          isSfx: true,
-          text: sfxMatch[1].trim()
-        }
-      }
 
-      // support **Speaker**: or SPEAKER:
-      const match = trimmedBlock.match(/^(?:\*\*([^*]+)\*\*|([A-Z0-9-]+))(?:\s+\[([^\]]+)\])?:\s*(\S[\s\S]*)$/i)
-      if (match) {
-        return {
-          speaker: (match[1] || match[2]).trim(),
-          timestamp: match[3] || undefined,
-          text: match[4].replace(/<br>/g, '\n').trim()
-        }
-      }
-      return { text: trimmedBlock.replace(/<br>/g, '\n') }
-    })
-
-    return {
-      id: artifact.id,
-      chapterId: artifact.chapterId,
-      type: 'conversation',
-      data: {
-        title: artifact.title,
-        channel: artifact.channel || 'ARCHIVE//LOG',
-        date: artifact.publishedAt,
-        messages
-      }
-    }
+  return {
+    id: record.id,
+    chapterId: record.chapterId,
+    record,
+    type: 'conversation',
+    data: getChatlogLore(record),
   }
 })
 

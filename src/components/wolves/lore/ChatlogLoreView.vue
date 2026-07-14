@@ -1,0 +1,483 @@
+<script setup lang="ts">
+import type { LoreViewProps } from '../lore'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { getChatlogLore } from '../lore'
+
+const props = defineProps<LoreViewProps>()
+
+const conversation = computed(() => getChatlogLore(props.record))
+const quoteViewportRef = ref<HTMLElement | null>(null)
+const activeMessageIndex = ref(0)
+const typedMessagesText = ref<string[]>([])
+const climaxMessageIndex = ref<number | null>(null)
+const revealedClimaxSentence = ref('')
+let typewriterTimer: ReturnType<typeof setInterval> | null = null
+let scrollPending = false
+
+const CLIMAX_ARTIFACT_ID = 'lorem-pursuit-1'
+const CLIMAX_SPEAKER = 'BUR//S'
+const CLIMAX_HOLD_MS = 3000
+const CLIMAX_FADE_MS = 1000
+
+function clearTypewriter() {
+  if (typewriterTimer) {
+    clearInterval(typewriterTimer)
+    typewriterTimer = null
+  }
+}
+
+function scrollViewport() {
+  if (scrollPending) {
+    return
+  }
+
+  scrollPending = true
+  void nextTick(() => {
+    const viewport = quoteViewportRef.value
+    if (viewport) {
+      viewport.scrollTo({
+        top: viewport.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
+    scrollPending = false
+  })
+}
+
+function runTypewriter() {
+  clearTypewriter()
+
+  activeMessageIndex.value = 0
+  typedMessagesText.value = conversation.value.messages.map(() => '')
+  climaxMessageIndex.value = props.record.id === CLIMAX_ARTIFACT_ID
+    ? conversation.value.messages.findIndex(message => message.speaker === CLIMAX_SPEAKER)
+    : null
+  revealedClimaxSentence.value = ''
+
+  let stepTime = 35
+  {
+    const D = props.duration * 1000
+    const climaxCueDuration = props.record.id === CLIMAX_ARTIFACT_ID
+      ? CLIMAX_HOLD_MS + CLIMAX_FADE_MS
+      : 0
+    let totalTicks = 0
+    conversation.value.messages.forEach((message) => {
+      const isSlow = message.speaker === 'BUR//S' || message.speaker === 'SARAH'
+      totalTicks += message.text.length
+      const text = message.text
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i]
+        if (char === '.' || char === '?' || char === '!') {
+          totalTicks += isSlow ? 40 : 12
+        }
+        else if (char === '…') {
+          totalTicks += isSlow ? 30 : 15
+        }
+        else if (char === ',') {
+          totalTicks += isSlow ? 15 : 5
+        }
+      }
+      totalTicks += isSlow ? 50 : 20
+    })
+    stepTime = Math.max(5, Math.min(50, Math.max(0, D * 0.7 - climaxCueDuration) / totalTicks))
+  }
+
+  let currentLength = 0
+  let pauseTicks = 0
+  let climaxStage: 'typing' | 'holding' | 'fading' = 'typing'
+
+  typewriterTimer = setInterval(() => {
+    if (pauseTicks > 0) {
+      pauseTicks--
+      return
+    }
+
+    if (activeMessageIndex.value >= conversation.value.messages.length) {
+      clearTypewriter()
+      return
+    }
+
+    const currentMessage = conversation.value.messages[activeMessageIndex.value]
+    const targetText = currentMessage.text
+    const speaker = currentMessage.speaker
+    const isSlowSpeaker = speaker === 'BUR//S' || speaker === 'SARAH'
+    const isClimaxMessage = activeMessageIndex.value === climaxMessageIndex.value
+    const climaxOpeningEnd = targetText.indexOf('. ') + 2
+
+    if (isClimaxMessage && climaxStage === 'holding') {
+      revealedClimaxSentence.value = targetText.slice(climaxOpeningEnd)
+      climaxStage = 'fading'
+      pauseTicks = Math.ceil(CLIMAX_FADE_MS / stepTime)
+      return
+    }
+
+    if (isClimaxMessage && climaxStage === 'fading') {
+      scrollViewport()
+      activeMessageIndex.value++
+      currentLength = 0
+      return
+    }
+
+    currentLength++
+
+    if (currentLength <= targetText.length) {
+      typedMessagesText.value[activeMessageIndex.value] = targetText.slice(0, currentLength)
+
+      if (isClimaxMessage && currentLength === climaxOpeningEnd) {
+        climaxStage = 'holding'
+        pauseTicks = Math.ceil(CLIMAX_HOLD_MS / stepTime)
+        return
+      }
+
+      const lastChar = targetText[currentLength - 1]
+      if (lastChar === '.' || lastChar === '?' || lastChar === '!' || lastChar === '…') {
+        scrollViewport()
+      }
+
+      if (isSlowSpeaker) {
+        pauseTicks = 2
+        if (lastChar === '.' || lastChar === '?' || lastChar === '!') {
+          pauseTicks = 40
+        }
+        else if (lastChar === '…') {
+          pauseTicks = 30
+        }
+        else if (lastChar === ',') {
+          pauseTicks = 15
+        }
+      }
+      else if (lastChar === '.' || lastChar === '?' || lastChar === '!') {
+        pauseTicks = 12
+      }
+      else if (lastChar === '…') {
+        pauseTicks = 15
+      }
+      else if (lastChar === ',') {
+        pauseTicks = 5
+      }
+    }
+    else {
+      typedMessagesText.value[activeMessageIndex.value] = targetText
+      scrollViewport()
+      activeMessageIndex.value++
+      currentLength = 0
+      pauseTicks = isSlowSpeaker ? 50 : 20
+    }
+  }, stepTime)
+}
+
+function skipTypewriter() {
+  clearTypewriter()
+
+  activeMessageIndex.value = conversation.value.messages.length - 1
+  typedMessagesText.value = conversation.value.messages.map(message => message.text)
+
+  setTimeout(() => {
+    if (quoteViewportRef.value) {
+      quoteViewportRef.value.scrollTop = quoteViewportRef.value.scrollHeight
+    }
+  }, 50)
+}
+
+watch(() => props.record, runTypewriter, { immediate: true })
+
+onBeforeUnmount(clearTypewriter)
+</script>
+
+<template>
+  <section
+    id="intercepted-communications"
+    class="dispatch-quote-section comic-reader-section"
+    data-lore-view-kind="chatlog"
+  >
+    <div class="dispatch-quote-card">
+      <div class="dispatch-plan-content">
+        <p class="dispatch-plan-command">
+          nimbinatus@blue-universal:~$ monitor --archive
+        </p>
+        <h2 class="title-h2">
+          // se7en.days
+        </h2>
+        <p class="title-p">
+          <span class="stat-lbl">CLUSTER:</span> ghost.exo-1.k3s // <span class="stat-lbl">NS:</span> wolves-telemetry // <span class="stat-lbl">REPLICAS:</span> <span class="stat-ok">3/3 READY</span>
+          <br><span class="stat-lbl">FACTORY:</span> factory.projectbluefin.io // <span class="stat-lbl">BUILD:</span> <span class="stat-ok">PASS</span>
+          <br><span class="stat-lbl">VARIANT:</span> bluefin:testing // <span class="stat-lbl">ARCH:</span> x86_64, aarch64 // <span class="stat-lbl">STATUS:</span> <span class="stat-ok">Active</span>
+        </p>
+      </div>
+
+      <div ref="quoteViewportRef" class="quote-viewport" @click="skipTypewriter">
+        <p v-if="warning" class="thesis-warning">
+          {{ warning }}
+        </p>
+        <Transition name="quote-fade">
+          <div :key="record.id" class="conversation-rotator">
+            <div class="conversation-heading">
+              <span>{{ conversation.channel }}</span>
+              <time :datetime="conversation.date">{{ conversation.date }}</time>
+            </div>
+            <h3 class="conversation-title">
+              {{ conversation.title }}
+            </h3>
+            <ol class="conversation-messages">
+              <li
+                v-for="(message, index) in conversation.messages"
+                v-show="index <= activeMessageIndex"
+                :key="`${record.id}-${index}`"
+                class="conversation-message"
+                :class="{ 'sfx-message': message.isSfx }"
+              >
+                <p v-if="message.isSfx" class="sfx-text">
+                  {{ typedMessagesText[index] ?? '' }}
+                </p>
+                <template v-else>
+                  <div class="conversation-message-header">
+                    <span class="conversation-speaker">{{ message.speaker }}</span>
+                    <time v-if="message.timestamp">{{ message.timestamp }}</time>
+                  </div>
+                  <p>
+                    {{ typedMessagesText[index] ?? '' }}
+                    <Transition name="climax-fade">
+                      <span
+                        v-if="index === climaxMessageIndex && revealedClimaxSentence"
+                        class="climax-sentence"
+                      >{{ revealedClimaxSentence }}</span>
+                    </Transition>
+                  </p>
+                </template>
+              </li>
+            </ol>
+          </div>
+        </Transition>
+      </div>
+    </div>
+  </section>
+</template>
+
+<style scoped lang="scss">
+.dispatch-quote-section {
+  @media (min-width: 1024px) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+}
+
+.dispatch-quote-card {
+  background-color: #10151f;
+  border: 1px solid #272727;
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+  overflow: hidden;
+
+  @media (min-width: 1024px) {
+    flex: 1;
+    min-height: 0;
+  }
+
+  &:hover {
+    border-color: rgba(var(--color-blue-rgb), 0.4);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.dispatch-plan-content {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  background: linear-gradient(180deg, rgba(16, 21, 31, 0.98) 0%, rgba(12, 16, 22, 0.98) 100%);
+  border: 1px solid rgba(var(--color-blue-rgb), 0.22);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.dispatch-plan-command {
+  margin: 0 0 6px;
+  font-size: 0.86rem;
+  color: rgba(189, 189, 189, 0.65);
+}
+
+.dispatch-plan-content .title-h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.dispatch-plan-content .title-p {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(189, 189, 189, 0.9);
+}
+
+.stat-lbl {
+  color: var(--color-blue-light);
+}
+
+.stat-ok {
+  color: #4ade80;
+}
+
+.quote-viewport {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(102, 179, 255, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .thesis-warning {
+    margin: 0 0 18px;
+    border-left: 2px solid var(--color-blue-light);
+    padding-left: 12px;
+    color: #d9f4ff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 1.3rem;
+    font-style: italic;
+    line-height: 1.6;
+    opacity: 0.8;
+    animation: thesis-warning-fade 20s linear forwards;
+  }
+
+  @keyframes thesis-warning-fade {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.35;
+    }
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(102, 179, 255, 0.3);
+    border-radius: 3px;
+  }
+}
+
+.conversation-rotator {
+  position: relative;
+  padding-top: 4px;
+  padding-right: 4px;
+}
+
+.conversation-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(var(--color-blue-rgb), 0.25);
+  padding-bottom: 8px;
+  color: var(--color-blue-light);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+
+.conversation-title {
+  margin: 16px 0 20px;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.conversation-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.conversation-message {
+  border-left: 2px solid rgba(var(--color-blue-rgb), 0.45);
+  padding-left: 16px;
+}
+
+.sfx-message {
+  border-left: none;
+  padding-left: 0;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.sfx-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  color: var(--color-blue-light);
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.conversation-message-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-blue);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+}
+
+.conversation-message-header time {
+  color: rgba(189, 189, 189, 0.65);
+}
+
+.conversation-message p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 1.15rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.climax-sentence {
+  display: inline;
+}
+
+.climax-fade-enter-active {
+  transition: opacity 1s linear;
+}
+
+.climax-fade-enter-from {
+  opacity: 0;
+}
+
+.quote-fade-enter-active,
+.quote-fade-leave-active {
+  transition: opacity 0.5s ease-in-out;
+}
+
+.quote-fade-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.quote-fade-enter-from,
+.quote-fade-leave-to {
+  opacity: 0;
+}
+</style>

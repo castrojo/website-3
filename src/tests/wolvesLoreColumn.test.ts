@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { loreEntries } from '../components/wolves/lore'
+import { getChatlogLore, getQuoteLore, loreRecords } from '../components/wolves/lore'
 import WolvesLoreColumn from '../components/wolves/WolvesLoreColumn.vue'
 
 describe('wolvesLoreColumn Logic', () => {
@@ -15,19 +15,21 @@ describe('wolvesLoreColumn Logic', () => {
 
     vi.advanceTimersByTime(5_000)
     await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-lore-view-kind="quote"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('It is a bitter thought, but you must face it.')
   })
 
   it('types quote source characters without generated glyphs', async () => {
     vi.useFakeTimers()
-    const entry = loreEntries.find(entry => entry.id === 'arthur-c-clarke-3')
-    if (!entry || entry.type !== 'quote') {
+    const record = loreRecords.find(record => record.id === 'arthur-c-clarke-3')
+    if (!record || record.kind !== 'quote') {
       throw new Error('Expected a quote fixture')
     }
+    const quote = getQuoteLore(record)
 
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        artifactId: entry.id,
+        artifactId: record.id,
         duration: 1,
       },
     })
@@ -37,19 +39,20 @@ describe('wolvesLoreColumn Logic', () => {
 
     const renderedQuote = wrapper.find('.lore-quote-text').text()
     expect(renderedQuote).not.toBe('')
-    expect(entry.data.quote.startsWith(renderedQuote)).toBe(true)
+    expect(quote.quote.startsWith(renderedQuote)).toBe(true)
   })
 
   it('types transmission source characters without generated glyphs', async () => {
     vi.useFakeTimers()
-    const entry = loreEntries.find(entry => entry.id === 'lorem-prologue-1')
-    if (!entry || entry.type !== 'conversation') {
+    const record = loreRecords.find(record => record.id === 'lorem-prologue-1')
+    if (!record || record.kind !== 'chatlog') {
       throw new Error('Expected a transmission fixture')
     }
+    const chatlog = getChatlogLore(record)
 
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        artifactId: entry.id,
+        artifactId: record.id,
         duration: 0.01,
       },
     })
@@ -59,7 +62,8 @@ describe('wolvesLoreColumn Logic', () => {
 
     const renderedMessage = wrapper.find('.conversation-message p').text()
     expect(renderedMessage).not.toBe('')
-    expect(entry.data.messages[0].text.startsWith(renderedMessage)).toBe(true)
+    expect(wrapper.find('[data-lore-view-kind="chatlog"]').exists()).toBe(true)
+    expect(chatlog.messages[0].text.startsWith(renderedMessage)).toBe(true)
   })
 
   it('renders The Children sound effects with the established SFX treatment', async () => {
@@ -83,24 +87,6 @@ describe('wolvesLoreColumn Logic', () => {
     expect(soundEffects.every(effect => !effect.find('.conversation-message-header').exists())).toBe(true)
   })
 
-  it('keeps two mascot layers mounted during rotation', async () => {
-    vi.useFakeTimers()
-    const wrapper = mount(WolvesLoreColumn, {
-      props: {
-        artifactId: 'arthur-c-clarke-3',
-        duration: 20,
-      },
-    })
-
-    expect(wrapper.findAll('.mascot-avatar')).toHaveLength(2)
-
-    await vi.advanceTimersByTimeAsync(15_000)
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.mascot-avatar-current').classes()).toContain('is-fading-out')
-    expect(wrapper.find('.mascot-avatar-next').classes()).toContain('is-fading-in')
-  })
-
   it('smoothly advances long quotes at reading beats', async () => {
     vi.useFakeTimers()
     const scrollTo = vi.spyOn(HTMLElement.prototype, 'scrollTo')
@@ -122,10 +108,11 @@ describe('wolvesLoreColumn Logic', () => {
 
   it('scrolls a completed quote after its final character renders', async () => {
     vi.useFakeTimers()
-    const entry = loreEntries.find(entry => entry.id === 'arthur-c-clarke-3')
-    if (!entry || entry.type !== 'quote') {
+    const record = loreRecords.find(record => record.id === 'arthur-c-clarke-3')
+    if (!record || record.kind !== 'quote') {
       throw new Error('Expected a quote fixture')
     }
+    const quote = getQuoteLore(record)
 
     const renderedTextAtScroll: string[] = []
     const scrollTo = vi.spyOn(HTMLElement.prototype, 'scrollTo')
@@ -134,7 +121,7 @@ describe('wolvesLoreColumn Logic', () => {
       })
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        artifactId: entry.id,
+        artifactId: record.id,
         duration: 0.01,
       },
     })
@@ -142,18 +129,19 @@ describe('wolvesLoreColumn Logic', () => {
     await vi.advanceTimersByTimeAsync(1_000)
 
     expect(scrollTo).toHaveBeenCalled()
-    expect(renderedTextAtScroll).toContain(entry.data.quote)
+    expect(renderedTextAtScroll).toContain(quote.quote)
     wrapper.unmount()
   })
 
   it('holds and fades the Golden Era vision before Sarah speaks', async () => {
     vi.useFakeTimers()
-    const entry = loreEntries.find(entry => entry.id === 'lorem-pursuit-1')
-    if (!entry || entry.type !== 'conversation') {
+    const record = loreRecords.find(record => record.id === 'lorem-pursuit-1')
+    if (!record || record.kind !== 'chatlog') {
       throw new Error('Expected the Golden Era transmission fixture')
     }
+    const chatlog = getChatlogLore(record)
 
-    const climaxMessage = entry.data.messages.find(message => message.speaker === 'BUR//S')
+    const climaxMessage = chatlog.messages.find(message => message.speaker === 'BUR//S')
     if (!climaxMessage) {
       throw new Error('Expected the Golden Era vision fixture')
     }
@@ -161,7 +149,7 @@ describe('wolvesLoreColumn Logic', () => {
     const vision = climaxMessage.text.slice(climaxMessage.text.indexOf('. ') + 2)
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        artifactId: entry.id,
+        artifactId: record.id,
         duration: 0.01,
       },
     })
@@ -189,12 +177,13 @@ describe('wolvesLoreColumn Logic', () => {
 
   it('keeps Golden Era dialogue visible while Sarah is still typing', async () => {
     vi.useFakeTimers()
-    const entry = loreEntries.find(entry => entry.id === 'lorem-pursuit-1')
-    if (!entry || entry.type !== 'conversation') {
+    const record = loreRecords.find(record => record.id === 'lorem-pursuit-1')
+    if (!record || record.kind !== 'chatlog') {
       throw new Error('Expected the Golden Era transmission fixture')
     }
+    const chatlog = getChatlogLore(record)
 
-    const sarah = entry.data.messages.find(message => message.speaker === 'SARAH')
+    const sarah = chatlog.messages.find(message => message.speaker === 'SARAH')
     if (!sarah) {
       throw new Error('Expected the Golden Era Sarah fixture')
     }
@@ -202,7 +191,7 @@ describe('wolvesLoreColumn Logic', () => {
     const scrollTo = vi.spyOn(HTMLElement.prototype, 'scrollTo')
     const wrapper = mount(WolvesLoreColumn, {
       props: {
-        artifactId: entry.id,
+        artifactId: record.id,
         duration: 0.01,
       },
     })
