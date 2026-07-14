@@ -8,6 +8,41 @@ const props = defineProps<LoreViewProps>()
 
 const telemetry = computed(() => deriveLoreTelemetry(props.record))
 const provenance = computed(() => getSourceProvenance(props.record))
+
+const parsedParagraphs = computed(() => {
+  return props.record.body.split(/\n{2,}/).map((para) => {
+    const trimmed = para.trim()
+    const match = trimmed.match(/^(?:\*\*([^*]+)\*\*|([A-Z0-9\s-]+)):\s*(\S[\s\S]*)$/i)
+    if (match) {
+      const speaker = (match[1] || match[2]).trim()
+      let text = match[3].trim()
+      text = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      return {
+        isSpeaker: true,
+        speaker,
+        text,
+      }
+    }
+    const escaped = trimmed
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+    const text = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    return {
+      isSpeaker: false,
+      speaker: '',
+      text,
+    }
+  })
+})
 </script>
 
 <template>
@@ -42,8 +77,22 @@ const provenance = computed(() => getSourceProvenance(props.record))
       </dl>
     </header>
 
-    <blockquote class="my-4 whitespace-pre-wrap border-l-2 border-blue-300/50 pl-3 text-lg leading-6 text-slate-100">
-      {{ record.body }}
+    <blockquote class="my-4 border-l-2 border-blue-300/50 pl-3 text-slate-100 source-body-content">
+      <div
+        v-for="(para, index) in parsedParagraphs"
+        :key="index"
+        class="source-para-block"
+      >
+        <template v-if="para.isSpeaker">
+          <div class="source-speaker-message">
+            <span class="source-speaker-name">{{ para.speaker }}</span>
+            <p v-html="para.text" />
+          </div>
+        </template>
+        <template v-else>
+          <p class="source-raw-text" v-html="para.text" />
+        </template>
+      </div>
     </blockquote>
 
     <footer class="mt-auto border-t border-blue-300/25 pt-3 text-base text-blue-200">
@@ -100,12 +149,39 @@ const provenance = computed(() => getSourceProvenance(props.record))
   color: #bae6fd;
 }
 
-.source-fragment blockquote {
+.source-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   margin: 16px 0;
   border-left: 2px solid rgba(var(--color-blue-rgb), 0.5);
   padding-left: 12px;
+}
+
+.source-para-block {
+  margin: 0;
+}
+
+.source-speaker-message {
+  margin: 4px 0;
+}
+
+.source-speaker-name {
+  display: block;
+  color: var(--color-blue-light);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 1.15rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.source-speaker-message > p,
+.source-raw-text {
+  margin: 0;
   color: #f1f5f9;
-  font-size: 1.7rem;
+  font-size: 1.65rem;
   line-height: 1.65;
   white-space: pre-wrap;
 }
