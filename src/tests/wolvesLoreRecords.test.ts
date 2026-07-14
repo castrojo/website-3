@@ -32,6 +32,11 @@ describe('wolves lore records', () => {
       .toThrow('Lore front matter must be a mapping')
   })
 
+  it('rejects bare date scalar frontmatter', () => {
+    expect(() => parseLoreRecord('date', 'prologue', './lore/date.md', '---\n2026-07-14\n---\nbody'))
+      .toThrow('Lore front matter must be a mapping')
+  })
+
   it('loads every staged record with authored identity taking precedence over its fallback', () => {
     const records = loadAllLoreRecords()
     const artifact = records.find(record => record.id === 'lorem-prologue-1')

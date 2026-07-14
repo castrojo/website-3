@@ -58,7 +58,11 @@ export interface LegacyLoreIdentity {
 }
 
 function isMapping(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false
+  }
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
 }
 
 function stringField(metadata: Record<string, unknown>, field: string): string | undefined {
