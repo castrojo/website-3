@@ -10,7 +10,7 @@ const telemetry = computed(() => deriveLoreTelemetry(props.record))
 
 <template>
   <section
-    class="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-[#272727] bg-[#10151f] p-4 font-mono shadow-xl"
+    class="news-bulletin"
     data-lore-view="news-bulletin"
   >
     <header class="border-b border-blue-300/25 pb-3">
@@ -49,6 +49,66 @@ const telemetry = computed(() => deriveLoreTelemetry(props.record))
 </template>
 
 <style scoped>
+.news-bulletin {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid rgba(102, 179, 255, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(16, 21, 31, 0.45);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.news-bulletin header {
+  border-bottom: 1px solid rgba(var(--color-blue-rgb), 0.25);
+  padding-bottom: 12px;
+}
+
+.news-bulletin header > p {
+  margin: 0;
+  color: var(--color-blue-light);
+  font-size: 1.35rem;
+  letter-spacing: 0.2em;
+}
+
+.news-bulletin h2 {
+  margin: 8px 0 0;
+  color: #ffffff;
+  font-size: 1.95rem;
+}
+
+.news-bulletin header > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 12px;
+  color: rgba(226, 232, 240, 0.9);
+  font-size: 1.25rem;
+}
+
+.news-bulletin > p {
+  margin: 16px 0;
+  color: #f1f5f9;
+  font-size: 1.7rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.news-bulletin footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(var(--color-blue-rgb), 0.25);
+  padding-top: 12px;
+  color: #bae6fd;
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
 .thesis-warning-fade {
   animation: thesis-warning-fade 20s linear forwards;
 }
