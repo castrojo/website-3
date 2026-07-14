@@ -30,6 +30,14 @@ const telemetry = computed(() => deriveLoreTelemetry(props.record))
       </div>
     </header>
 
+    <aside
+      v-if="warning"
+      class="mt-4 border-l-2 border-blue-300 pl-3 text-lg italic leading-6 text-blue-100"
+      data-lore-warning
+    >
+      {{ warning }}
+    </aside>
+
     <p class="my-4 whitespace-pre-wrap text-lg leading-6 text-slate-100">
       {{ record.body }}
     </p>

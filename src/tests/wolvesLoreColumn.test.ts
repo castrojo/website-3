@@ -2,6 +2,8 @@ import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getChatlogLore, getQuoteLore, loreRecords } from '../components/wolves/lore'
 import WolvesLoreColumn from '../components/wolves/WolvesLoreColumn.vue'
+import { getNarrativeSlotForTime } from '../data/wolves-narrative-timeline'
+import { getWolvesThesisState } from '../data/wolves-thesis-sequence'
 import { wolvesLoreRecordFixtures } from './fixtures/wolves-lore-records'
 
 describe('wolvesLoreColumn Logic', () => {
@@ -234,6 +236,28 @@ describe('wolvesLoreColumn Logic', () => {
     })
 
     expect(wrapper.text()).toContain('PROVENANCE / https://www.ishtar-collective.net/entries/gardener-and-winnower')
+  })
+
+  it.each([405, 425])('renders the thesis warning beside the final news artifact at Track 0 %is', (time) => {
+    const thesisState = getWolvesThesisState(time)
+    const finalSlot = getNarrativeSlotForTime(time)
+    const wrapper = mount(WolvesLoreColumn, {
+      props: {
+        artifactId: finalSlot.artifactId,
+        duration: finalSlot.endTime - finalSlot.startTime,
+        warning: thesisState.warning,
+      },
+    })
+
+    expect(finalSlot).toMatchObject({
+      artifactId: 'blue-universal-acquires-wayland-yutani',
+      startTime: 398,
+      endTime: 425,
+    })
+    expect(thesisState.warning).toBe('truly a great loss for humanity.')
+    expect(wrapper.find('[data-lore-view="news-bulletin"]').exists()).toBe(true)
+    expect(wrapper.get('[data-lore-warning]').text()).toBe(thesisState.warning)
+    expect(wrapper.text()).not.toContain(thesisState.text)
   })
 
   it.each([

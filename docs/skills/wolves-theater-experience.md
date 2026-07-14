@@ -62,6 +62,7 @@ Use this skill when modifying the immersive fullscreen dashboard, background wal
 - Resolve source provenance from the corresponding `wolvesRelease` artifact's canonical `sourceUrl`: staged source Markdown may legitimately contain only an editor prompt and body.
 - Dinosaur artwork must resolve only through an authored species ID and explicit cited registry entry. Prefix the registry path with `import.meta.env.BASE_URL`; do not infer filenames, rotate assets, or supply a generic fallback.
 - Use type-based Vue props and computed derivations in view components: `const props = defineProps<LoreViewProps>()` and `const value = computed(() => derive(props.record))`. Source: `/vuejs/vue`.
+- The locked final news view (398–425 seconds) must render its passed nonempty `warning` separately from `record.body`. Never substitute thesis `text` or `hudLabel`; cover the actual 405- and 425-second final-slot states.
 
 ## Common Rationalizations
 

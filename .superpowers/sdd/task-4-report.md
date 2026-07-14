@@ -49,3 +49,10 @@ Complete.
 ## Concerns
 
 None.
+
+## Review Follow-up: Final News Warning
+
+- Restored the explicitly passed thesis warning in `NewsLoreView` without changing thesis story text, HUD communications, authored lore, or timeline data.
+- Added a regression that derives the actual locked final artifact and warning at Track 0 405s and 425s. It first failed because `news-bulletin` had no `data-lore-warning`, then passed after the warning presentation was added.
+- Passed: `npm run test:run -- src/tests/wolvesLoreColumn.test.ts src/tests/wolvesThesisSequence.test.ts src/tests/wolvesNarrativeTimeline.test.ts` (31 tests), `npm run typecheck`, scoped ESLint, and `git diff --check`.
+- Browser validation used the mounted soundtrack progress bar with a local IFrame API stand-in at 405s and 425s. The top HUD, lower thesis overlay, and separate right-column warning were asserted independently. Desktop and 390px mobile screenshots were reviewed and removed.
