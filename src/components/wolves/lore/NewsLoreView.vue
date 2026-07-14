@@ -7,14 +7,16 @@ const props = defineProps<LoreViewProps>()
 
 const telemetry = computed(() => deriveLoreTelemetry(props.record))
 
-const formattedBody = computed(() => {
-  const escaped = props.record.body
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-  return escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+const paragraphs = computed(() => {
+  return props.record.body.split(/\n{2,}/).map((para) => {
+    const escaped = para
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+    return escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  })
 })
 </script>
 
@@ -48,7 +50,12 @@ const formattedBody = computed(() => {
       {{ warning }}
     </aside>
 
-    <p class="my-4 whitespace-pre-wrap text-lg leading-6 text-slate-100" v-html="formattedBody" />
+    <p
+      v-for="(para, index) in paragraphs"
+      :key="index"
+      class="my-4 whitespace-pre-wrap text-lg leading-6 text-slate-100"
+      v-html="para"
+    />
 
     <footer class="mt-auto border-t border-blue-300/25 pt-3 text-base text-blue-200">
       STATUS / {{ telemetry.phase }} · {{ telemetry.resourceName }} · {{ telemetry.recordFingerprint }}
