@@ -1,5 +1,6 @@
 /**
- * Alternating YouTube Shorts feed for the Wolves landing page "Creator Shorts" section.
+ * Alternating YouTube Shorts feed for the Wolves immersive theater's Creator Shorts
+ * interstitial (played once, between Track 0 and Track 1 of the soundtrack).
  * Video IDs are real public Shorts pulled from each creator's channel (never invented).
  * Order is content: strictly alternating, Lindsay Nikole always goes first.
  */
