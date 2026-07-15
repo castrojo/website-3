@@ -56,6 +56,7 @@ const curatedTitles = {
   'showcase-20': 'Community Showcase by AlgoCompSynth by znmeb',
 
   // People / KubeCon / Flickr curated titles
+  'interview-clyde-seepersad-linux-foundation': 'Clyde Seepersad, Linux Foundation — "AI Is Not Killing Tech Jobs"',
   'kubecon-55164225841': 'Maintainer Summit Evening Reception - 043 MN',
   'kubecon-55164388368': 'Maintainer Summit Evening Reception - 040 MN',
   'kubecon-55163325182': 'Maintainer Summit Evening Reception - 030 MN',
