@@ -39,7 +39,6 @@ export const wolvesCreatorShortsCassidyWilliams: readonly WolvesCreatorShort[] =
   { videoId: 'cLd205w04do', title: 'Where are the tests', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
   { videoId: 'xCjuz1Q4qbE', title: 'I accidentally discovered a clustering algorithm with Magna-Tiles', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
   { videoId: 'yvhbINxBR6k', title: 'Beyonce knows eslint', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
-  { videoId: 'cIaNRGkZQdM', title: 'React is like paella', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
 ] as const
 
 /** Ping-pong turn order: Cassidy's list on the left, Lindsay's on the right, Cassidy first. */

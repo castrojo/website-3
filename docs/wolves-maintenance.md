@@ -150,7 +150,7 @@ Architecture:
 
 **Note on the one horizontal exception**: "Animals that are METAL AS F*CK" (`hqbR6Kt2McY`) is a real, verified Lindsay Nikole video but is a horizontal long-form upload, not a vertical Short — confirmed via YouTube's oEmbed API (`width:200,height:113` vs. a real Short's `width:113,height:200`) since no literal vertical "metal af animals" Short exists on her channel. Kept per explicit user decision; embeds and plays correctly, letterboxed automatically by YouTube's player.
 
-**Removed entry**: Lindsay Nikole's "Hammerheads are getting hammered" (`K1DJNw2zHlo`) was removed from the rotation per explicit user request (2026-07-15). Lindsay's list is now 7 entries (was 8); Cassidy's list is unchanged at 6.
+**Removed entries**: Lindsay Nikole's "Hammerheads are getting hammered" (`K1DJNw2zHlo`) and Cassidy Williams's "React is like paella" (`cIaNRGkZQdM`) were removed from the rotation per explicit user request (2026-07-15). Lindsay's list is now 7 entries (was 8); Cassidy's list is now 5 entries (was 6).
 
 **What agents may touch**: only the two video lists in `src/data/wolves-creator-shorts.ts`, with exact real, non-fictional video ids/titles/creator credit — same editorial rule as everywhere else on this page (verify any new entry via YouTube's oEmbed API before adding it, never invent an id). The trigger condition (Track 0 → Track 1, once only), the pause/resume behavior, the ping-pong/preloading mechanics, and the interstitial's own markup/logic are locked.
 

@@ -155,8 +155,8 @@ describe('wolvesCreatorShortsInterstitial', () => {
       return slots[0]?.classList.contains('is-active') ? 'left' : 'right'
     }
 
-    // Lindsay has 7 entries, Cassidy has 6 -- Cassidy's list must run out first, and Lindsay
-    // must keep playing solo (via loadVideoById) for her last entry before completing.
+    // Lindsay has 7 entries, Cassidy has 5 -- Cassidy's list must run out first, and Lindsay
+    // must keep playing solo (via loadVideoById) for her last two entries before completing.
     const totalTurns = wolvesCreatorShortsLindsayNikole.length + wolvesCreatorShortsCassidyWilliams.length
     for (let turn = 0; turn < totalTurns; turn++) {
       expect(wrapper.emitted('complete')).toBeUndefined()
