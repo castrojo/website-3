@@ -9,8 +9,8 @@ aliases:
 titles:
   - Systems Engineer
 guardian:
-  class: warlock
-  super: Well of Radiance
+  class: titan
+  super: Sentinel
   specializations:
     - operator
 relations:

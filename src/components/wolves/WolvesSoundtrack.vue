@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { SoundtrackSource, SoundtrackTrack, WolvesSoundtrackManifest } from '@/data/wolves-soundtrack'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import WolvesIntroOverlay from '@/components/wolves/WolvesIntroOverlay.vue'
+import { buildIntroVideoSequence } from '@/data/wolves-intro-sequence'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
 
 const props = defineProps<{
@@ -70,6 +72,8 @@ const officialLyricsUrls: Readonly<Record<string, string>> = {
 
 const status = ref<PlayerStatus>('idle')
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
+const introOverlayActive = ref(false)
+const introVideos = buildIntroVideoSequence(import.meta.env.BASE_URL)
 const currentTrackIndex = ref(0)
 const playerHost = ref<HTMLElement | null>(null)
 const currentTime = ref(0)
@@ -373,7 +377,7 @@ function pausePlayback() {
 
 function handlePrimaryAction() {
   if (status.value === 'idle' || status.value === 'error') {
-    void startSoundtrack()
+    introOverlayActive.value = true
     return
   }
 
@@ -383,6 +387,11 @@ function handlePrimaryAction() {
   }
 
   resumePlayback()
+}
+
+function handleIntroOverlayComplete() {
+  introOverlayActive.value = false
+  void startSoundtrack()
 }
 
 function handlePreviousTrack() {
@@ -457,6 +466,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="sidebar-soundtrack-card wolves-soundtrack-card">
+    <WolvesIntroOverlay
+      v-if="introOverlayActive"
+      :videos="introVideos"
+      @complete="handleIntroOverlayComplete"
+    />
+
     <section class="soundtrack-panel" :class="{ 'is-started': isStarted, 'has-error': status === 'error' }">
       <div class="soundtrack-panel-main">
         <div class="soundtrack-artwork-shell" :class="{ 'is-playing': isPlaying }">

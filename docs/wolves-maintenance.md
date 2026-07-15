@@ -88,6 +88,9 @@ If authored lore appears to be missing from the worktree, never ask the user to 
 1. For a dinosaur, add a registry entry to `src/data/wolves-dinosaur-species.ts` (`id`, `scientificName`, `documentationUrl`, `artwork`) with artwork committed under `public/characters/` as compressed WebP.
 2. Add a `character-sheet` lore record (with `subject_kind: dinosaur` and `species: <registry-id>` for dinosaurs) plus any `guardian-bond` record the user specifies, following the lore-entry steps above.
 3. Do not touch the dossier views or the team roster markup in `WolvesLoreColumn.vue` unless the user explicitly asks for a roster change, and then edit only the label and id strings.
+4. Guardian `class` is a strict enum in the parser (`titan | warlock | hunter` — `src/data/wolves-lore-records.ts`); a compound or invalid value throws at load time. For a user-supplied dual-class character, pick the primary class the user lists first and note the secondary in `titles`; do not invent a compound value.
+5. A character's dinosaur pairing may be an intentional narrative mystery. Recording it as `relations: { dinosaur: '[REDACTED]' }` (a plain string, not a `subjectprofile/...` reference) is safe and will not fail validation, because `validateGuardianBonds()` only enforces the reference format on `guardian-bond` kind records — simply do not create a `guardian-bond` record (or a dinosaur `character-sheet`) until the user reveals the real pairing.
+6. Every new lore record needs a manifest entry in `src/data/wolves-lore-records.ts` (see step 3 under "Adding a lore entry" above) **and** a bump to the hardcoded total in `src/tests/wolvesLoreRecords.test.ts` (`expect(records).toHaveLength(N)`) — increment `N` by exactly the number of new manifest entries.
 
 ## Music Widget
 
@@ -97,6 +100,27 @@ If authored lore appears to be missing from the worktree, never ask the user to 
 - **Regeneration**: `npm run update:wolves-playlist` rebuilds the manifest from the YouTube playlist and downloads artwork to `public/wolves-artwork/`. Tempo overrides live in `TEMPO_CONFIGS` inside `scripts/update-wolves-playlist.js`.
 - **Adding, swapping, or reordering tracks**: change the YouTube playlist itself, then regenerate. Hand-editing metadata fields in the JSON is acceptable for title or artist fixes. Track 0 is special: the entire authored narrative (timeline, thesis, incoming signal, beat math at 152 BPM) is built against "7 Days to the Wolves" at position 0. Never move or replace Track 0.
 - The music is part of the narrative sequence. Track order beyond position 0 follows the user's authored playlist order; never reorder it on your own.
+
+## Intro Overlay System
+
+**Authorized exception to the "WolvesSoundtrack.vue is locked" rule below**, added by explicit, repeatedly-confirmed user request (not agent-initiated). Before touching this surface again, re-read this section; the boundary above still applies to everything not described here.
+
+When the user clicks the primary "Start soundtrack" / "Start Experience" button (the first `idle`/`error` -> playback transition in `WolvesSoundtrack.vue`), a fullscreen intro sequence plays before the live YouTube playlist experience begins:
+
+1. A new, self-produced intro video (own footage, own ffmpeg encode — never third-party/downloaded footage) with HTML/CSS text overlays introducing crew characters.
+2. The existing "hero video" export (`wolves-first-song-1440p`, produced separately by `record-wolves.cjs` / `compile-slideshow.js` for YouTube — that pipeline is untouched by this system).
+3. Then `startSoundtrack()` runs exactly as it always has, handing off into the normal live playlist experience.
+
+Architecture:
+
+- `src/data/wolves-intro-sequence.ts`: pure, unit-tested state machine (`createIntroSequenceState`, `advanceIntroSequence`, `skipIntroSequence`, `activeOverlayText`) plus `buildIntroVideoSequence(baseUrl)`, the config listing each video's source path and its character-overlay text cues (`{ text, start, end }`). This is the **content surface** for the intro sequence: BASE_URL-relative video paths and overlay text/timing are editable with exact user-supplied copy.
+- `src/components/wolves/WolvesIntroOverlay.vue`: fullscreen `<video>` sequencer consuming that state machine. Renders one video at a time, advances on `ended`, auto-advances on `error` (a missing/broken render never blocks the live experience), shows the current overlay text cue, and exposes a "Skip" button that jumps straight to the live experience regardless of which video is playing. This component's markup/logic is locked, same as other Wolves components — only the data it's given (`wolves-intro-sequence.ts`) is editable.
+- Wired into `WolvesSoundtrack.vue`: `handlePrimaryAction()` shows the overlay instead of calling `startSoundtrack()` directly on the first `idle`/`error` click; `handleIntroOverlayComplete()` (fired on the overlay's `complete` event, whether from natural playback end or Skip) then calls `startSoundtrack()`. This plays **every time** Start is clicked (no once-per-session suppression) and is intentional per the user's confirmed choice.
+- Video files themselves: the intro video's render script and final asset are **not yet built** — this requires real footage/timing decisions and would touch `recordings/` while the separate hero-video pipeline may be mid-render there. Until both `videos/wolves-intro-1440p.mp4` and `videos/wolves-first-song-1440p.mp4` exist under `public/`, the overlay's `error` handler transparently skips past whichever is missing.
+
+**What agents may touch**: video source paths and overlay text/timing in `buildIntroVideoSequence()` (`src/data/wolves-intro-sequence.ts`), with exact user-supplied copy only — same editorial rule as everywhere else on this page.
+
+**What agents must not touch without a fresh, explicit user request**: `WolvesIntroOverlay.vue` markup/styles/logic, the `handlePrimaryAction`/`handleIntroOverlayComplete` wiring in `WolvesSoundtrack.vue`, or the pure functions in `wolves-intro-sequence.ts` (only its `buildIntroVideoSequence()` data payload is content).
 
 ## Slideshows
 
@@ -124,7 +148,7 @@ Do not modify these under any circumstance. If a task seems to require it, stop 
 - `wolves/index.html` (View Transitions rule, Cast SDK loader, meta tags).
 - `src/wolves-main.ts`.
 - `src/WolvesApp.vue`: all markup, classes, styles, script logic, layout budgets (80px header, 140px footer, `2fr 1fr` split), equinox terminal text, footer telemetry strings, wallpaper crossfade system. Exception: hero prose text nodes, with exact user-supplied copy only.
-- `src/components/wolves/WolvesComicReader.vue`, `WolvesLoreColumn.vue`, `WolvesSoundtrack.vue`, `WolvesQrCodes.vue`, and every view in `src/components/wolves/lore/`.
+- `src/components/wolves/WolvesComicReader.vue`, `WolvesLoreColumn.vue`, `WolvesSoundtrack.vue` (except the documented Intro Overlay System wiring), `WolvesQrCodes.vue`, `WolvesIntroOverlay.vue`, and every view in `src/components/wolves/lore/`.
 - `src/components/wolves/lore.ts` and `wallpapers-list.ts` (the latter is generated).
 - `src/data/wolves-thesis-sequence.ts` (thesis text, mode windows, BPM and phrase constants).
 - `src/data/wolves-narrative-timeline.ts` outside an explicitly authorized timing update, and its three locked anchors always.
@@ -149,6 +173,7 @@ The complete list of places agents may edit, and nothing else:
 | `TEMPO_CONFIGS` in `scripts/update-wolves-playlist.js` | Per-track tempo values, when the user supplies them |
 | Hero prose text nodes in `src/WolvesApp.vue` | Exact user-supplied copy only |
 | Link URLs and label text in `WolvesQrCodes.vue` | Exact user-supplied values only |
+| `buildIntroVideoSequence()` in `src/data/wolves-intro-sequence.ts` | Intro-sequence video source paths and character-overlay text/timing cues; exact user-supplied copy only |
 
 ## Editorial Rules
 

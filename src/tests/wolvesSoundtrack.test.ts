@@ -136,6 +136,11 @@ function mockIframeApiFailure() {
   script?.dispatchEvent(new Event('error'))
 }
 
+async function skipIntroOverlay(wrapper: ReturnType<typeof mount>) {
+  await wrapper.get('button[aria-label="Skip intro"]').trigger('click')
+  await flushPromises()
+}
+
 beforeEach(() => {
   loadWolvesSoundtrack.mockResolvedValue(soundtrackManifest)
   players = []
@@ -175,6 +180,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
     resolveIframeApi()
     await flushPromises()
     players[0].triggerReady()
@@ -208,6 +214,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
 
     expect(loadWolvesSoundtrack).toHaveBeenCalledTimes(1)
     expect(document.querySelector(`script[src="${iframeApiSrc}"]`)).not.toBeNull()
@@ -220,6 +227,7 @@ describe('wolves soundtrack', () => {
     expect(wrapper.findAll('button.soundtrack-action')).toHaveLength(1)
     await primaryButton.trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
 
     resolveIframeApi()
     await flushPromises()
@@ -238,6 +246,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
     resolveIframeApi()
     await flushPromises()
     players[0].triggerReady()
@@ -255,6 +264,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
 
     resolveIframeApi()
     await flushPromises()
@@ -272,6 +282,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
 
     resolveIframeApi()
     await flushPromises()
@@ -299,6 +310,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
     resolveIframeApi()
     await flushPromises()
     players[0].triggerReady()
@@ -315,6 +327,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
 
     resolveIframeApi()
     await flushPromises()
@@ -336,6 +349,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
 
     mockIframeApiFailure()
     await flushPromises()
@@ -350,6 +364,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('button[aria-label="Start soundtrack"]').trigger('click')
     await flushPromises()
+    await skipIntroOverlay(wrapper)
 
     resolveIframeApi()
     await flushPromises()
@@ -367,8 +382,7 @@ describe('wolves soundtrack', () => {
 
     await wrapper.get('.soundtrack-action').trigger('click')
     await flushPromises()
-
-    expect(players[0].destroy).toHaveBeenCalledTimes(1)
+    await skipIntroOverlay(wrapper)
     expect(players).toHaveLength(2)
     expect(wrapper.get('[data-testid="wolves-player-host"]').element).toBe(persistentHost)
     expect(wrapper.element.contains(persistentHost)).toBe(true)

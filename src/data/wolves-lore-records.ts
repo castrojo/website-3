@@ -381,6 +381,10 @@ const loreManifest = [
   { id: 'subjectprofile/natalie', chapterId: 'awakening', relativePath: './lore/natalie.md' },
   { id: 'subjectprofile/alamo', chapterId: 'awakening', relativePath: './lore/alamo.md' },
   { id: 'guardian-bond/natalie-alamo', chapterId: 'awakening', relativePath: './lore/natalie-alamo.md' },
+  { id: 'subjectprofile/robert-killen', chapterId: 'awakening', relativePath: './lore/robert-killen.md' },
+  { id: 'subjectprofile/kaslin-fields', chapterId: 'awakening', relativePath: './lore/kaslin-fields.md' },
+  { id: 'subjectprofile/laura-santamaria', chapterId: 'awakening', relativePath: './lore/laura-santamaria.md' },
+  { id: 'subjectprofile/christopher-blecker', chapterId: 'awakening', relativePath: './lore/christopher-blecker.md' },
 ] as const satisfies readonly LoreManifestEntry[]
 
 const loreFiles = import.meta.glob('./lore/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
