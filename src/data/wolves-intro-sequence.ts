@@ -69,6 +69,13 @@ export interface IntroVideoSegment extends IntroSegmentBase {
   readonly youtubeVideoId: string
   /** Forces an early advance at this many seconds, before the video's natural end. */
   readonly maxDuration?: number
+  /**
+   * Seconds into the source video where playback should begin, skipping content baked into the
+   * footage itself before that point (e.g. a publisher rating card). Passed straight through to
+   * the YouTube player's native `start` param, so `activeOverlayCue`/`activeOverlayCues` windows
+   * still line up against the video's real (absolute) timeline — they do not need to be shifted.
+   */
+  readonly startOffset?: number
 }
 
 export interface IntroTextSegment extends IntroSegmentBase {
@@ -390,6 +397,11 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
       id: 'wolves-intro',
       kind: 'video',
       youtubeVideoId: 'BKm0TPqeOjY',
+      // The source video opens on Bungie's own ESRB "TEEN" rating card (visible ~0-1.5s,
+      // confirmed frame-by-frame), which isn't part of the Guardian content we want to show.
+      // Starting 2s in skips past it entirely without touching any of the cue windows below,
+      // since those are keyed to the video's absolute/native timeline, not this offset.
+      startOffset: 2,
       overlays: [
         { text: 'Void Warlock — Robert Killen — Reconciler of the Arcane', start: 5, end: 19 },
         { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 19, end: 24.5 },

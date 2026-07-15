@@ -309,6 +309,7 @@ async function loadVideoSegment(segment: Extract<IntroVideoSpec, { kind: 'video'
       playsinline: 1,
       rel: 0,
       modestbranding: 1,
+      ...(segment.startOffset ? { start: Math.round(segment.startOffset) } : {}),
     },
     events: {
       onReady: () => {
