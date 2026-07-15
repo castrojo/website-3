@@ -15,6 +15,13 @@ export interface YoutubePlayer {
   getDuration?: () => number
   seekTo?: (seconds: number, allowSeekAhead: boolean) => void
   destroy?: () => void
+  /** Loads and immediately plays a new video in this same player instance. */
+  loadVideoById?: (videoId: string) => void
+  /**
+   * Loads a new video into this player without playing it — used to silently preload the
+   * next video on an inactive side of a ping-pong player pair so switching is instant.
+   */
+  cueVideoById?: (videoId: string) => void
 }
 
 export interface YoutubePlayerState {

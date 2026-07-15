@@ -2,7 +2,7 @@ import type { WolvesSoundtrackManifest } from '../data/wolves-soundtrack'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { resetYoutubeIframeApiCacheForTests } from '../composables/useYoutubeIframeApi'
-import { wolvesCreatorShorts } from '../data/wolves-creator-shorts'
+import { wolvesCreatorShortsCassidyWilliams, wolvesCreatorShortsLindsayNikole } from '../data/wolves-creator-shorts'
 
 const { loadWolvesSoundtrack } = vi.hoisted(() => ({
   loadWolvesSoundtrack: vi.fn<() => Promise<WolvesSoundtrackManifest>>(),
@@ -429,10 +429,20 @@ describe('wolves soundtrack', () => {
 
     expect(players[0].pauseVideo).toHaveBeenCalledOnce()
 
-    // Finishing the shorts feed resumes the soundtrack and removes the interstitial.
-    for (let i = 0; i < wolvesCreatorShorts.length; i++) {
-      const shortsPlayer = players[players.length - 1]
-      shortsPlayer.config.events?.onStateChange?.({ data: (window as any).YT.PlayerState.ENDED, target: shortsPlayer })
+    // Finishing the shorts feed resumes the soundtrack and removes the interstitial. The
+    // interstitial creates exactly two persistent players (Lindsay, Cassidy) rather than one per
+    // short, ping-ponging which side is active until both creators' lists are exhausted.
+    const [, leftShortsPlayer, rightShortsPlayer] = players
+    const totalTurns = wolvesCreatorShortsLindsayNikole.length + wolvesCreatorShortsCassidyWilliams.length
+
+    function getActiveShortsSide(): 'left' | 'right' {
+      const slots = document.body.querySelectorAll('.wolves-creator-shorts-slot')
+      return slots[0]?.classList.contains('is-active') ? 'left' : 'right'
+    }
+
+    for (let turn = 0; turn < totalTurns; turn++) {
+      const activePlayer = getActiveShortsSide() === 'left' ? leftShortsPlayer : rightShortsPlayer
+      activePlayer.config.events?.onStateChange?.({ data: (window as any).YT.PlayerState.ENDED, target: activePlayer })
       await flushPromises()
     }
 

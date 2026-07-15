@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { resetYoutubeIframeApiCacheForTests } from '../composables/useYoutubeIframeApi'
-import { wolvesCreatorShorts } from '../data/wolves-creator-shorts'
+import { wolvesCreatorShortsCassidyWilliams, wolvesCreatorShortsLindsayNikole } from '../data/wolves-creator-shorts'
 
 const { default: WolvesCreatorShortsInterstitial } = await import('../components/wolves/WolvesCreatorShortsInterstitial.vue')
 
@@ -11,6 +11,11 @@ const iframeApiSrc = 'https://www.youtube.com/iframe_api'
 interface MockPlayerRecord {
   config: any
   videoId: string
+  autoplay: boolean
+  loadVideoById: ReturnType<typeof vi.fn>
+  cueVideoById: ReturnType<typeof vi.fn>
+  playVideo: ReturnType<typeof vi.fn>
+  pauseVideo: ReturnType<typeof vi.fn>
   destroy: ReturnType<typeof vi.fn>
   triggerEnded: () => void
   triggerError: () => void
@@ -22,11 +27,17 @@ function installMockIframeApi() {
   class MockPlayer {
     config: any
     videoId: string
+    autoplay: boolean
+    loadVideoById = vi.fn((id: string) => { this.videoId = id })
+    cueVideoById = vi.fn((id: string) => { this.videoId = id })
+    playVideo = vi.fn()
+    pauseVideo = vi.fn()
     destroy = vi.fn()
 
     constructor(element: Element, config: any) {
       this.config = config
       this.videoId = config.videoId
+      this.autoplay = config.playerVars?.autoplay === 1
       const mountNode = element as HTMLElement
       if (!mountNode.parentElement) {
         throw new Error('MockPlayer target must stay attached')
@@ -59,6 +70,12 @@ function interstitialVisible() {
   return document.body.querySelector('.wolves-creator-shorts-interstitial') !== null
 }
 
+function captionText(side: 'left' | 'right') {
+  const slots = document.body.querySelectorAll('.wolves-creator-shorts-slot')
+  const slot = side === 'left' ? slots[0] : slots[1]
+  return slot?.querySelector('.wolves-creator-shorts-caption')?.textContent ?? ''
+}
+
 beforeEach(() => {
   players = []
   ;(window as any).happyDOM.settings.handleDisabledFileLoadingAsSuccess = true
@@ -78,68 +95,95 @@ afterEach(() => {
 })
 
 describe('wolvesCreatorShortsInterstitial', () => {
-  it('teleports to body and starts with the first (Lindsay Nikole) short', async () => {
+  it('teleports to body, creates exactly two persistent players, and starts with Lindsay Nikole active', async () => {
     mount(WolvesCreatorShortsInterstitial)
     await flushPromises()
     resolveIframeApi()
     await flushPromises()
 
     expect(interstitialVisible()).toBe(true)
-    expect(players).toHaveLength(1)
-    expect(players[0].videoId).toBe(wolvesCreatorShorts[0].videoId)
-    expect(document.body.querySelector('.wolves-creator-shorts-interstitial-credit')?.textContent).toContain('Lindsay Nikole')
+    expect(players).toHaveLength(2)
+
+    const [left, right] = players
+    expect(left.videoId).toBe(wolvesCreatorShortsLindsayNikole[0].videoId)
+    expect(left.autoplay).toBe(true)
+    expect(right.videoId).toBe(wolvesCreatorShortsCassidyWilliams[0].videoId)
+    expect(right.autoplay).toBe(false)
+
+    expect(captionText('left')).toContain(wolvesCreatorShortsLindsayNikole[0].title)
+    expect(captionText('right')).toContain(wolvesCreatorShortsCassidyWilliams[0].title)
   })
 
-  it('advances through the alternating list as each short ends', async () => {
+  it('ping-pongs to the already-cued other side when the active side ends, and preloads the finished side', async () => {
     mount(WolvesCreatorShortsInterstitial)
     await flushPromises()
     resolveIframeApi()
     await flushPromises()
 
-    players[0].triggerEnded()
+    const [left, right] = players
+
+    left.triggerEnded()
     await flushPromises()
     await nextTick()
 
+    // Still only two players -- no new player instances are created for a swap.
     expect(players).toHaveLength(2)
-    expect(players[1].videoId).toBe(wolvesCreatorShorts[1].videoId)
-    expect(document.body.querySelector('.wolves-creator-shorts-interstitial-credit')?.textContent).toContain('Cassidy Williams')
+    expect(right.playVideo).toHaveBeenCalledTimes(1)
+    expect(left.cueVideoById).toHaveBeenCalledWith(wolvesCreatorShortsLindsayNikole[1].videoId)
+    expect(captionText('left')).toContain(wolvesCreatorShortsLindsayNikole[1].title)
+    expect(captionText('right')).toContain(wolvesCreatorShortsCassidyWilliams[0].title)
+
+    right.triggerEnded()
+    await flushPromises()
+    await nextTick()
+
+    expect(left.playVideo).toHaveBeenCalledTimes(1)
+    expect(right.cueVideoById).toHaveBeenCalledWith(wolvesCreatorShortsCassidyWilliams[1].videoId)
+    expect(captionText('right')).toContain(wolvesCreatorShortsCassidyWilliams[1].title)
   })
 
-  it('emits complete after the last short ends, without looping back to the first', async () => {
+  it('lets the longer list continue solo once the shorter one runs out, then emits complete once both are done', async () => {
     const wrapper = mount(WolvesCreatorShortsInterstitial)
     await flushPromises()
     resolveIframeApi()
     await flushPromises()
 
-    for (let i = 0; i < wolvesCreatorShorts.length - 1; i++) {
-      players[players.length - 1].triggerEnded()
+    const [left, right] = players
+
+    function getActiveSide(): 'left' | 'right' {
+      const slots = document.body.querySelectorAll('.wolves-creator-shorts-slot')
+      return slots[0]?.classList.contains('is-active') ? 'left' : 'right'
+    }
+
+    // Lindsay has 8 entries, Cassidy has 6 -- Cassidy's list must run out first, and Lindsay
+    // must keep playing solo (via loadVideoById) for her last two entries before completing.
+    const totalTurns = wolvesCreatorShortsLindsayNikole.length + wolvesCreatorShortsCassidyWilliams.length
+    for (let turn = 0; turn < totalTurns; turn++) {
+      expect(wrapper.emitted('complete')).toBeUndefined()
+      const side = getActiveSide()
+      ;(side === 'left' ? left : right).triggerEnded()
       await flushPromises()
       await nextTick()
     }
 
-    expect(players).toHaveLength(wolvesCreatorShorts.length)
-    expect(wrapper.emitted('complete')).toBeUndefined()
-
-    players[players.length - 1].triggerEnded()
-    await flushPromises()
-    await nextTick()
-
-    // The component emits `complete` and leaves the unmount decision to its parent
-    // (WolvesSoundtrack.vue's `v-if`), so it does not remove itself here.
+    // No third player was ever created -- the solo phase reuses the same two persistent players.
+    expect(players).toHaveLength(2)
+    expect(left.loadVideoById).toHaveBeenCalledWith(wolvesCreatorShortsLindsayNikole[7].videoId)
     expect(wrapper.emitted('complete')).toHaveLength(1)
   })
 
-  it('never blocks the feed when a short errors', async () => {
+  it('never blocks the ping-pong when a side errors', async () => {
     mount(WolvesCreatorShortsInterstitial)
     await flushPromises()
     resolveIframeApi()
     await flushPromises()
 
-    players[0].triggerError()
+    const [left, right] = players
+    left.triggerError()
     await flushPromises()
     await nextTick()
 
     expect(players).toHaveLength(2)
-    expect(document.body.querySelector('.wolves-creator-shorts-interstitial-credit')?.textContent).toContain('Cassidy Williams')
+    expect(right.playVideo).toHaveBeenCalledTimes(1)
   })
 })
