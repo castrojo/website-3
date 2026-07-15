@@ -410,9 +410,11 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
       // verification checklist, replacing the original automated hue/brightness pass that had
       // mismatched two of the six windows:
       // - Robert Killen's Void Warlock (the first purple, a crystalline void-arm close-up) runs
-      //   5-19s; the second purple beat starting ~19s is a Titan Ward of Dawn bubble, not more
-      //   Robert footage, so that's where Kat Cosgrove's window now starts.
-      // - Kat Cosgrove's Harbinger Titan bubble shot runs 19-24.5s. The old 25.5-37.5s window
+      //   5-17.5s; the whip-pan cut to a Titan Ward of Dawn bubble forming happens at ~17.5s
+      //   (confirmed via 0.5s-resolution frame capture — 17.0s is still clearly the Warlock's
+      //   caped back, 18.5s is already the Titan crouched inside the bubble), earlier than the
+      //   previous 19s boundary, so Kat Cosgrove's window now starts there instead.
+      // - Kat Cosgrove's Harbinger Titan bubble shot runs 17.5-24.5s. The old 25.5-37.5s window
       //   was wrong — that stretch is an unrelated Fallen/Scorn captain's dialogue, not a
       //   Guardian shot at all, so no cue covers it.
       // - Kaslin Fields' Arc Warlock lightning duel runs the full 38-48s (previously cut off at
@@ -431,8 +433,8 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
       // since those are keyed to the video's absolute/native timeline, not this offset.
       startOffset: 2,
       overlays: [
-        { text: 'Void Warlock — Robert Killen — Reconciler of the Arcane', start: 5, end: 19 },
-        { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 19, end: 24.5 },
+        { text: 'Void Warlock — Robert Killen — Reconciler of the Arcane', start: 5, end: 17.5 },
+        { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 17.5, end: 24.5 },
         { text: 'Arc Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 },
         { text: 'Solar Hunter — Laura Santamaria — Paragon to the Order of 7', start: 70.5, end: 77 },
         { text: 'Strand Warlock — Christopher Blecker — First Among Equals — The North Star', start: 83, end: 90, position: 'left' },
