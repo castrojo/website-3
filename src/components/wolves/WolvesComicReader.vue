@@ -89,7 +89,8 @@ const mixedPhotos = computed(() => {
     type: wp.type,
     dayName: wp.dayName,
     nightName: wp.nightName,
-    fit: wp.fit
+    fit: wp.fit,
+    description: wp.description
   }))
 
   // 2. Local People wallpapers (isPeople = true)
@@ -104,7 +105,8 @@ const mixedPhotos = computed(() => {
     type: wp.type,
     dayName: wp.dayName,
     nightName: wp.nightName,
-    fit: wp.fit
+    fit: wp.fit,
+    description: wp.description
   }))
 
   // 3. Flickr Remote People photos
@@ -202,6 +204,7 @@ interface TimelineSlide {
   duration: number
   endTime: number
   fit?: 'cover' | 'contain'
+  description?: string
 }
 
 const timelineSlides = computed<TimelineSlide[]>(() => {
@@ -216,7 +219,8 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     type: wp.type,
     dayName: wp.dayName,
     nightName: wp.nightName,
-    fit: wp.fit
+    fit: wp.fit,
+    description: wp.description
   }))
 
   const localPeople = wallpapers.filter((wp) => {
@@ -230,7 +234,8 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     type: wp.type,
     dayName: wp.dayName,
     nightName: wp.nightName,
-    fit: wp.fit
+    fit: wp.fit,
+    description: wp.description
   }))
 
   const daynightShowcase = localShowcase.filter(wp => wp.type === 'daynight')
@@ -824,8 +829,22 @@ onBeforeUnmount(() => {
               </template>
             </div>
 
-            <!-- Sleek photo caption -->
-            <div v-if="activePhoto" class="flickr-caption font-mono">
+            <!-- Sleek photo caption: slides with a `description` (e.g. a real interview still)
+                 get a larger fullscreen "theater" caption designed for a 10-foot viewing
+                 distance instead of the standard small pill caption. -->
+            <div v-if="activePhoto && activePhoto.description" class="wallpaper-theater-caption">
+              <p class="wallpaper-theater-caption-title">
+                {{ activePhoto.title }}
+              </p>
+              <p
+                v-for="(paragraph, pIdx) in activePhoto.description.split('\n\n')"
+                :key="pIdx"
+                class="wallpaper-theater-caption-body"
+              >
+                {{ paragraph }}
+              </p>
+            </div>
+            <div v-else-if="activePhoto" class="flickr-caption font-mono">
               <span class="caption-label text-cyan">
                 {{ activePhoto.isLocal ? 'BLUEFIN SHOWCASE //' : 'CNCF STREAM //' }}
               </span>
@@ -888,8 +907,22 @@ onBeforeUnmount(() => {
                       alt="Bluefin Dusk - Night"
                     >
                   </div>
-                  <!-- Decorative caption -->
-                  <div class="wallpaper-caption font-mono">
+                  <!-- Decorative caption: slides with a `description` (e.g. a real interview
+                       still) get a larger fullscreen "theater" caption designed for a 10-foot
+                       viewing distance instead of the standard small archive pill. -->
+                  <div v-if="wp.description" class="wallpaper-theater-caption">
+                    <p class="wallpaper-theater-caption-title">
+                      {{ wp.title }}
+                    </p>
+                    <p
+                      v-for="(paragraph, pIdx) in wp.description.split('\n\n')"
+                      :key="pIdx"
+                      class="wallpaper-theater-caption-body"
+                    >
+                      {{ paragraph }}
+                    </p>
+                  </div>
+                  <div v-else class="wallpaper-caption font-mono">
                     <span class="caption-label text-cyan">BLUEFIN ARCHIVE //</span> {{ wp.title }}
                   </div>
                 </div>
@@ -1252,6 +1285,47 @@ onBeforeUnmount(() => {
 
   .caption-label {
     font-weight: bold;
+  }
+}
+
+/* Fullscreen "theater" caption for slides with a `description` (e.g. a real interview still),
+   sized for a 10-foot living-room viewing distance instead of the standard small archive pill:
+   large type, high contrast, and generous spacing so the title and quote read clearly from
+   across a room rather than up close at a desk. */
+.wallpaper-theater-caption {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90%, 60rem);
+  max-height: 55%;
+  overflow-y: auto;
+  background-color: rgb(10 14 22 / 88%);
+  border: 1px solid rgb(66 133 244 / 35%);
+  border-radius: 1rem;
+  padding: clamp(1.25rem, 1rem + 1.2vw, 2.25rem);
+  color: #f5f5f5;
+  z-index: 5;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 55%);
+  backdrop-filter: blur(6px);
+  text-shadow: 0 2px 8px rgb(0 0 0 / 70%);
+}
+
+.wallpaper-theater-caption-title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.8rem, 1.4rem + 1.4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #93c5fd;
+}
+
+.wallpaper-theater-caption-body {
+  margin: 0 0 1rem;
+  font-size: clamp(1.3rem, 1.1rem + 0.7vw, 1.7rem);
+  line-height: 1.5;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 }
 

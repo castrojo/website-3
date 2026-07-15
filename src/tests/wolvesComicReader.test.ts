@@ -51,7 +51,8 @@ function galleryCrossfadeDuration(wrapper: ReturnType<typeof mount>) {
 function activeTimelineImage(wrapper: ReturnType<typeof mount>) {
   const activeLayer = wrapper.findAll('.flickr-photo-layer')
     .find(layer => (layer.attributes('style') ?? '').includes('z-index: 2'))
-  return activeLayer?.find('.flickr-img').attributes('src')
+  const img = activeLayer?.find('.flickr-img')
+  return img?.exists() ? img.attributes('src') : undefined
 }
 
 describe('wolvesComicReader', () => {
@@ -591,5 +592,47 @@ describe('wolvesComicReader', () => {
     const dusk = wallpapers.find(wp => wp.title === 'Dusk (Day & Night)')
     expect(dusk).toBeDefined()
     expect(dusk?.fit).toBeUndefined()
+  })
+
+  it('renders a large theater caption only for wallpapers with a description, leaving every other slide on the standard small caption pill', async () => {
+    const interview = wallpapers.find(wp => wp.name === 'wolves/people/interview-clyde-seepersad-linux-foundation.webp')
+    expect(interview, 'expected the Clyde Seepersad interview wallpaper to exist').toBeDefined()
+    expect(interview?.description, 'expected the interview wallpaper to carry a description').toBeTruthy()
+
+    // Track 0 (the opening/"guardian" video) is the only rotation that shows local People
+    // wallpapers like this one; later tracks only rotate remote Flickr photos.
+    mockGalleryData([coverTrack])
+    const wrapper = mount(WolvesComicReader, {
+      props: { trackIndex: 0, playlistCurrentTime: 0 },
+    })
+    await flushPromises()
+
+    let sawTheaterCaption = false
+    for (let second = 0; second <= 423; second += 1) {
+      await wrapper.setProps({ playlistCurrentTime: second })
+      const activeSrc = activeTimelineImage(wrapper)
+      if (!activeSrc) {
+        continue // no slide has swapped in yet (e.g. the very first tick)
+      }
+      const isInterviewSlide = activeSrc.includes('interview-clyde-seepersad-linux-foundation')
+      const theaterCaption = wrapper.find('.wallpaper-theater-caption')
+      const smallCaption = wrapper.find('.flickr-caption')
+
+      if (isInterviewSlide) {
+        sawTheaterCaption = true
+        expect(theaterCaption.exists()).toBe(true)
+        expect(smallCaption.exists()).toBe(false)
+        expect(theaterCaption.get('.wallpaper-theater-caption-title').text()).toBe(interview!.title)
+        const paragraphs = theaterCaption.findAll('.wallpaper-theater-caption-body').map(p => p.text())
+        expect(paragraphs.join('\n\n')).toBe(interview!.description)
+      }
+      else {
+        // Every slide without a description must keep the existing small caption pill unchanged.
+        expect(theaterCaption.exists()).toBe(false)
+        expect(smallCaption.exists()).toBe(true)
+      }
+    }
+
+    expect(sawTheaterCaption, 'expected the interview slide to appear at least once during Track 0').toBe(true)
   })
 })
