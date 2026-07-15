@@ -434,15 +434,12 @@ Guardians were not only unnecessary, but a threat.`,
       //   screen, not just a stylistic hold. His plate additionally carries `leader: true`,
       //   gilding it gold instead of the standard silver/blue treatment to signify leadership,
       //   pairing with his existing "First Among Equals" title line — reserved for him alone,
-      //   do not apply broadly. His title line now carries four segments joined the same way
-      //   ("First Among Equals — The North Star — Uncompromising Purity — Platinum Member"),
-      //   all rendered on one `wolves-guardian-plate-title` line with identical styling so every
-      //   title reads with equal visual weight (no segment is emphasized over another) — per
-      //   explicit user request, confirmed 2026-07-15, to add "Uncompromising Purity" and
-      //   "Platinum Member" with even association to his existing titles. "Platinum Member" was
-      //   later renamed from "Platinum Sponsor" and given its own `blingTitle` shimmer treatment
-      //   (`wolves-guardian-plate-bling`), per a follow-up request the same day for a
-      //   "distinctive bling effect" — reserved for that one segment alone.
+      //   do not apply broadly. His title line carries two segments joined the same way
+      //   ("First Among Equals — The North Star"), rendered on one `wolves-guardian-plate-title`
+      //   line with identical styling so both read with equal visual weight. "Uncompromising
+      //   Purity" and "Platinum Member" (added 2026-07-15, the latter with a `blingTitle`
+      //   shimmer) were removed the same day per a follow-up explicit user request to drop back
+      //   to just the original two titles — do not re-add either without a fresh user request.
       // - Natali Vlatko's title line adds a second line after "Boss B*tch" ("He's wearing a
       //   dress, I'm wearing a FIST"), per explicit user request, confirmed 2026-07-15. The
       //   user's original line ended in a trailing ellipsis; substituted with an em dash to
@@ -471,7 +468,7 @@ Guardians were not only unnecessary, but a threat.`,
         { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 16.5, end: 24.5 },
         { text: 'Arc Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 },
         { text: 'Solar Hunter — Laura Santamaria — Paragon to the Order of 7', start: 70.5, end: 77 },
-        { text: 'Strand Warlock — Christopher Blecker — First Among Equals — The North Star — Uncompromising Purity — Platinum Member', start: 83, end: 96, position: 'left', leader: true, blingTitle: 'Platinum Member' },
+        { text: 'Strand Warlock — Christopher Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left', leader: true },
         { text: 'Behemoth Titan — Natali Vlatko — Boss B*tch — He\'s wearing a dress, I\'m wearing a FIST', start: 87.5, end: 96, position: 'right', raised: true },
       ],
     },
