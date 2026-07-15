@@ -381,7 +381,7 @@ describe('wolvesLoreColumn Logic', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('GUARDIAN // MAINTAINER')
+    expect(wrapper.text()).toContain('MAINTAINER // GUARDIAN')
     expect(wrapper.text()).toContain('CONTROLLER · RECONCILER')
     expect(wrapper.text()).toContain('class: titan')
     expect(wrapper.text()).toContain('super: Test super')

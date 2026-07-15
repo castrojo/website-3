@@ -123,6 +123,13 @@ Architecture:
 
 **What agents may touch**: segment data, `youtubeVideoId`/`audioYoutubeVideoId`, `maxDuration`/`duration`, and overlay text/timing/background in `buildIntroVideoSequence()` (`src/data/wolves-intro-sequence.ts`), with exact user-supplied copy only — same editorial rule as everywhere else on this page. The Collapse artwork (`public/wolves-intro/bluefin-collapse-{day,night}.webp`) is exclusive to this sequence by explicit user request; do not restore it to the Track 0 wallpaper rotation.
 
+### Guardian plate
+
+Each `wolves-intro` cue in the form `"{class} — {name} — {title}"` (parsed by `parseGuardianCue()`) renders as a Destiny-style card in `WolvesIntroOverlay.vue`. Two owner-authorized changes to this card, on top of the base system above:
+
+- The plate's header label reads **`MAINTAINER // GUARDIAN`** (maintainer first), matching the narrative's own wording ("They were Maintainer-Guardians...", `wolves-intro-sequence.ts`). The lore-column `GuardianDossierView.vue` header must always read the same text — keep both in sync.
+- A guardian's bonded-dinosaur icon (small artwork next to their name) appears when a documented `guardian-bond` lore record exists for them. The lookup lives in `src/data/wolves-guardian-dinosaur-bonds.ts` — a small curated `guardianName -> dinosaurSpeciesId` list, intentionally *not* parsed from lore markdown at runtime (the intro overlay is a lightweight, performance-sensitive component and shouldn't depend on the full lore loader). Update this list whenever a new `guardian-bond` record is added for a guardian who also appears in the intro sequence. Guardians with no documented bond render with no icon — this is expected, not a bug.
+
 ## Creator Shorts Interstitial
 
 **Authorized exception to the "WolvesSoundtrack.vue is locked" rule above**, added by explicit, repeatedly-confirmed user request (not agent-initiated). Before touching this surface again, re-read this section; the boundary above still applies to everything not described here.

@@ -250,3 +250,55 @@ describe('wolvesIntroOverlay text segments', () => {
     expect(wrapper.find('video').exists()).toBe(false)
   })
 })
+
+describe('wolvesIntroOverlay guardian plate', () => {
+  const guardianPlateSequence = [
+    {
+      id: 'wolves-intro',
+      kind: 'video' as const,
+      youtubeVideoId: 'BKm0TPqeOjY',
+      overlays: [
+        { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 0, end: 5 },
+        { text: 'Void Warlock — Robert Killen — Reconciler of the Arcane', start: 5, end: 10 },
+      ],
+    },
+  ]
+
+  it('reads MAINTAINER // GUARDIAN, matching the lore-column dossier label', async () => {
+    const wrapper = mount(WolvesIntroOverlay, { props: { videos: guardianPlateSequence } })
+    await flushPromises()
+    resolveIframeApi()
+    await flushPromises()
+    players[0].triggerReady()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('MAINTAINER // GUARDIAN')
+    expect(wrapper.text()).not.toContain('GUARDIAN // MAINTAINER')
+  })
+
+  it('shows a guardian\'s bonded-dinosaur icon when one is documented', async () => {
+    const wrapper = mount(WolvesIntroOverlay, { props: { videos: guardianPlateSequence } })
+    await flushPromises()
+    resolveIframeApi()
+    await flushPromises()
+    players[0].triggerReady()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Kat Cosgrove')
+    expect(wrapper.find('.wolves-guardian-plate-dinosaur-icon').exists()).toBe(true)
+  })
+
+  it('renders no icon for a guardian with no documented dinosaur bond', async () => {
+    const wrapper = mount(WolvesIntroOverlay, { props: { videos: guardianPlateSequence } })
+    await flushPromises()
+    resolveIframeApi()
+    await flushPromises()
+    players[0].triggerReady()
+    players[0].getCurrentTime = vi.fn(() => 6)
+    await vi.advanceTimersByTimeAsync(200)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Robert Killen')
+    expect(wrapper.find('.wolves-guardian-plate-dinosaur-icon').exists()).toBe(false)
+  })
+})

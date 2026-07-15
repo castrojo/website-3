@@ -3,6 +3,8 @@ import type { YoutubePlayer } from '@/composables/useYoutubeIframeApi'
 import type { IntroOverlayTextCue, IntroVideoSpec } from '@/data/wolves-intro-sequence'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { getYoutubePlayerConstructor, getYoutubePlayerState, loadYoutubeIframeApi } from '@/composables/useYoutubeIframeApi'
+import { dinosaurSpecies } from '@/data/wolves-dinosaur-species'
+import { wolvesGuardianDinosaurBonds } from '@/data/wolves-guardian-dinosaur-bonds'
 import {
   activeOverlayCue,
   activeOverlayCues,
@@ -68,6 +70,13 @@ function parseGuardianCue(text: string): { guardianClass: string, name: string, 
   }
   const [guardianClass, name, ...titleParts] = parts
   return { guardianClass, name, title: titleParts.join(' — ') }
+}
+
+/** Bonded-dinosaur artwork URL for a guardian's plate, or undefined if no bond is documented. */
+function guardianDinosaurArtwork(guardianName: string): string | undefined {
+  const bond = wolvesGuardianDinosaurBonds.find(entry => entry.guardianName === guardianName)
+  const species = bond && dinosaurSpecies.find(entry => entry.id === bond.dinosaurSpeciesId)
+  return species && `${import.meta.env.BASE_URL}${species.artwork.slice(2)}`
 }
 
 /** Total progress-bar duration across every segment, once each one's real duration is known. */
@@ -456,13 +465,20 @@ onBeforeUnmount(() => {
             <div class="wolves-guardian-plate-horizon wolves-guardian-plate-horizon-right" aria-hidden="true" />
           </div>
           <p class="wolves-guardian-plate-label">
-            GUARDIAN // MAINTAINER
+            MAINTAINER // GUARDIAN
           </p>
           <p class="wolves-guardian-plate-class">
             {{ parseGuardianCue(cue.text)!.guardianClass }}
           </p>
           <p class="wolves-guardian-plate-name">
             {{ parseGuardianCue(cue.text)!.name }}
+            <img
+              v-if="guardianDinosaurArtwork(parseGuardianCue(cue.text)!.name)"
+              :src="guardianDinosaurArtwork(parseGuardianCue(cue.text)!.name)"
+              alt=""
+              aria-hidden="true"
+              class="wolves-guardian-plate-dinosaur-icon"
+            >
           </p>
           <p class="wolves-guardian-plate-title">
             {{ parseGuardianCue(cue.text)!.title }}
@@ -982,6 +998,16 @@ onBeforeUnmount(() => {
   margin: 0.35rem 0 0;
   font-size: clamp(1.5rem, 1.2rem + 0.7vw, 1.9rem);
   color: #94a3b8;
+}
+
+.wolves-guardian-plate-dinosaur-icon {
+  display: inline-block;
+  height: clamp(2.2rem, 1.6rem + 1.4vw, 3rem);
+  width: auto;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 6px rgb(255 255 255 / 35%));
+  animation: wolves-guardian-plate-text-drift 1.4s cubic-bezier(0.1, 0.9, 0.2, 1) 0.25s backwards;
 }
 
 @keyframes wolves-guardian-plate-ignite {

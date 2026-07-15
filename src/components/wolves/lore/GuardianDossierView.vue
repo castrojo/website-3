@@ -35,7 +35,7 @@ const paragraphs = computed(() => {
   >
     <header class="border-b border-blue-300/25 pb-3">
       <p class="m-0 text-base tracking-[0.2em] text-blue-300">
-        GUARDIAN // MAINTAINER
+        MAINTAINER // GUARDIAN
       </p>
       <h2 v-if="record.metadata.title" class="mb-0 mt-2 text-3xl text-white">
         {{ record.metadata.title }}
