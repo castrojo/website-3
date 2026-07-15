@@ -72,6 +72,12 @@ export interface IntroOverlayTextCue {
    * legible backdrop for bottom-anchored text than the top.
    */
   readonly textPosition?: 'top' | 'bottom'
+  /**
+   * Gilds a Guardian trailer callout with a gold treatment instead of the default silver/blue
+   * plate, signifying leadership. Reserved for Christopher Blecker's "First Among Equals" cue
+   * per explicit user request (2026-07-15) — do not apply broadly, it should read as singular.
+   */
+  readonly leader?: boolean
 }
 
 interface IntroSegmentBase {
@@ -424,9 +430,16 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
       //   40s, well before the footage itself ends).
       // - Laura Santamaria's Solar Hunter window (70.5-77s) was already correct.
       // - Christopher Blecker (Strand, green) and Natali Vlatko (Behemoth Titan, icy blue) share
-      //   the same shot from ~87.5-90s onward, so their windows now overlap (83-90s and
+      //   the same shot from ~87.5-90s onward, so their windows now overlap (83-96s and
       //   87.5-96s) with `position` anchoring each to its own side of the frame instead of one
-      //   caption overwriting the other.
+      //   caption overwriting the other. Christopher's window was extended from 90s to 96s
+      //   (matching Natali's own end) at explicit user request, confirmed 2026-07-15 — his green
+      //   Strand arm is still clearly visible reaching into frame through 94-96s (re-verified via
+      //   frame capture), so this also corrects the plate disappearing while he's still on
+      //   screen, not just a stylistic hold. His plate additionally carries `leader: true`,
+      //   gilding it gold instead of the standard silver/blue treatment to signify leadership,
+      //   pairing with his existing "First Among Equals" title line — reserved for him alone,
+      //   do not apply broadly.
       id: 'wolves-intro',
       kind: 'video',
       youtubeVideoId: 'BKm0TPqeOjY',
@@ -440,7 +453,7 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
         { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 16.5, end: 24.5 },
         { text: 'Arc Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 },
         { text: 'Solar Hunter — Laura Santamaria — Paragon to the Order of 7', start: 70.5, end: 77 },
-        { text: 'Strand Warlock — Christopher Blecker — First Among Equals — The North Star', start: 83, end: 90, position: 'left' },
+        { text: 'Strand Warlock — Christopher Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left', leader: true },
         { text: 'Behemoth Titan — Natali Vlatko — Boss B*tch', start: 87.5, end: 96, position: 'right', raised: true },
       ],
     },

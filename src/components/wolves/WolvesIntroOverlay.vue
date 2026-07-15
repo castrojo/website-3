@@ -451,6 +451,7 @@ onBeforeUnmount(() => {
           'wolves-guardian-plate-left': cue.position === 'left',
           'wolves-guardian-plate-right': cue.position === 'right',
           'wolves-guardian-plate-raised': cue.raised,
+          'wolves-guardian-plate-leader': cue.leader,
         }"
       >
         <template v-if="parseGuardianCue(cue.text)">
@@ -892,6 +893,46 @@ onBeforeUnmount(() => {
 .wolves-guardian-plate-raised {
   bottom: auto;
   top: 28%;
+}
+
+/* Gilds the plate gold instead of the default silver/blue treatment to signify leadership.
+   Reserved for Christopher Blecker's "First Among Equals" cue — see the `leader` field doc
+   comment in wolves-intro-sequence.ts. Overrides border, horizon lines, crest, burst flash,
+   and the title line so the gold reads consistently across the whole plate. */
+.wolves-guardian-plate-leader {
+  border-color: rgb(250 204 21 / 55%);
+  box-shadow: 0 0 24px rgb(250 204 21 / 20%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-burst {
+  background: radial-gradient(circle, #fff 0%, #facc15 45%, transparent 70%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-horizon {
+  background: linear-gradient(to right, transparent, #facc15 60%, #fff 100%);
+  box-shadow: 0 0 8px rgb(250 204 21 / 55%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-horizon-right {
+  background: linear-gradient(to left, transparent, #facc15 60%, #fff 100%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-crest {
+  filter: drop-shadow(0 0 8px rgb(250 204 21 / 70%));
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-crest-outer,
+.wolves-guardian-plate-leader .wolves-guardian-plate-crest-chevron {
+  stroke: #facc15;
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-label {
+  color: #facc15;
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-title {
+  color: #fde68a;
+  font-weight: 600;
 }
 
 /* Radial ignition flash behind the crest at the moment the plate appears. */
