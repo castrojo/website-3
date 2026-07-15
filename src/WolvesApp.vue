@@ -20,7 +20,6 @@ import type { WolvesSoundtrackManifest } from './data/wolves-soundtrack'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import TopNavbar from './components/TopNavbar.vue'
 import WolvesComicReader from './components/wolves/WolvesComicReader.vue'
-import WolvesCreatorShorts from './components/wolves/WolvesCreatorShorts.vue'
 import WolvesLoreColumn from './components/wolves/WolvesLoreColumn.vue'
 import WolvesQrCodes from './components/wolves/WolvesQrCodes.vue'
 import WolvesSoundtrack from './components/wolves/WolvesSoundtrack.vue'
@@ -315,10 +314,6 @@ onBeforeUnmount(() => {
         </div>
       </header>
 
-      <section class="wolves-creator-shorts-section">
-        <WolvesCreatorShorts />
-      </section>
-
       <section class="wolves-page-qr comic-reader-section">
         <WolvesQrCodes />
       </section>
@@ -517,10 +512,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 24px;
-}
-
-.wolves-creator-shorts-section {
-  margin-top: 8px;
 }
 
 .wolves-page-qr {

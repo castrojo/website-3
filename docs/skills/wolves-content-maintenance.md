@@ -14,7 +14,6 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 - Adding a lore entry, character, dinosaur, guardian bond, or location dossier.
 - Editing top-bar incoming-signal lines (`src/data/wolves-incoming-signal.txt`).
 - Adding, swapping, or fixing metadata for soundtrack tracks (`public/wolves-playlist.json`).
-- Adding, swapping, or removing entries in the Creator Shorts feed (`src/data/wolves-creator-shorts.ts`) — never break the strict alternation or move Lindsay Nikole out of the first slot.
 - Adding or removing slideshow images under `public/img/wallpapers/wolves/`, including optional per-slide theater-caption descriptions in `curatedDescriptions` (`scripts/generate-wallpapers.js`).
 - Any user request that mentions the Wolves page, lore, thesis, soundtrack, or slideshow.
 
