@@ -204,7 +204,7 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/20260709-osc26-distrobox-1.jpg",
+    "name": "wolves/people/20260709-osc26-distrobox-1.webp",
     "title": "20260709 Osc26 Distrobox 1"
   },
   {
@@ -279,7 +279,7 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/abigailcabunoc30360.web_.jpg",
+    "name": "wolves/people/abigailcabunoc30360.web_.webp",
     "title": "Abigailcabunoc30360"
   },
   {
@@ -289,12 +289,12 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/amberleighruth_reference.jpg",
+    "name": "wolves/people/amberleighruth_reference.webp",
     "title": "Amberleighruth Reference"
   },
   {
     "type": "single",
-    "name": "wolves/people/ashleymcnamara35365.jpg",
+    "name": "wolves/people/ashleymcnamara35365.webp",
     "title": "Ashleymcnamara35365"
   },
   {
@@ -309,7 +309,7 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/dirkhohndel.faces21994.web_.jpg",
+    "name": "wolves/people/dirkhohndel.faces21994.web_.webp",
     "title": "Dirkhohndel.faces21994"
   },
   {
@@ -319,7 +319,7 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/faces.jessiefrazella25358.web_.jpg",
+    "name": "wolves/people/faces.jessiefrazella25358.web_.webp",
     "title": "Faces.jessiefrazella25358"
   },
   {
@@ -914,7 +914,7 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/liz.jpg",
+    "name": "wolves/people/liz.webp",
     "title": "Liz"
   },
   {
@@ -929,7 +929,7 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/rikkiendsley28095-2.jpg",
+    "name": "wolves/people/rikkiendsley28095-2.webp",
     "title": "Rikkiendsley28095 2"
   },
   {
@@ -939,7 +939,7 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/stormy.faces23764.web_.jpg",
+    "name": "wolves/people/stormy.faces23764.web_.webp",
     "title": "Stormy.faces23764"
   },
   {

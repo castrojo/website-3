@@ -23,15 +23,15 @@ export function pinJonoBaconAtTrackZeroWindow<T extends { id: string }>(slides: 
 
 // Explicit reservation of ten user-supplied People photos for the fast finale.
 export const trackZeroFastFinalePhotoIds: ReadonlySet<string> = new Set([
-  'wolves/people/20260709-osc26-distrobox-1.jpg',
-  'wolves/people/abigailcabunoc30360.web_.jpg',
-  'wolves/people/amberleighruth_reference.jpg',
-  'wolves/people/ashleymcnamara35365.jpg',
-  'wolves/people/dirkhohndel.faces21994.web_.jpg',
-  'wolves/people/faces.jessiefrazella25358.web_.jpg',
-  'wolves/people/liz.jpg',
-  'wolves/people/rikkiendsley28095-2.jpg',
-  'wolves/people/stormy.faces23764.web_.jpg',
+  'wolves/people/20260709-osc26-distrobox-1.webp',
+  'wolves/people/abigailcabunoc30360.web_.webp',
+  'wolves/people/amberleighruth_reference.webp',
+  'wolves/people/ashleymcnamara35365.webp',
+  'wolves/people/dirkhohndel.faces21994.web_.webp',
+  'wolves/people/faces.jessiefrazella25358.web_.webp',
+  'wolves/people/liz.webp',
+  'wolves/people/rikkiendsley28095-2.webp',
+  'wolves/people/stormy.faces23764.web_.webp',
   'wolves/people/vmbrasseur.webp',
 ] as const)
 
