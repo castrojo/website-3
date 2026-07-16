@@ -36,7 +36,6 @@ export const wolvesCreatorShortsLindsayNikole: readonly WolvesCreatorShort[] = [
 export const wolvesCreatorShortsCassidyWilliams: readonly WolvesCreatorShort[] = [
   { videoId: 'e6GCa-E75uk', title: 'My meeting persona vs my quiet working persona', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
   { videoId: 'Ffhu6TLyuuY', title: 'The boss always knows', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
-  { videoId: 'xCjuz1Q4qbE', title: 'I accidentally discovered a clustering algorithm with Magna-Tiles', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
   { videoId: 'yvhbINxBR6k', title: 'Beyonce knows eslint', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
   { videoId: 'gpoT1YH9deM', title: 'Friday deploys', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
   { videoId: 'VBqh13NOYLQ', title: 'Legacy code', creatorName: 'Cassidy Williams', channelUrl: 'https://www.youtube.com/@cassidoo', orientation: 'vertical' },
