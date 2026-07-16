@@ -145,3 +145,54 @@ git diff --check
 
 Both commands passed. The user-owned dirty `public/dakota-versions.json` and
 `src/data/wolves-intro-sequence.ts` remain unstaged and untouched.
+
+## Final re-review: restart generation callbacks
+
+### Root cause
+
+`start()` correctly allocated a new generation after a terminal lifecycle, but
+`ensurePlayer()` retained the prior SDK player. Its listeners remained closed
+over the old generation, so every later `player_state_changed` callback was
+discarded by the generation guard.
+
+### TDD evidence
+
+Added the focused adapter regression before changing production code. It fails
+the first lifecycle through `account_error`, starts again, then verifies that a
+known catalog state sets `playing` and emits normalized progress.
+
+RED:
+
+```text
+npx vitest run src/tests/useSpotifyPlayback.test.ts
+Test Files  1 failed (1)
+Tests  1 failed | 8 passed (9)
+AssertionError: expected 'ready' to be 'playing'
+```
+
+GREEN:
+
+```text
+npx vitest run src/tests/useSpotifyPlayback.test.ts src/tests/wolvesSoundtrackSpotify.test.ts
+Test Files  2 passed (2)
+Tests  12 passed (12)
+```
+
+### Fix and validation
+
+- A new start disconnects and recreates an SDK player when its generation
+  differs, resetting the device ID and progress baseline.
+- Every device callback remains bound to its creating generation, including
+  `ready`; stale starts and callbacks cannot affect the current lifecycle.
+- Device transfer remains targeted to the newly ready SDK device and starts
+  the exact reviewed URI list. `destroy()` remains idempotent.
+
+Passed:
+
+```text
+npx eslint src/composables/useSpotifyPlayback.ts src/tests/useSpotifyPlayback.test.ts
+git diff --check
+```
+
+The unrelated dirty `public/dakota-versions.json` and
+`src/data/wolves-intro-sequence.ts` remain unstaged and untouched.

@@ -248,6 +248,37 @@ describe('spotify Wolves playback', () => {
     expect(harness.fetch).toHaveBeenCalledOnce()
   })
 
+  it('accepts player state and emits progress after restarting a failed lifecycle', async () => {
+    const harness = createHarness()
+    const onProgress = vi.fn()
+    const playback = useSpotifyPlayback({
+      accessToken: 'token',
+      playlistUri: 'spotify:playlist:reviewed',
+      trackUris,
+      onProgress,
+      dependencies: harness.dependencies,
+    })
+
+    const firstStart = playback.start()
+    await Promise.resolve()
+    harness.emit('account_error', { message: 'Premium required' })
+    await expect(firstStart).rejects.toMatchObject({ code: 'account-ineligible' })
+
+    const restarted = playback.start()
+    await Promise.resolve()
+    harness.emit('ready', { device_id: 'device-456' })
+    await restarted
+    harness.emit('player_state_changed', {
+      position: 12_000,
+      duration: 423_000,
+      paused: false,
+      track_window: { current_track: { uri: trackUris[1] } },
+    })
+
+    expect(playback.status.value).toBe('playing')
+    expect(onProgress).toHaveBeenCalledWith({ currentTime: 12, duration: 423, playlistIndex: 1 })
+  })
+
   it('cleans up idempotently and ignores late SDK callbacks', async () => {
     const harness = createHarness()
     const onProgress = vi.fn()
