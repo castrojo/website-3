@@ -269,6 +269,8 @@ try {
   assertTruthy('Marina Moore slide starts at 2:51.879', marinaAtStart?.includes('kubecon-55168684055.webp'))
   const marinaCaption = await page.locator('.flickr-caption').textContent()
   assertTruthy('Marina Moore caption is visible', marinaCaption?.includes('Marina Moore'))
+  assert('Track 0 top HUD remains visible during Marina Moore', await page.locator('.immersive-hud-header').isVisible(), true)
+  assert('Track 0 lower thesis overlay remains inactive during Marina Moore', await page.locator('.thesis-overlay').count(), 0)
 
   await page.evaluate(() => {
     window.__mockWolvesSoundtrackPlayer.seekTo(175.959, true)
