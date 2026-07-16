@@ -9,7 +9,7 @@ import type { SoundtrackTrack, WolvesSoundtrackManifest } from '@/data/wolves-so
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { shuffleWolvesGalleryPhotos } from '@/data/wolves-gallery-shuffle'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
-import { jonoBaconSlideId, jonoBaconTrackZeroWindow, pinJonoBaconAtTrackZeroWindow } from '@/data/wolves-track-zero-slides'
+import { jonoBaconSlideId, jonoBaconTrackZeroWindow, pinJonoBaconAtTrackZeroWindow, splitTrackZeroFastFinaleSlides, trackZeroFastFinalePhotoIds } from '@/data/wolves-track-zero-slides'
 import { wallpapers } from './wallpapers-list'
 
 const props = defineProps<{
@@ -273,7 +273,22 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
 
   const shuffledDaynight = deterministicShuffle(daynightShowcase, 101)
   const shuffledNormalShowcase = deterministicShuffle(normalShowcase, 202)
-  const shuffledPeople = pinJonoBaconAtTrackZeroWindow(deterministicShuffle(localPeople, 303))
+  const { regularSlides, finaleSlides } = splitTrackZeroFastFinaleSlides(localPeople)
+  const shuffledPeople = pinJonoBaconAtTrackZeroWindow(deterministicShuffle(regularSlides, 303))
+  const reservedFastFinaleSlides = [
+    ...finaleSlides,
+    ...[...trackZeroFastFinalePhotoIds]
+      .filter(id => !finaleSlides.some(slide => slide.id === id))
+      .map(id => ({
+        id,
+        isLocal: true,
+        path: id,
+        title: formatTrackZeroTitle(id),
+        type: 'single' as const,
+        dayName: undefined,
+        nightName: undefined,
+      })),
+  ]
 
   const result: TimelineSlide[] = []
   let currentTime = 0
@@ -425,7 +440,10 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime += freezeDuration
   }
 
-  const peoplePool4 = shuffledPeople.slice(73)
+  const peoplePool4 = deterministicShuffle([
+    ...shuffledPeople.slice(73),
+    ...reservedFastFinaleSlides,
+  ], 404)
   const finaleStartTime = 408
   const sec6BaseDuration = (finaleStartTime - currentTime) / peoplePool4.length
   for (const item of peoplePool4) {
@@ -652,6 +670,11 @@ function getFlickrPhotoUrl(photo: any) {
 // letterbox badly under contain, so they opt into cover instead.
 function photoObjectFit(photo: any) {
   return photo?.fit === 'cover' ? 'cover' : 'contain'
+}
+
+function formatTrackZeroTitle(path: string) {
+  const basename = path.split('/').pop()?.replace(/\.[^.]+$/, '') ?? path
+  return basename.replace(/[._-]+/g, ' ')
 }
 
 function shuffleArray<T>(array: T[]): T[] {

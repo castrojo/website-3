@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { wallpapers } from '../components/wolves/wallpapers-list'
 import WolvesComicReader from '../components/wolves/WolvesComicReader.vue'
+import { trackZeroFastFinalePhotoIds } from '../data/wolves-track-zero-slides'
 
 const source = {
   provider: 'youtube',
@@ -189,6 +190,11 @@ describe('wolvesComicReader', () => {
     })
     const shownImages: string[] = []
     let previousImage = ''
+    const reservedPaths = [...trackZeroFastFinalePhotoIds]
+    const reservedFirstSeenAt = new Map<string, number>()
+    const missingReservedPaths = reservedPaths.filter(path => !wallpapers.some(wallpaper =>
+      wallpaper.name === path || wallpaper.dayName === path || wallpaper.nightName === path,
+    ))
 
     for (let time = 0; time < 423; time += 0.5) {
       await wrapper.setProps({ playlistCurrentTime: time })
@@ -196,11 +202,17 @@ describe('wolvesComicReader', () => {
       if (image !== previousImage) {
         shownImages.push(image)
       }
+      const reservedPath = reservedPaths.find(path => image.includes(path))
+      if (reservedPath && !reservedFirstSeenAt.has(reservedPath)) {
+        reservedFirstSeenAt.set(reservedPath, time)
+      }
       previousImage = image
     }
 
     expect(new Set(shownImages).size).toBe(shownImages.length)
-    expect(new Set(shownImages).size).toBe(wallpapers.length)
+    expect(new Set(shownImages).size).toBe(wallpapers.length + missingReservedPaths.length)
+    expect([...reservedFirstSeenAt.keys()].sort()).toEqual(reservedPaths.sort())
+    expect([...reservedFirstSeenAt.values()].every(time => time >= 359 && time < 408)).toBe(true)
   })
 
   it('keeps every photo in a later-track shuffle available only once', async () => {
