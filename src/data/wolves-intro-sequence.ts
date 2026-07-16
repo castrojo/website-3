@@ -71,7 +71,7 @@ export interface IntroOverlayTextCue {
    * large dark dinosaur-silhouette mass sits in the lower frame, which reads better as a
    * legible backdrop for bottom-anchored text than the top.
    */
-  readonly textPosition?: 'top' | 'bottom'
+  readonly textPosition?: 'top' | 'bottom' | 'bottom-right'
   /**
    * Gilds a Guardian trailer callout with a gold treatment instead of the default silver/blue
    * plate, signifying leadership. Reserved for Christopher Blecker's "First Among Equals" cue
@@ -257,16 +257,6 @@ function bluefinMonthCrossfadePair(month: number): IntroBackgroundCrossfade {
 }
 
 /** Reversed stage: starts on the month's night frame and crossfades into its day frame. */
-function bluefinMonthCrossfadePairReversed(month: number): IntroBackgroundCrossfade {
-  const pair = bluefinMonthCrossfadePair(month)
-  return { day: pair.night, night: pair.day }
-}
-
-/** Single-stage form: crossfades day->night once over the cue's full duration. */
-function bluefinMonthCrossfade(month: number): readonly IntroBackgroundCrossfade[] {
-  return [bluefinMonthCrossfadePair(month)]
-}
-
 /**
  * The sequence played before the live playlist experience begins, in three parts:
  *
@@ -293,113 +283,90 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
       kind: 'text',
       // Cut down from the song's full 5:26 (326s) to a 60s excerpt per explicit user request
       // (2026-07-15, later widened from an initial 45s the same day). The user hand-edited
-      // which lines survive and rewrote several; the remaining cues below were retimed
-      // proportionally (each cue's share of the total shortened to keep the same relative
-      // pacing) to close the gaps left by removed lines and land on exactly 60s, with no
-      // dead/black gaps between cues.
+      // which lines survive and rewrote several. The remaining cues below are manually paced
+      // for readable holds across the same 60-second runtime, with no dead/black gaps.
       duration: 60,
       audioYoutubeVideoId: 'EB3IokHelRk',
       overlays: [
         // Cold open on total darkness -- nothing exists yet, before Earth or its wallpaper
         // scenes even enter the story. The bluefin-01..12 wallpaper cycle below only begins
         // once life/Earth is introduced starting with the next line.
-        { text: 'A Gardener and Winnower walked amongst the stars', start: 0, end: 5.89 },
+        { text: 'A Gardener and Winnower walked amongst the stars', start: 0, end: 4 },
         {
-          text: 'One to spread life, and one to cull the dross,',
-          start: 5.89,
-          end: 12.08,
-          backgroundCrossfade: bluefinMonthCrossfade(2),
+          text: `One to spread life, and one to cull the dross
+to shape the Garden of Earth`,
+          start: 4,
+          end: 11,
+          backgroundCrossfade: [bluefinMonthCrossfadePair(2), bluefinMonthCrossfadePair(1)],
+          textPosition: 'bottom-right',
         },
         {
-          text: 'to shape the garden.',
-          start: 12.08,
-          end: 14.77,
-          backgroundCrossfade: bluefinMonthCrossfade(1),
-        },
-        {
-          text: 'Forever entrapped in their roles for the greater good',
-          start: 14.77,
-          end: 19.67,
-          backgroundCrossfade: bluefinMonthCrossfade(9),
-          textPosition: 'bottom',
-        },
-        {
-          // A single unbroken line, cycling through two wallpaper scenes underneath it: scene
-          // 07 reversed (night->day) followed by scene 10 normal (day->night).
-          text: 'All for the love of their Children',
-          start: 19.67,
-          end: 25.02,
-          backgroundCrossfade: [bluefinMonthCrossfadePairReversed(7), bluefinMonthCrossfadePair(10)],
-        },
-        {
-          // The day->night crossfade IS the calamity: the background animates from the bright
-          // day frame to the dark night frame across this cue's full window (see
-          // wolves-intro-overlay-background-day/-night keyframes), and this line is overlaid
-          // directly on top of that fade rather than shown on a separate blank beat.
           // NOTE: the two asset filenames are inverted relative to their actual content
           // (confirmed by eye in-browser) — the file literally named "...-day.webp" is the
           // darker/dusk frame and "...-night.webp" is the brighter frame, so the `day`/`night`
           // keys below intentionally point at the opposite filenames to render correctly.
-          text: 'One day changed everything',
-          start: 25.02,
-          end: 37.46,
+          text: 'One day changed the Garden forever',
+          start: 11,
+          end: 20,
+          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
+        },
+        {
+          text: 'New Children arose, and filled the pattern.',
+          start: 20,
+          end: 23,
+          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
+        },
+        {
+          text: 'For eons Maintainer-Guardians cultivated the Garden ...',
+          start: 23,
+          end: 29,
+          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
+        },
+        {
+          text: `Until the Birth of Artificial Intelligence
+Society decided that Guardians were not only unnecessary,
+
+But a threat.`,
+          start: 29,
+          end: 36,
+          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
+        },
+        {
+          text: 'The armies of the galaxy came claim a bountiful, unprotected Garden',
+          start: 36,
+          end: 40,
           backgroundCrossfade: [{ day: 'wolves-intro/bluefin-collapse-night.webp', night: 'wolves-intro/bluefin-collapse-day.webp' }],
           calamity: true,
         },
         {
-          text: 'New Children arose, and filled the pattern.',
-          start: 37.46,
-          end: 39.91,
-          backgroundCrossfade: [{ day: 'img/wallpapers/bluefin-03-day.webp', night: 'img/wallpapers/bluefin-03-day.webp' }],
-        },
-        {
-          text: 'And the pinnacel, Maintainer-Guardians. For eons they thrived.',
-          start: 39.91,
-          end: 45.23,
-          backgroundCrossfade: bluefinMonthCrossfade(12),
-        },
-        { text: '', start: 45.23, end: 48.79, backgroundImage: 'wolves-intro/kubecon-hero-shot.webp', backgroundMotion: 'kenburns' },
-        {
-          text: `Until the Birth of AI,
-and Society Decided, that
-Guardians were not only unnecessary, but a threat.`,
-          start: 48.79,
-          end: 50.75,
-          backgroundCrossfade: bluefinMonthCrossfade(12),
-        },
-        // Survival and the Clarke quote below deliberately drop back to a plain black screen
-        // (no wallpaper) so the dominant quote's high-contrast, much-larger treatment reads as
-        // a hard tonal break from the wallpaper-lit stanzas that came before it.
-        { text: 'Now their Children fight for Survival.', start: 50.75, end: 53.43 },
-        {
-          text: 'In the space of a few days, humanity had lost its future,',
-          start: 53.43,
-          end: 55.14,
+          text: `In the space of a few days,
+humanity had lost its future`,
+          start: 40,
+          end: 47.5,
           emphasis: 'dominant',
+          textPosition: 'bottom',
+          backgroundImage: 'wolves-intro/bluefin-collapse-day.webp',
         },
         {
-          // Split into its own cue (2026-07-15, "the last quote needs to be broken up so it
-          // reads better") -- previously crammed both clauses into one cue with a mid-string
-          // blank line; now each clause gets its own full-screen beat, matching the pacing of
-          // the sibling lines around it.
-          text: 'for the heart of any race is destroyed,',
-          start: 55.14,
-          end: 56.37,
+          text: `For the heart of any race is destroyed
+
+And its will to survive is utterly Broken
+When its children are taken from it`,
+          start: 47.5,
+          end: 52,
           emphasis: 'dominant',
+          textPosition: 'bottom',
+          backgroundImage: 'wolves-intro/bluefin-collapse-day.webp',
         },
         {
-          text: 'and its will to survive is utterly broken,',
-          start: 56.37,
-          end: 57.60,
+          text: 'Now what\'s left of a proud order fights for survial, surrounded by predators',
+          start: 52,
+          end: 56,
           emphasis: 'dominant',
+          textPosition: 'bottom',
+          backgroundImage: 'wolves-intro/bluefin-collapse-day.webp',
         },
-        {
-          text: 'when its children are taken from it.',
-          start: 57.60,
-          end: 58.68,
-          emphasis: 'dominant',
-        },
-        { text: 'B L U E F I N — seven days to the wolves', start: 58.68, end: 60 },
+        { text: 'B L U E F I N — seven days to the wolves', start: 56, end: 60 },
       ],
     },
     {
@@ -464,7 +431,7 @@ Guardians were not only unnecessary, but a threat.`,
       // "Season of the Wish" promo card — see the comment block above.
       maxDuration: 114,
       overlays: [
-        { text: 'Void Warlock — Robert Killen — Reconciler of the Arcane', start: 5, end: 16.5 },
+        { text: 'Void Warlock — Robert Killen — Reconciler of the Plane', start: 5, end: 16.5 },
         { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 14.5, end: 24.5 },
         { text: 'Arc Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 },
         { text: 'Solar Hunter — Laura Santamaria — Paragon to the Order of 7', start: 70.5, end: 77 },

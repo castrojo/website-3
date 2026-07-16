@@ -567,7 +567,8 @@ onBeforeUnmount(() => {
       :class="{
         'wolves-intro-overlay-text-somber': isSomberTextSegment,
         'wolves-intro-overlay-text-dominant': activeCue?.emphasis === 'dominant',
-        'wolves-intro-overlay-text-top': activeCue?.backgroundCrossfade && activeCue.emphasis !== 'dominant' && !activeCue.calamity && activeCue.textPosition !== 'bottom',
+        'wolves-intro-overlay-text-top': activeCue?.backgroundCrossfade && activeCue.emphasis !== 'dominant' && !activeCue.calamity && activeCue.textPosition !== 'bottom' && activeCue.textPosition !== 'bottom-right',
+        'wolves-intro-overlay-text-bottom-right': activeCue?.textPosition === 'bottom-right',
       }"
       :style="isSomberTextSegment ? { animationDuration: `${somberFadeDuration}s` } : undefined"
     >
@@ -804,8 +805,8 @@ onBeforeUnmount(() => {
   right: 5%;
   margin: 0;
   color: #f5f5f5;
-  font-size: clamp(2.75rem, 6.2vw, 4.8rem);
-  line-height: 1.4;
+  font-size: clamp(3.25rem, 7vw, 6.5rem);
+  line-height: 1.25;
   text-shadow: 0 2px 12px rgb(0 0 0 / 80%);
   /* Some prologue cues author an explicit line break in their `text` (a JS/TS template
      literal newline) to control where a long line wraps -- preserve it instead of collapsing
@@ -819,6 +820,14 @@ onBeforeUnmount(() => {
 .wolves-intro-overlay-text-top {
   top: 10%;
   bottom: auto;
+}
+
+.wolves-intro-overlay-text-bottom-right {
+  left: auto;
+  width: min(90%, 100rem);
+  font-size: clamp(3.25rem, 7vw, 6.5rem);
+  line-height: 1.25;
+  text-align: right;
 }
 
 /* A slow, subtle, somber fade-in for the Prologue/Epilogue's black-screen text cards, paced to
@@ -880,9 +889,9 @@ onBeforeUnmount(() => {
   transform: translateY(-50%);
   text-align: center;
   font-weight: 700;
-  font-size: clamp(3.25rem, 7vw, 6.5rem);
-  line-height: 1.3;
-  letter-spacing: 0.01em;
+  font-size: clamp(4rem, 8vw, 8rem);
+  line-height: 1.2;
+  letter-spacing: 0.015em;
   text-shadow: 0 4px 24px rgb(0 0 0 / 90%);
 }
 

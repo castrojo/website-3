@@ -203,7 +203,7 @@ describe('wolvesComicReader', () => {
     expect(new Set(shownImages).size).toBe(wallpapers.length)
   })
 
-  it('keeps each later-track Flickr sequence stable and refreshes it for the next track', async () => {
+  it('keeps every photo in a later-track shuffle available only once', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     mockGalleryData([
       coverTrack,
@@ -242,24 +242,14 @@ describe('wolvesComicReader', () => {
     await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 0 })
     await flushPromises()
     expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
-    expect(galleryCaption(wrapper)).not.toBe(firstTrackStart)
+    expect(galleryCaption(wrapper)).toBe(firstTrackStart)
   })
 
-  it('spreads later-track Flickr events across each gallery segment', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0)
+  it('does not restart a later-track shuffle after its final photo', async () => {
     const photos = [
-      ...Array.from({ length: 100 }, (_, index) => ({
-        id: `na-${index}`,
-        server: '1',
-        secret: `na-${index}`,
-        title: `KC+CNC_NA_251109_Photo_${index}`,
-      })),
-      ...Array.from({ length: 100 }, (_, index) => ({
-        id: `eu-${index}`,
-        server: '1',
-        secret: `eu-${index}`,
-        title: `KC+CNC_EU_260322_Photo_${index}`,
-      })),
+      { id: 'photo-a', server: '1', secret: 'a', title: 'Photo A' },
+      { id: 'photo-b', server: '1', secret: 'b', title: 'Photo B' },
+      { id: 'photo-c', server: '1', secret: 'c', title: 'Photo C' },
     ]
     mockGalleryData([
       coverTrack,
@@ -274,64 +264,15 @@ describe('wolvesComicReader', () => {
       },
     ], new Response(JSON.stringify(photos)))
     const wrapper = mount(WolvesComicReader, {
-      props: { trackIndex: 0, playlistCurrentTime: 0 },
+      props: { trackIndex: 1, playlistCurrentTime: 0 },
     })
     await flushPromises()
-    await wrapper.setProps({ trackIndex: 1, playlistCurrentTime: 0 })
-    const firstCaption = galleryCaption(wrapper)
 
-    await wrapper.setProps({ playlistCurrentTime: 8 })
+    await wrapper.setProps({ playlistCurrentTime: 16 })
+    const finalCaption = galleryCaption(wrapper)
 
-    expect(galleryCaption(wrapper)).not.toBe(firstCaption)
-    expect([firstCaption, galleryCaption(wrapper)]).toEqual(expect.arrayContaining([
-      expect.stringContaining('KC+CNC_NA_251109'),
-      expect.stringContaining('KC+CNC_EU_260322'),
-    ]))
-  })
-
-  it('uses separate Flickr photo segments for all later tracks', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-    const photos = Array.from({ length: 600 }, (_, index) => ({
-      id: `photo-${index}`,
-      server: '1',
-      secret: String(index),
-      title: `Photo ${index}`,
-    }))
-    const tracks = [
-      coverTrack,
-      ...Array.from({ length: 6 }, (_, index) => ({
-        id: `later-track-${index + 1}`,
-        title: `Later Track ${index + 1}`,
-        artist: 'Artist',
-        artwork: `wolves-artwork/later-track-${index + 1}.jpg`,
-        youtubeVideoId: String(index + 1),
-        bpm: 120,
-        phraseBeats: 5,
-      })),
-    ]
-    mockGalleryData(tracks, new Response(JSON.stringify(photos)))
-    const wrapper = mount(WolvesComicReader, {
-      props: { trackIndex: 0, playlistCurrentTime: 0 },
-    })
-    await flushPromises()
-    await wrapper.setProps({ trackIndex: 1, playlistCurrentTime: 0 })
-
-    const captionsForTrack = async () => {
-      const captions = new Set<string>()
-      for (const second of Array.from({ length: 10 }, (_, index) => index * 10)) {
-        await wrapper.setProps({ playlistCurrentTime: second })
-        captions.add(galleryCaption(wrapper))
-      }
-      return captions
-    }
-
-    const shownCaptions = new Set<string>()
-    for (const trackIndex of [1, 2, 3, 4, 5, 6]) {
-      await wrapper.setProps({ trackIndex, playlistCurrentTime: 0 })
-      const captions = await captionsForTrack()
-      expect([...captions].some(caption => shownCaptions.has(caption))).toBe(false)
-      captions.forEach(caption => shownCaptions.add(caption))
-    }
+    await wrapper.setProps({ playlistCurrentTime: 24 })
+    expect(galleryCaption(wrapper)).toBe(finalCaption)
   })
 
   it('excludes Track 0 People Flickr photos from later tracks', async () => {
@@ -597,7 +538,12 @@ describe('wolvesComicReader', () => {
         artwork: 'wolves-artwork/fallback-tempo.jpg',
         youtubeVideoId: '1',
       },
-    ])
+    ], new Response(JSON.stringify([
+      { id: 'photo-a', server: '1', secret: 'a', title: 'Photo A' },
+      { id: 'photo-b', server: '1', secret: 'b', title: 'Photo B' },
+      { id: 'photo-c', server: '1', secret: 'c', title: 'Photo C' },
+      { id: 'photo-d', server: '1', secret: 'd', title: 'Photo D' },
+    ])))
     const firstRun = mount(WolvesComicReader, {
       props: { trackIndex: 1, playlistCurrentTime: 0 },
     })

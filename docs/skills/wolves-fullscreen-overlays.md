@@ -92,6 +92,10 @@ bugs before being understood.
    dimensions, hit targets, and disabled state in `WolvesControlBar.vue`.
    Use `:deep()` only for deliberate context-specific overrides, and assert
    rendered bounds in Chromium for every fullscreen movie stage.
+9. **Intro typography is theater typography.** The Wolves intro is viewed at
+   10-foot theater distance: standard cues must remain theater-readable, and
+   dominant cues must be visibly larger and heavier. Fit long user-authored
+   copy with line breaks, timing, or separate cues, never reduced type.
 
 ## Common Rationalizations
 

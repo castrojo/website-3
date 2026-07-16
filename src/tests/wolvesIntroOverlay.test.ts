@@ -258,6 +258,29 @@ describe('wolvesIntroOverlay text segments', () => {
     expect(wrapper.text()).toContain('Prologue')
   })
 
+  it('keeps a bottom-right text cue out of the top placement', async () => {
+    const textSequence = [
+      {
+        id: 'wolves-prologue',
+        kind: 'text' as const,
+        duration: 5,
+        overlays: [{
+          text: 'One to spread life, and one to cull the dross to shape the garden',
+          start: 0,
+          end: 5,
+          backgroundCrossfade: [{ day: 'day.webp', night: 'night.webp' }],
+          textPosition: 'bottom-right' as const,
+        }],
+      },
+    ]
+    const wrapper = mount(WolvesIntroOverlay, { props: { videos: textSequence } })
+    await flushPromises()
+
+    const text = wrapper.get('.wolves-intro-overlay-text')
+    expect(text.classes()).toContain('wolves-intro-overlay-text-bottom-right')
+    expect(text.classes()).not.toContain('wolves-intro-overlay-text-top')
+  })
+
   it('auto-advances once the authored duration elapses', async () => {
     const textSequence = [
       { id: 'wolves-prologue', kind: 'text' as const, duration: 1 },

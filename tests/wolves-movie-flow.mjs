@@ -326,11 +326,9 @@ try {
   })
   await page.waitForTimeout(150)
   const secondGalleryCaption = await page.textContent('.flickr-caption')
-  const firstGalleryEvent = firstGalleryCaption?.match(/KC\+CNC_[^_]+_[^_\s]+/)?.[0]
-  const secondGalleryEvent = secondGalleryCaption?.match(/KC\+CNC_[^_]+_[^_\s]+/)?.[0]
-  assertTruthy('Track 1 starts with a Flickr event caption', firstGalleryEvent)
-  assertTruthy('Track 1 advances to another Flickr event caption', secondGalleryEvent)
-  assert('Track 1 alternates events between consecutive gallery slides', firstGalleryEvent === secondGalleryEvent, false)
+  assertTruthy('Track 1 starts with a Flickr caption', firstGalleryCaption)
+  assertTruthy('Track 1 advances to another Flickr caption', secondGalleryCaption)
+  assert('Track 1 does not repeat a gallery photo before exhausting the shuffle', firstGalleryCaption === secondGalleryCaption, false)
   await captureStage(page, 'track-one')
 
   await page.evaluate(() => {

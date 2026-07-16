@@ -7,7 +7,7 @@ Renders the soundtrack-synced Wolves visual presentation.
 import type { SoundtrackTrack, WolvesSoundtrackManifest } from '@/data/wolves-soundtrack'
 
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { buildWolvesGalleryCycle } from '@/data/wolves-gallery-cycle'
+import { shuffleWolvesGalleryPhotos } from '@/data/wolves-gallery-shuffle'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
 import { jonoBaconSlideId, jonoBaconTrackZeroWindow, pinJonoBaconAtTrackZeroWindow } from '@/data/wolves-track-zero-slides'
 import { wallpapers } from './wallpapers-list'
@@ -43,7 +43,6 @@ const trackZeroFlickrPhotoIds = new Set(
 )
 const flickrPhotos = ref<{ id: string, server: string, secret: string, title: string }[]>([])
 const laterTrackPhotos = ref<any[]>([])
-const galleryCycle = ref<any[]>([])
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
 
 const activeBuffer = ref<'A' | 'B'>('A')
@@ -53,7 +52,6 @@ const opacityA = ref(1)
 const opacityB = ref(0)
 const slideAIndex = ref(-1)
 const slideBIndex = ref(-1)
-const GALLERY_SEGMENT_SIZE = 100
 const TIMELINE_BOUNDARY_EPSILON_SECONDS = 0.001
 
 const activePhoto = computed(() => {
@@ -545,7 +543,7 @@ const activeFlickrIndex = computed(() => {
     return 0
   }
 
-  return Math.floor(props.playlistCurrentTime / (laterTrackSlideHold.value ?? 7)) % mixedPhotos.value.length
+  return Math.floor(props.playlistCurrentTime / (laterTrackSlideHold.value ?? 7))
 })
 
 const activeDisplayIndex = computed(() => {
@@ -620,14 +618,14 @@ watch(() => props.trackIndex, (trackIndex, previousTrackIndex) => {
     activeBuffer.value = 'A'
   }
   if (trackIndex !== undefined && trackIndex > 0) {
-    snapshotLaterTrackPhotos(trackIndex)
+    snapshotLaterTrackPhotos()
   }
 }, { immediate: true })
 
 watch(flickrPhotos, (photos) => {
   const trackIndex = props.trackIndex
   if (photos.length > 0 && trackIndex !== undefined && trackIndex > 0) {
-    snapshotLaterTrackPhotos(trackIndex)
+    snapshotLaterTrackPhotos()
   }
 })
 
@@ -660,7 +658,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return copy
 }
 
-function snapshotLaterTrackPhotos(trackIndex: number) {
+function snapshotLaterTrackPhotos() {
   const remotePhotos = flickrPhotos.value
     .filter(photo => !trackZeroFlickrPhotoIds.has(photo.id))
     .map(photo => ({
@@ -674,19 +672,11 @@ function snapshotLaterTrackPhotos(trackIndex: number) {
       rawPhoto: photo
     }))
   if (remotePhotos.length === 0) {
-    galleryCycle.value = []
     laterTrackPhotos.value = []
     return
   }
 
-  if (galleryCycle.value.length === 0) {
-    galleryCycle.value = buildWolvesGalleryCycle(remotePhotos)
-  }
-
-  const startIndex = galleryCycle.value.length > 0
-    ? ((trackIndex - 1) * GALLERY_SEGMENT_SIZE) % galleryCycle.value.length
-    : 0
-  laterTrackPhotos.value = [...galleryCycle.value.slice(startIndex), ...galleryCycle.value.slice(0, startIndex)]
+  laterTrackPhotos.value = shuffleWolvesGalleryPhotos(remotePhotos)
 }
 
 function deterministicShuffle<T>(array: T[], seed = 42): T[] {

@@ -29,10 +29,11 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 2. Confirm the requested change lands entirely on an open surface (see the Open Surfaces table in the reference). If it requires a locked surface, stop and tell the user.
 3. Apply user-supplied text verbatim. Never generate fiction, chapter names, or creative prose (see `docs/skills/editorial-policy.md`).
 4. Keep the three Track 0 content layers separate: top-bar comms (`wolves-incoming-signal.txt`), thesis overlay (`wolves-thesis-sequence.ts`, locked), lore column (`src/data/lore/*.md`).
-5. For an explicit owner-authorized fixed slide window, put the identifier and interval in `src/data/wolves-track-zero-slides.ts`; add independent reorder, rendered-boundary, and player-progress assertions. Do not turn a generated-order coincidence into an undocumented lock.
-6. For post-hero Flickr galleries, group photos by the first three underscore-separated title fields and emit one shuffled photo per available event per round. Preserve Track 0's authored schedule and locks.
-7. Run the "Before You Commit" checklist in the reference: diff confined to open surfaces, lint/typecheck/test/build green, `public/dakota-versions.json` unstaged, real-player timestamp verification for timeline-adjacent edits.
-8. After pushing, confirm the pushed SHA's "Deploy to GitHub Pages" workflow succeeds before reporting completion.
+5. Treat intro copy as a 10-foot theater experience: retain theater-readable type, use user-authorized line breaks and cue splits for long copy, and keep `dominant` cues more forceful than standard cues. Do not make text smaller to fit.
+6. For an explicit owner-authorized fixed slide window, put the identifier and interval in `src/data/wolves-track-zero-slides.ts`; add independent reorder, rendered-boundary, and player-progress assertions. Do not turn a generated-order coincidence into an undocumented lock.
+7. For post-hero Flickr galleries, use one complete Fisher-Yates shuffle per track. Do not group or rotate photos. Preserve Track 0's authored schedule and locks.
+8. Run the "Before You Commit" checklist in the reference: diff confined to open surfaces, lint/typecheck/test/build green, `public/dakota-versions.json` unstaged, real-player timestamp verification for timeline-adjacent edits.
+9. After pushing, confirm the pushed SHA's "Deploy to GitHub Pages" workflow succeeds before reporting completion.
 
 ## Common Rationalizations
 
@@ -43,7 +44,7 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 | "I can write placeholder lore that fits the tone." | The user authors all fiction. Placeholders are standard lorem ipsum only. |
 | "The build passed, so the change is verified." | A green build is not verification. Seek the real Track 0 player at affected timestamps and check the live deploy. |
 | "The deterministic shuffle already places this slide correctly." | Generated order is not a timing lock. An owner-authorized fixed window needs explicit data plus independent browser assertions. |
-| "A flat random Flickr shuffle is diverse enough." | Random ordering can cluster a single event. Later-track gallery cycles must use event rounds. |
+| "Photos need event buckets to make the gallery diverse." | The owner selected a simple full-pool shuffle. Do not introduce event grouping or rotation. |
 
 ## Red Flags
 
@@ -53,7 +54,7 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 - Hand-edits to `src/components/wolves/wallpapers-list.ts` (generated) or thesis constants.
 - Adding or changing the theater-caption rendering mechanism itself in `WolvesComicReader.vue` (it already exists; only the `curatedDescriptions` text content is an open surface).
 - A timing-sensitive slide that remains positioned only by generated-array order.
-- A post-hero gallery cycle built from a flat Flickr shuffle.
+- A post-hero gallery implementation that groups or rotates photos.
 - Emojis or ellipses introduced anywhere.
 
 ## Verification
@@ -63,5 +64,5 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 - [ ] All added prose came verbatim from the user or recovered authored sources.
 - [ ] Timeline anchors (0:00, 150-220, 398-425) and thesis text are byte-identical.
 - [ ] Each owner-authorized fixed slide window has ordering, rendered-boundary, and player-progress assertions.
-- [ ] Later-track gallery assertions show consecutive slides from distinct event groups.
+- [ ] Later-track gallery assertions show a non-repeating shuffled sequence.
 - [ ] Affected Track 0 timestamps verified on the real player; deploy workflow for the pushed SHA succeeded.

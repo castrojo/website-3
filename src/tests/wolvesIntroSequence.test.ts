@@ -99,4 +99,107 @@ describe('wolves intro overlay sequence', () => {
     expect(epilogue.kind).toBe('text')
     expect(sequence.every(segment => segment.overlays?.length)).toBe(true)
   })
+
+  it('gives the revised prologue copy readable holds within its 60-second runtime', () => {
+    const [prologue] = buildIntroVideoSequence()
+    if (!isTextSegment(prologue)) {
+      throw new Error('Expected the first intro segment to be text-only')
+    }
+
+    expect(prologue.duration).toBe(60)
+    expect(prologue.overlays).toEqual(expect.arrayContaining([
+      expect.objectContaining({ text: 'A Gardener and Winnower walked amongst the stars', start: 0, end: 4 }),
+      expect.objectContaining({
+        text: `One to spread life, and one to cull the dross
+to shape the Garden of Earth`,
+        start: 4,
+        end: 11,
+        textPosition: 'bottom-right',
+      }),
+      expect.objectContaining({ text: 'One day changed the Garden forever', start: 11, end: 20 }),
+      expect.objectContaining({
+        text: 'Until the Birth of Artificial Intelligence\nSociety decided that Guardians were not only unnecessary,\n\nBut a threat.',
+        start: 29,
+        end: 36,
+      }),
+      expect.objectContaining({
+        text: `In the space of a few days,
+humanity had lost its future`,
+        start: 40,
+        end: 47.5,
+        textPosition: 'bottom',
+      }),
+      expect.objectContaining({
+        text: `For the heart of any race is destroyed
+
+And its will to survive is utterly Broken
+When its children are taken from it`,
+        start: 47.5,
+        end: 52,
+        textPosition: 'bottom',
+      }),
+      expect.objectContaining({
+        text: 'Now what\'s left of a proud order fights for survial, surrounded by predators',
+        start: 52,
+        end: 56,
+        textPosition: 'bottom',
+      }),
+      expect.objectContaining({ text: 'B L U E F I N — seven days to the wolves', start: 56, end: 60 }),
+    ]))
+    expect(prologue.overlays?.every(cue => !cue.text.includes('<br>'))).toBe(true)
+    expect(prologue.overlays?.every(cue => !cue.text.includes('(hold this'))).toBe(true)
+    expect(prologue.overlays?.every((cue, index, cues) =>
+      index === 0 ? cue.start === 0 : cue.start === cues[index - 1].end,
+    )).toBe(true)
+  })
+
+  it('fades the Collapse to night with the armies line before the combined closing words', () => {
+    const [prologue] = buildIntroVideoSequence()
+    if (!isTextSegment(prologue)) {
+      throw new Error('Expected the first intro segment to be text-only')
+    }
+
+    const serializedCues = JSON.stringify(prologue.overlays)
+    expect(serializedCues).not.toContain('bluefin-12')
+    expect(prologue.overlays).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        text: 'One day changed the Garden forever',
+        backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
+      }),
+      expect.objectContaining({
+        text: 'The armies of the galaxy came claim a bountiful, unprotected Garden',
+        start: 36,
+        end: 40,
+        backgroundCrossfade: [{
+          day: 'wolves-intro/bluefin-collapse-night.webp',
+          night: 'wolves-intro/bluefin-collapse-day.webp',
+        }],
+      }),
+      expect.objectContaining({
+        text: `In the space of a few days,
+humanity had lost its future`,
+        start: 40,
+        end: 47.5,
+        backgroundImage: 'wolves-intro/bluefin-collapse-day.webp',
+        textPosition: 'bottom',
+      }),
+      expect.objectContaining({
+        text: `For the heart of any race is destroyed
+
+And its will to survive is utterly Broken
+When its children are taken from it`,
+        start: 47.5,
+        end: 52,
+        backgroundImage: 'wolves-intro/bluefin-collapse-day.webp',
+        textPosition: 'bottom',
+      }),
+      expect.objectContaining({
+        text: 'Now what\'s left of a proud order fights for survial, surrounded by predators',
+        start: 52,
+        end: 56,
+        backgroundImage: 'wolves-intro/bluefin-collapse-day.webp',
+        textPosition: 'bottom',
+      }),
+    ]))
+  })
 })
