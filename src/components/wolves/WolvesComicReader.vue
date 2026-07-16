@@ -218,6 +218,7 @@ interface TimelineSlide {
   endTime: number
   fit?: 'cover' | 'contain'
   description?: string
+  theaterTitleOnly?: boolean
 }
 
 const timelineSlides = computed<TimelineSlide[]>(() => {
@@ -233,7 +234,8 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     dayName: wp.dayName,
     nightName: wp.nightName,
     fit: wp.fit,
-    description: wp.description
+    description: wp.description,
+    theaterTitleOnly: wp.theaterTitleOnly,
   }))
 
   const localPeople = wallpapers.filter((wp) => {
@@ -248,7 +250,8 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     dayName: wp.dayName,
     nightName: wp.nightName,
     fit: wp.fit,
-    description: wp.description
+    description: wp.description,
+    theaterTitleOnly: wp.theaterTitleOnly,
   }))
 
   const daynightShowcase = localShowcase.filter(wp => wp.type === 'daynight')
@@ -932,21 +935,25 @@ onBeforeUnmount(() => {
               </template>
             </div>
 
-            <!-- Sleek photo caption: slides with a `description` (e.g. a real interview still)
-                 get a larger fullscreen "theater" caption designed for a 10-foot viewing
-                 distance instead of the standard small pill caption. When a slide has no
-                 description, fall back to the compact pill while keeping the title visible. -->
-            <div v-if="activePhoto && activePhoto.description" class="wallpaper-theater-caption">
+            <!-- Sleek photo caption: slides with a description or an owner-authorized title-only
+                 banner get the large fullscreen theater treatment instead of the compact pill. -->
+            <div
+              v-if="activePhoto && (activePhoto.description || activePhoto.theaterTitleOnly)"
+              class="wallpaper-theater-caption"
+              :class="{ 'is-title-only': activePhoto.theaterTitleOnly }"
+            >
               <p class="wallpaper-theater-caption-title">
                 {{ activePhoto.title }}
               </p>
-              <p
-                v-for="(paragraph, pIdx) in activePhoto.description.split('\n\n')"
-                :key="pIdx"
-                class="wallpaper-theater-caption-body"
-              >
-                {{ paragraph }}
-              </p>
+              <template v-if="activePhoto.description">
+                <p
+                  v-for="(paragraph, pIdx) in activePhoto.description.split('\n\n')"
+                  :key="pIdx"
+                  class="wallpaper-theater-caption-body"
+                >
+                  {{ paragraph }}
+                </p>
+              </template>
             </div>
             <div v-else-if="activePhoto" class="flickr-caption font-mono">
               <span class="caption-label text-cyan">
@@ -1011,20 +1018,25 @@ onBeforeUnmount(() => {
                       alt="Bluefin Dusk - Night"
                     >
                   </div>
-                  <!-- Decorative caption: slides with a `description` (e.g. a real interview
-                       still) get a larger fullscreen "theater" caption designed for a 10-foot
-                       viewing distance instead of the standard small archive pill. -->
-                  <div v-if="wp.description" class="wallpaper-theater-caption">
+                  <!-- Decorative caption: description-backed and owner-authorized title-only
+                       slides use the large fullscreen theater treatment. -->
+                  <div
+                    v-if="wp.description || wp.theaterTitleOnly"
+                    class="wallpaper-theater-caption"
+                    :class="{ 'is-title-only': wp.theaterTitleOnly }"
+                  >
                     <p class="wallpaper-theater-caption-title">
                       {{ wp.title }}
                     </p>
-                    <p
-                      v-for="(paragraph, pIdx) in wp.description.split('\n\n')"
-                      :key="pIdx"
-                      class="wallpaper-theater-caption-body"
-                    >
-                      {{ paragraph }}
-                    </p>
+                    <template v-if="wp.description">
+                      <p
+                        v-for="(paragraph, pIdx) in wp.description.split('\n\n')"
+                        :key="pIdx"
+                        class="wallpaper-theater-caption-body"
+                      >
+                        {{ paragraph }}
+                      </p>
+                    </template>
                   </div>
                   <div v-else class="wallpaper-caption font-mono">
                     <span class="caption-label text-cyan">BLUEFIN ARCHIVE //</span> {{ wp.title || 'Untitled slide' }}
@@ -1417,6 +1429,22 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 30px rgb(0 0 0 / 55%);
   backdrop-filter: blur(6px);
   text-shadow: 0 2px 8px rgb(0 0 0 / 70%);
+
+  &.is-title-only {
+    bottom: 8%;
+    width: min(94%, 76rem);
+    max-height: 70%;
+    padding: clamp(1.5rem, 1rem + 2vw, 3.5rem);
+    text-align: center;
+
+    .wallpaper-theater-caption-title {
+      margin: 0;
+      font-size: clamp(3rem, 1.8rem + 3.5vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1;
+      color: #e0f2fe;
+    }
+  }
 }
 
 .wallpaper-theater-caption-title {

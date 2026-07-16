@@ -257,6 +257,37 @@ try {
     return activeLayer?.querySelector('img')?.getAttribute('src')
   })
   assertTruthy('Jono Bacon slide is active at 2:47.8', jonoAtStart?.includes('interview-jono-bacon-cult-psychology-kubernetes.webp'))
+  const jonoBanner = page.locator('.wallpaper-theater-caption.is-title-only')
+  assert('Jono Cult Psychology banner is visible', await jonoBanner.isVisible(), true)
+  assertTruthy('Jono Cult Psychology banner preserves its exact title', (await jonoBanner.textContent())?.includes('The Cult Psychology of Kubernetes'))
+  const jonoBannerMetrics = await jonoBanner.evaluate((banner) => {
+    const title = banner.querySelector('.wallpaper-theater-caption-title')
+    const viewer = document.querySelector('.flickr-gallery-wrapper')
+    const bannerRect = banner.getBoundingClientRect()
+    const viewerRect = viewer?.getBoundingClientRect()
+    return {
+      display: getComputedStyle(banner).display,
+      fontSize: Number.parseFloat(getComputedStyle(title).fontSize),
+      scrolls: banner.scrollHeight > banner.clientHeight + 1,
+      withinViewer: Boolean(viewerRect
+        && bannerRect.left >= viewerRect.left
+        && bannerRect.right <= viewerRect.right
+        && bannerRect.top >= viewerRect.top
+        && bannerRect.bottom <= viewerRect.bottom),
+    }
+  })
+  assert('Jono Cult Psychology banner uses a block theater layout', jonoBannerMetrics.display, 'block')
+  assertTruthy('Jono Cult Psychology banner uses 10-foot typography', jonoBannerMetrics.fontSize >= (width < 600 ? 30 : 48))
+  assert('Jono Cult Psychology banner does not scroll', jonoBannerMetrics.scrolls, false)
+  assert('Jono Cult Psychology banner fits the viewer', jonoBannerMetrics.withinViewer, true)
+  assert('Track 0 top HUD remains visible during Jono', await page.locator('.immersive-hud-header').isVisible(), true)
+  assert('Track 0 lower thesis overlay remains inactive during Jono', await page.locator('.thesis-overlay').count(), 0)
+
+  await page.evaluate(() => {
+    window.__mockWolvesSoundtrackPlayer.seekTo(171.878, true)
+  })
+  await page.waitForTimeout(150)
+  assert('Jono Cult Psychology banner persists through 2:51.878', await jonoBanner.isVisible(), true)
 
   await page.evaluate(() => {
     window.__mockWolvesSoundtrackPlayer.seekTo(171.879, true)
@@ -267,6 +298,7 @@ try {
     return activeLayer?.querySelector('img')?.getAttribute('src')
   })
   assertTruthy('Marina Moore slide starts at 2:51.879', marinaAtStart?.includes('kubecon-55168684055.webp'))
+  assert('Jono Cult Psychology banner hands off at 2:51.879', await jonoBanner.count(), 0)
   const marinaCaption = await page.locator('.flickr-caption').textContent()
   assertTruthy('Marina Moore caption is visible', marinaCaption?.includes('Marina Moore'))
   assert('Track 0 top HUD remains visible during Marina Moore', await page.locator('.immersive-hud-header').isVisible(), true)

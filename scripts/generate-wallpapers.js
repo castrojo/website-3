@@ -190,6 +190,11 @@ const curatedTitles = {
 const curatedDescriptions = {
 }
 
+// Owner-authorized title-only 10-foot theater banner for the Track 0 Jono cue.
+const titleOnlyTheaterCaptions = new Set([
+  'interview-jono-bacon-cult-psychology-kubernetes',
+])
+
 function formatTitle(filename) {
   const base = filename.replace(/\.[^/.]+$/, '')
   if (curatedTitles[base]) {
@@ -313,7 +318,8 @@ async function generate() {
       type: 'single',
       name: `wolves/people/${file}`,
       title: formatTitle(base),
-      ...(description ? { description } : {})
+      ...(description ? { description } : {}),
+      ...(titleOnlyTheaterCaptions.has(base) ? { theaterTitleOnly: true } : {})
     })
   }
 
@@ -332,6 +338,10 @@ export interface Wallpaper {
    * isn't enough context.
    */
   description?: string
+  /**
+   * Renders the title alone as a large theater banner instead of the compact caption pill.
+   */
+  theaterTitleOnly?: boolean
 }
 
 export const wallpapers: Wallpaper[] = ${JSON.stringify(wallpapers, null, 2)}

@@ -12,6 +12,10 @@ export interface Wallpaper {
    * isn't enough context.
    */
   description?: string
+  /**
+   * Renders the title alone as a large theater banner instead of the compact caption pill.
+   */
+  theaterTitleOnly?: boolean
 }
 
 export const wallpapers: Wallpaper[] = [
@@ -530,7 +534,8 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/interview-jono-bacon-cult-psychology-kubernetes.webp",
-    "title": "Jono Bacon, Stateshift — \"The Cult Psychology of Kubernetes\""
+    "title": "Jono Bacon, Stateshift — \"The Cult Psychology of Kubernetes\"",
+    "theaterTitleOnly": true
   },
   {
     "type": "single",

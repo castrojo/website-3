@@ -203,6 +203,27 @@ describe('wolvesComicReader', () => {
     expect(activeTimelineImage(wrapper)).not.toContain(m2Path)
   })
 
+  it('renders Jono Bacon’s Cult Psychology title as a theater banner', async () => {
+    const wrapper = mount(WolvesComicReader, {
+      props: {
+        trackIndex: 0,
+        playlistCurrentTime: 167.8,
+      },
+    })
+
+    const banner = wrapper.get('.wallpaper-theater-caption.is-title-only')
+    expect(banner.get('.wallpaper-theater-caption-title').text()).toBe('Jono Bacon, Stateshift — "The Cult Psychology of Kubernetes"')
+    expect(wrapper.find('.flickr-caption').exists()).toBe(false)
+
+    const archiveWrapper = mount(WolvesComicReader)
+    const archiveSlides = (archiveWrapper.vm as any).shuffledWallpapers as Array<{ name?: string }>
+    const jonoSlideIndex = archiveSlides.findIndex(slide => slide.name === 'wolves/people/interview-jono-bacon-cult-psychology-kubernetes.webp')
+    ;(archiveWrapper.vm as any).page = jonoSlideIndex + 2
+    await nextTick()
+
+    expect(archiveWrapper.get('.wallpaper-theater-caption.is-title-only').text()).toContain('The Cult Psychology of Kubernetes')
+  })
+
   it('uses each Track 0 wallpaper once', async () => {
     const wrapper = mount(WolvesComicReader, {
       props: {
@@ -640,9 +661,11 @@ describe('wolvesComicReader', () => {
     expect(dusk?.fit).toBeUndefined()
   })
 
-  it('renders a large theater caption only for wallpapers with a description, leaving every other slide on the standard small caption pill', async () => {
+  it('renders title-only theater captions only for explicitly flagged wallpapers', async () => {
     const wallpapersWithDescription = wallpapers.filter(wp => wp.description)
     expect(wallpapersWithDescription.length, 'expected no wallpaper to carry a description after simplifying these interview captions').toBe(0)
+    const jono = wallpapers.find(wp => wp.name === 'wolves/people/interview-jono-bacon-cult-psychology-kubernetes.webp')
+    expect(jono?.theaterTitleOnly).toBe(true)
 
     // Track 0 (the opening/"guardian" video) is the only rotation that shows local People
     // wallpapers like these; later tracks only rotate remote Flickr photos.
@@ -652,14 +675,13 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    for (let second = 0; second <= 423; second += 1) {
-      await wrapper.setProps({ playlistCurrentTime: second })
-      const theaterCaption = wrapper.find('.wallpaper-theater-caption')
-      const smallCaption = wrapper.find('.flickr-caption')
+    await wrapper.setProps({ playlistCurrentTime: 167.8 })
+    expect(wrapper.get('.wallpaper-theater-caption.is-title-only').findAll('.wallpaper-theater-caption-body')).toHaveLength(0)
+    expect(wrapper.find('.flickr-caption').exists()).toBe(false)
 
-      expect(theaterCaption.exists()).toBe(false)
-      expect(smallCaption.exists()).toBe(true)
-    }
+    await wrapper.setProps({ playlistCurrentTime: 171.879 })
+    expect(wrapper.find('.wallpaper-theater-caption').exists()).toBe(false)
+    expect(wrapper.find('.flickr-caption').exists()).toBe(true)
   })
 
   it('keeps long wallpaper page titles visible in the compact archive caption', async () => {
