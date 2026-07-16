@@ -86,6 +86,12 @@ bugs before being understood.
    dispatching the scrub event, and cross-check against the on-screen time
    readout (e.g. `.wolves-intro-overlay-debug-time`) rather than assuming your
    requested value took effect.
+8. **Shared controls own their geometry.** A parent component's `<style scoped>`
+   rules do not reach nested buttons rendered by a child component; only the
+   child's root receives the parent's scope attribute. Put required button
+   dimensions, hit targets, and disabled state in `WolvesControlBar.vue`.
+   Use `:deep()` only for deliberate context-specific overrides, and assert
+   rendered bounds in Chromium for every fullscreen movie stage.
 
 ## Common Rationalizations
 
@@ -96,6 +102,7 @@ bugs before being understood.
 | "I already loaded the YouTube API once this test file, no need to reset." | The module-level cache is a true singleton across the whole file. Skipping the reset leaks state into later tests and produces flaky, order-dependent failures. |
 | "One `await` guard at the top of the function is enough." | Only protects against cancellation before the first await. A second await reopens the race window. |
 | "The plate name changed right after I scrubbed, so the boundary must be off." | Check how long you waited before reading. If it's more than ~300ms, the poll loop may have already advanced `currentTime` past your target — re-test with an immediate read and cross-check the time readout. |
+| "Passing a class to `WolvesControlBar` lets this component size its buttons." | A scoped parent selector cannot style nested child DOM. Keep shared control geometry in `WolvesControlBar.vue`, or use an intentional `:deep()` override. |
 
 ## Red Flags
 
@@ -116,6 +123,8 @@ bugs before being understood.
 - A cue-boundary verification that reads state hundreds of milliseconds after
   setting the debug scrub value, rather than immediately — the reading may
   reflect a poll-drifted time, not the value you actually set.
+- A control bar exists in the DOM but its buttons have zero-sized bounds or
+  cannot be clicked in Chromium.
 
 ## Verification
 
@@ -137,3 +146,9 @@ bugs before being understood.
 - [ ] Any cue-boundary frame verification reads state immediately after
       dispatching the scrub event and cross-checks the on-screen time
       readout, not just the requested scrub value.
+- [ ] Every movie stage that renders `WolvesControlBar` has visible,
+      viewport-contained, clickable controls in desktop and mobile Chromium.
+
+## Sources
+
+- Vue scoped CSS and `:deep()` behavior: `/vuejs/vue`
