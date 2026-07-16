@@ -22,7 +22,9 @@ describe('wolves Track 0 slide locks', () => {
     const newPhoto = { id: 'wolves/people/liz.webp' }
     const regular = [{ id: 'people-a' }, { id: 'people-b' }]
     const { regularSlides, finaleSlides } = splitTrackZeroFastFinaleSlides([
-      regular[0], newPhoto, regular[1],
+      regular[0],
+      newPhoto,
+      regular[1],
     ])
 
     expect(trackZeroFastFinalePhotoIds).toContain(newPhoto.id)
