@@ -25,7 +25,9 @@ import { chromium } from 'playwright'
 
 const BASE_URL = process.env.WOLVES_BASE_URL ?? 'http://127.0.0.1:5173'
 const WOLVES_URL = `${BASE_URL}/wolves/`
-const VIEWPORT = { width: 1440, height: 900 }
+const [width, height] = (process.env.WOLVES_VIEWPORT ?? '1440x900').split('x').map(Number)
+const VIEWPORT = { width, height }
+const SCREENSHOT_DIR = process.env.WOLVES_SCREENSHOT_DIR
 
 // First video IDs from src/data/wolves-creator-shorts.ts.
 // These are used to identify the left (Cassidy) and right (Lindsay) mock players.
@@ -64,6 +66,21 @@ function assertTruthy(label, actual) {
     console.error(`        expected a truthy value, got: ${actual}`)
   }
   return ok
+}
+
+async function hasVisibleControl(page, label) {
+  const control = page.getByLabel(label)
+  const count = await control.count()
+  const visible = await Promise.all(
+    Array.from({ length: count }, (_, index) => control.nth(index).isVisible()),
+  ).then(values => values.some(Boolean))
+  assert(`Visible ${label} control`, visible, true)
+}
+
+async function captureStage(page, name) {
+  if (SCREENSHOT_DIR) {
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/${name}.png` })
+  }
 }
 
 const browser = await chromium.launch({ headless: true })
@@ -183,6 +200,24 @@ try {
   }
   await page.waitForTimeout(1000)
 
+  // The same forward/play-pause controls must cover the complete movie, including
+  // the fullscreen prologue and Destiny segments that conceal the soundtrack footer.
+  await page.getByRole('button', { name: /JOIN THE EVOLUTION/i }).click()
+  await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 10_000 })
+  await hasVisibleControl(page, 'Pause intro')
+  await hasVisibleControl(page, 'Next section')
+  await captureStage(page, 'prologue')
+
+  await page.getByLabel('Next section').click()
+  await page.waitForSelector('.wolves-intro-overlay-player', { state: 'visible', timeout: 10_000 })
+  await hasVisibleControl(page, 'Pause intro')
+  await hasVisibleControl(page, 'Next section')
+  await captureStage(page, 'destiny')
+
+  // Complete the remaining intro stages before exercising the playlist handoff.
+  await page.getByLabel('Next section').click()
+  await page.getByLabel('Next section').click()
+
   // Use the existing test-only progress helper to jump straight into Track 0
   // playback without showing the intro overlay. Wait for the Wolves app to mount
   // and expose the helper on window first.
@@ -211,6 +246,9 @@ try {
 
   const interstitialVisible = await page.isVisible(interstitialSelector)
   assert('Creator Shorts interstitial is visible at Track 0 -> 1', interstitialVisible, true)
+  await hasVisibleControl(page, 'Pause video')
+  await hasVisibleControl(page, 'Skip video')
+  await captureStage(page, 'creator-shorts')
 
   // Verify both sides of the ping-pong stage mounted with the expected first
   // videos and creator captions.
@@ -247,6 +285,9 @@ try {
 
   const trackTitle = await page.textContent('.soundtrack-title')
   assert('Soundtrack resumes at Track 1 (Ghosts In The Mist)', trackTitle?.trim(), TRACK_ONE_TITLE)
+  await hasVisibleControl(page, 'Pause soundtrack')
+  await hasVisibleControl(page, 'Next track')
+  await captureStage(page, 'track-one')
 }
 catch (error) {
   console.error(`\nTest failed with error: ${error.message}`)

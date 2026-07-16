@@ -98,5 +98,28 @@ const playButtonClasses = computed(() => ['play-pause', props.playButtonClass].f
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 40%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 40%);
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+.wolves-control-button.play-pause {
+  width: 3rem;
+  height: 3rem;
+}
+
+.wolves-control-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.wolves-control-button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 </style>

@@ -33,6 +33,7 @@ const baseUrl = import.meta.env.BASE_URL
 
 const sequenceState = ref(createIntroSequenceState())
 const currentTime = ref(0)
+const isPaused = ref(false)
 /** TEMPORARY REVIEW TOOLING -- see the debug-scrubber block below. Removed together with it. */
 const debugSegmentDuration = ref(0)
 const mountHost = ref<HTMLDivElement | null>(null)
@@ -307,6 +308,9 @@ function startTextSegment(segment: Extract<IntroVideoSpec, { kind: 'text' }>) {
   void loadAudioTrack(segment.audioYoutubeVideoId)
 
   textTimer = setInterval(() => {
+    if (isPaused.value) {
+      return
+    }
     currentTime.value += 0.2
     if (isTextSegmentComplete(segment, currentTime.value)) {
       advance()
@@ -397,6 +401,7 @@ async function loadVideoSegment(segment: Extract<IntroVideoSpec, { kind: 'video'
 
 function loadCurrentSegment(segment: IntroVideoSpec | undefined) {
   loadToken += 1
+  isPaused.value = false
   destroyPlayer()
   stopTextTimer()
   destroyAudioPlayer()
@@ -435,6 +440,17 @@ function handleNext() {
 
 function handlePrevious() {
   sequenceState.value = previousIntroSequence(sequenceState.value)
+}
+
+function handleTogglePlayback() {
+  const activePlayer = currentSegment.value && isVideoSegment(currentSegment.value) ? player : audioPlayer
+  if (isPaused.value) {
+    activePlayer?.playVideo?.()
+  }
+  else {
+    activePlayer?.pauseVideo?.()
+  }
+  isPaused.value = !isPaused.value
 }
 
 onBeforeUnmount(() => {
@@ -566,13 +582,17 @@ onBeforeUnmount(() => {
       container-class="wolves-intro-overlay-nav"
       previous-button-class="wolves-intro-overlay-nav-btn"
       next-button-class="wolves-intro-overlay-nav-btn"
-      :show-play-pause="false"
+      play-button-class="wolves-intro-overlay-nav-btn"
       previous-aria-label="Previous section"
       next-aria-label="Next section"
+      play-aria-label="Resume intro"
+      pause-aria-label="Pause intro"
       :can-go-previous="canGoToPrevious"
       :can-go-next="true"
+      :is-playing="!isPaused"
       @previous="handlePrevious"
       @next="handleNext"
+      @toggle="handleTogglePlayback"
     />
 
     <!-- Permanent progress bar across the whole intro sequence (Prologue + Guardian trailer +

@@ -10,6 +10,8 @@ interface MockPlayerRecord {
   config: any
   videoId: string
   getCurrentTime: ReturnType<typeof vi.fn>
+  pauseVideo: ReturnType<typeof vi.fn>
+  playVideo: ReturnType<typeof vi.fn>
   destroy: ReturnType<typeof vi.fn>
   triggerReady: () => void
   triggerEnded: () => void
@@ -23,6 +25,8 @@ function installMockIframeApi() {
     config: any
     videoId: string
     getCurrentTime = vi.fn(() => 0)
+    pauseVideo = vi.fn()
+    playVideo = vi.fn()
     destroy = vi.fn()
 
     constructor(element: Element, config: any) {
@@ -200,6 +204,19 @@ describe('wolvesIntroOverlay video segments', () => {
     expect(wrapper.find('.wolves-intro-overlay-player').exists()).toBe(false)
   })
 
+  it('pauses and resumes the Destiny segment from the permanent control bar', async () => {
+    const wrapper = mount(WolvesIntroOverlay, { props: { videos: videoOnlySequence } })
+    await flushPromises()
+    resolveIframeApi()
+    await flushPromises()
+
+    await wrapper.get('button[aria-label="Pause intro"]').trigger('click')
+    expect(players[0].pauseVideo).toHaveBeenCalledOnce()
+
+    await wrapper.get('button[aria-label="Resume intro"]').trigger('click')
+    expect(players[0].playVideo).toHaveBeenCalledOnce()
+  })
+
   it('completes immediately for an empty video list instead of hanging', async () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: [] } })
     await flushPromises()
@@ -209,6 +226,27 @@ describe('wolvesIntroOverlay video segments', () => {
 })
 
 describe('wolvesIntroOverlay text segments', () => {
+  it('pauses and resumes the prologue from its permanent control bar', async () => {
+    const textSequence = [
+      { id: 'wolves-prologue', kind: 'text' as const, duration: 1 },
+    ]
+    const wrapper = mount(WolvesIntroOverlay, { props: { videos: textSequence } })
+    await flushPromises()
+
+    await vi.advanceTimersByTimeAsync(200)
+    await wrapper.get('button[aria-label="Pause intro"]').trigger('click')
+    await vi.advanceTimersByTimeAsync(1000)
+    await flushPromises()
+
+    expect(wrapper.emitted('complete')).toBeUndefined()
+
+    await wrapper.get('button[aria-label="Resume intro"]').trigger('click')
+    await vi.advanceTimersByTimeAsync(800)
+    await flushPromises()
+
+    expect(wrapper.emitted('complete')).toHaveLength(1)
+  })
+
   it('renders a black screen with no YouTube player for a video-less text segment', async () => {
     const textSequence = [
       { id: 'wolves-prologue', kind: 'text' as const, duration: 5, overlays: [{ text: 'Prologue', start: 0, end: 5 }] },
