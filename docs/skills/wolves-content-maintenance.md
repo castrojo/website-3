@@ -36,6 +36,14 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
    mappings in YouTube playlist order. Never use runtime search, fuzzy matching,
    or a substitute track; leave the Spotify catalog and manifest fields absent
    until every mapping and the owner-created playlist are approved.
+   - Once the owner has supplied every exact mapping, run
+    `SPOTIFY_CLIENT_ID=<public-client-id> npm run sync:wolves-spotify` locally.
+    The command uses local PKCE; never provide, store, or print a client secret.
+    Set `SPOTIFY_WOLVES_PLAYLIST_ID` after the initial public playlist is created.
+   - The command must fail before authorization when any catalog mapping is absent.
+    Keep approved per-track and playlist Spotify URIs when regenerating the
+    YouTube manifest; do not accept a newly introduced YouTube video without
+    its owner-reviewed URI.
 9. Run the "Before You Commit" checklist in the reference: diff confined to open surfaces, lint/typecheck/test/build green, `public/dakota-versions.json` unstaged, real-player timestamp verification for timeline-adjacent edits.
 10. After pushing, confirm the pushed SHA's "Deploy to GitHub Pages" workflow succeeds before reporting completion.
 
@@ -72,5 +80,13 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 - [ ] Later-track gallery assertions show a non-repeating shuffled sequence.
 - [ ] Provider catalog mappings are exact, unique, reviewed, and ordered to match
   the YouTube manifest; no unapproved mapping reaches runtime data.
+- [ ] The local Spotify sync tests cover ordered replacement, no-op reconciliation,
+  absent-catalog failure before authorization, and Spotify URI preservation.
 - [ ] After renaming or converting any Track 0 people asset, regenerate `wallpapers-list.ts` and recalculate finale-photo browser checkpoints. The generator sorts filenames, so an extension change can alter the deterministic finale shuffle even when the image content is unchanged.
 - [ ] Affected Track 0 timestamps verified on the real player; deploy workflow for the pushed SHA succeeded.
+
+## Sources
+
+- Spotify Web API PKCE flow: `/websites/developer_spotify_web-api`. PKCE exchanges
+  the authorization code using `client_id`, `code_verifier`, and the callback URI;
+  it does not require a client secret.

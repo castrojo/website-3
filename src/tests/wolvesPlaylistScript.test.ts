@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 // @ts-expect-error script module is intentionally plain Node ESM
-import { normalizePlaylistEntries } from '../../scripts/update-wolves-playlist.js'
+import { createManifest, normalizePlaylistEntries } from '../../scripts/update-wolves-playlist.js'
 import { loadWolvesSoundtrack } from '../data/wolves-soundtrack'
 
 describe('wolves playlist metadata generator', () => {
@@ -40,6 +40,70 @@ describe('wolves playlist metadata generator', () => {
         artist: 'Avatar',
       },
     ])
+  })
+
+  it('preserves approved Spotify URIs for unchanged YouTube videos', () => {
+    const generatedTrack = {
+      id: 'abc123',
+      title: '7 Days to the Wolves',
+      artist: 'Nightwish',
+      youtubeVideoId: 'abc123',
+      artwork: 'wolves-artwork/abc123.jpg',
+      thumbnailUrl: 'https://i.ytimg.com/vi/abc123/hqdefault.jpg',
+    }
+    const existingManifest = {
+      source: {
+        provider: 'youtube',
+        playlistId: 'PLA78oiE-RGAE',
+        playlistUrl: 'https://www.youtube.com/playlist?list=PLA78oiE-RGAE',
+        musicUrl: 'https://music.youtube.com/playlist?list=PLA78oiE-RGAE',
+        spotifyUri: 'spotify:playlist:owner-approved',
+      },
+      tracks: [{ ...generatedTrack, spotifyUri: 'spotify:track:owner-approved' }],
+    }
+
+    const regeneratedManifest = createManifest([generatedTrack], existingManifest)
+
+    expect(regeneratedManifest.source.spotifyUri).toBe('spotify:playlist:owner-approved')
+    expect(regeneratedManifest.tracks).toEqual([
+      {
+        id: 'abc123',
+        title: '7 Days to the Wolves',
+        artist: 'Nightwish',
+        youtubeVideoId: 'abc123',
+        artwork: 'wolves-artwork/abc123.jpg',
+        spotifyUri: 'spotify:track:owner-approved',
+      },
+    ])
+  })
+
+  it('refuses to replace an approved Spotify catalog with an unmapped YouTube video', () => {
+    const existingManifest = {
+      source: {
+        provider: 'youtube',
+        playlistId: 'PLA78oiE-RGAE',
+        playlistUrl: 'https://www.youtube.com/playlist?list=PLA78oiE-RGAE',
+        musicUrl: 'https://music.youtube.com/playlist?list=PLA78oiE-RGAE',
+        spotifyUri: 'spotify:playlist:owner-approved',
+      },
+      tracks: [{
+        id: 'abc123',
+        title: '7 Days to the Wolves',
+        artist: 'Nightwish',
+        youtubeVideoId: 'abc123',
+        artwork: 'wolves-artwork/abc123.jpg',
+        spotifyUri: 'spotify:track:owner-approved',
+      }],
+    }
+
+    expect(() => createManifest([{
+      id: 'new-video',
+      title: 'New track',
+      artist: 'Artist',
+      youtubeVideoId: 'new-video',
+      artwork: 'wolves-artwork/new-video.jpg',
+      thumbnailUrl: 'https://i.ytimg.com/vi/new-video/hqdefault.jpg',
+    }], existingManifest)).toThrow('No approved Spotify URI for new-video')
   })
 
   it('loads the soundtrack manifest from the base URL', async () => {
