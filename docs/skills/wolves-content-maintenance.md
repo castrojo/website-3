@@ -31,7 +31,7 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 4. Keep the three Track 0 content layers separate: top-bar comms (`wolves-incoming-signal.txt`), thesis overlay (`wolves-thesis-sequence.ts`, locked), lore column (`src/data/lore/*.md`).
 5. Treat intro copy as a 10-foot theater experience: retain theater-readable type, use user-authorized line breaks and cue splits for long copy, and keep `dominant` cues more forceful than standard cues. Do not make text smaller to fit.
 6. For an explicit owner-authorized fixed slide window, put the identifier and interval in `src/data/wolves-track-zero-slides.ts`; add independent reorder, rendered-boundary, and player-progress assertions. Do not turn a generated-order coincidence into an undocumented lock.
-7. For post-hero Flickr galleries, use one complete Fisher-Yates shuffle per track. Do not group or rotate photos. Preserve Track 0's authored schedule and locks.
+7. For post-hero Flickr galleries, use one complete Fisher-Yates shuffle across songs 2 onward. Do not group, rotate, or reuse photos. Preserve Track 0's authored schedule and locks.
 8. Run the "Before You Commit" checklist in the reference: diff confined to open surfaces, lint/typecheck/test/build green, `public/dakota-versions.json` unstaged, real-player timestamp verification for timeline-adjacent edits.
 9. After pushing, confirm the pushed SHA's "Deploy to GitHub Pages" workflow succeeds before reporting completion.
 

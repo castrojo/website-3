@@ -43,7 +43,9 @@ const trackZeroFlickrPhotoIds = new Set(
 )
 const flickrPhotos = ref<{ id: string, server: string, secret: string, title: string }[]>([])
 const laterTrackPhotos = ref<any[]>([])
+const shuffledLaterTrackPhotos = ref<any[]>([])
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
+const shownLaterTrackPhotoIds = new Set<string>()
 
 const activeBuffer = ref<'A' | 'B'>('A')
 const photoA = ref<any>(null)
@@ -565,6 +567,9 @@ watch([activeDisplayIndex, mixedPhotosToUse], ([newVal]) => {
   if (!activePhotoObj) {
     return
   }
+  if ((props.trackIndex ?? 0) > 0 && !activePhotoObj.isLocal) {
+    shownLaterTrackPhotoIds.add(activePhotoObj.id)
+  }
 
   // Preload the next image to prevent decode/network stutter during exact beat crossfades
   const nextIndex = (newVal + 1) % mixedPhotosToUse.value.length
@@ -608,6 +613,9 @@ watch([activeDisplayIndex, mixedPhotosToUse], ([newVal]) => {
 }, { immediate: true })
 
 watch(() => props.trackIndex, (trackIndex, previousTrackIndex) => {
+  if (trackIndex !== undefined && trackIndex > 0) {
+    snapshotLaterTrackPhotos()
+  }
   if (previousTrackIndex !== undefined) {
     photoA.value = null
     photoB.value = null
@@ -616,9 +624,6 @@ watch(() => props.trackIndex, (trackIndex, previousTrackIndex) => {
     slideAIndex.value = -1
     slideBIndex.value = -1
     activeBuffer.value = 'A'
-  }
-  if (trackIndex !== undefined && trackIndex > 0) {
-    snapshotLaterTrackPhotos()
   }
 }, { immediate: true })
 
@@ -672,11 +677,19 @@ function snapshotLaterTrackPhotos() {
       rawPhoto: photo
     }))
   if (remotePhotos.length === 0) {
+    shuffledLaterTrackPhotos.value = []
+    shownLaterTrackPhotoIds.clear()
     laterTrackPhotos.value = []
     return
   }
 
-  laterTrackPhotos.value = shuffleWolvesGalleryPhotos(remotePhotos)
+  if (shuffledLaterTrackPhotos.value.length === 0) {
+    shuffledLaterTrackPhotos.value = shuffleWolvesGalleryPhotos(remotePhotos)
+  }
+
+  const displayedPhotoIds = new Set([photoA.value?.id, photoB.value?.id])
+  laterTrackPhotos.value = shuffledLaterTrackPhotos.value
+    .filter(photo => !shownLaterTrackPhotoIds.has(photo.id) && !displayedPhotoIds.has(photo.id))
 }
 
 function deterministicShuffle<T>(array: T[], seed = 42): T[] {

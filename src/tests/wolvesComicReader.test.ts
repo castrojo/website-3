@@ -236,13 +236,16 @@ describe('wolvesComicReader', () => {
     expect(firstTrackStart).toContain('CNCF STREAM //')
 
     await wrapper.setProps({ playlistCurrentTime: 10 })
+    const secondTrackOnePhoto = galleryCaption(wrapper)
     await wrapper.setProps({ playlistCurrentTime: 0 })
     expect(galleryCaption(wrapper)).toBe(firstTrackStart)
 
-    await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 0 })
+    await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 10 })
     await flushPromises()
+    await wrapper.setProps({ playlistCurrentTime: 0 })
     expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
-    expect(galleryCaption(wrapper)).toBe(firstTrackStart)
+    expect(galleryCaption(wrapper)).not.toBe(firstTrackStart)
+    expect(galleryCaption(wrapper)).not.toBe(secondTrackOnePhoto)
   })
 
   it('does not restart a later-track shuffle after its final photo', async () => {

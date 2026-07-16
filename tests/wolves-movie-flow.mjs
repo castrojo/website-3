@@ -34,6 +34,7 @@ const SCREENSHOT_DIR = process.env.WOLVES_SCREENSHOT_DIR
 const CASSIDY_FIRST_VIDEO_ID = 'e6GCa-E75uk'
 const LINDSAY_FIRST_VIDEO_ID = 'T8aREn47900'
 const TRACK_ONE_TITLE = 'Ghosts In The Mist'
+const TRACK_TWO_TITLE = 'Tonight We Must Be Warriors'
 
 let passed = 0
 let failed = 0
@@ -75,6 +76,13 @@ async function hasVisibleControl(page, label) {
     Array.from({ length: count }, (_, index) => control.nth(index).isVisible()),
   ).then(values => values.some(Boolean))
   assert(`Visible ${label} control`, visible, true)
+}
+
+async function activeFlickrPhotoSource(page) {
+  return page.locator('.flickr-photo-layer').evaluateAll((layers) => {
+    const activeLayer = layers.find(layer => getComputedStyle(layer).zIndex === '2')
+    return activeLayer?.querySelector('img')?.getAttribute('src')
+  })
 }
 
 async function captureStage(page, name) {
@@ -320,20 +328,34 @@ try {
   })
   await page.waitForTimeout(150)
   const firstGalleryCaption = await page.textContent('.flickr-caption')
+  const firstGalleryPhoto = await activeFlickrPhotoSource(page)
 
   await page.evaluate(() => {
     window.__mockWolvesSoundtrackPlayer.seekTo(12, true)
   })
   await page.waitForTimeout(150)
   const secondGalleryCaption = await page.textContent('.flickr-caption')
+  const secondGalleryPhoto = await activeFlickrPhotoSource(page)
   assertTruthy('Track 1 starts with a Flickr caption', firstGalleryCaption)
   assertTruthy('Track 1 advances to another Flickr caption', secondGalleryCaption)
-  assert('Track 1 does not repeat a gallery photo before exhausting the shuffle', firstGalleryCaption === secondGalleryCaption, false)
+  assert('Track 1 does not repeat a gallery photo before exhausting the shuffle', firstGalleryPhoto === secondGalleryPhoto, false)
   await captureStage(page, 'track-one')
 
   await page.evaluate(() => {
     window.__mockWolvesSoundtrackPlayer.seekTo(0, true)
     window.__mockWolvesSoundtrackPlayer.nextVideo()
+  })
+  await page.waitForFunction(
+    title => document.querySelector('.soundtrack-title')?.textContent?.trim() === title,
+    TRACK_TWO_TITLE,
+  )
+  await page.waitForTimeout(1800)
+  const nextTrackGalleryCaption = await page.textContent('.flickr-caption')
+  const nextTrackGalleryPhoto = await activeFlickrPhotoSource(page)
+  assertTruthy('Track 2 starts with a Flickr caption', nextTrackGalleryCaption)
+  assert('Track 2 continues the gallery shuffle without reusing Track 1 photos', [firstGalleryPhoto, secondGalleryPhoto].includes(nextTrackGalleryPhoto), false)
+
+  await page.evaluate(() => {
     window.__mockWolvesSoundtrackPlayer.nextVideo()
   })
   await page.waitForTimeout(150)
