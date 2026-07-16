@@ -65,4 +65,5 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 - [ ] Timeline anchors (0:00, 150-220, 398-425) and thesis text are byte-identical.
 - [ ] Each owner-authorized fixed slide window has ordering, rendered-boundary, and player-progress assertions.
 - [ ] Later-track gallery assertions show a non-repeating shuffled sequence.
+- [ ] After renaming or converting any Track 0 people asset, regenerate `wallpapers-list.ts` and recalculate finale-photo browser checkpoints. The generator sorts filenames, so an extension change can alter the deterministic finale shuffle even when the image content is unchanged.
 - [ ] Affected Track 0 timestamps verified on the real player; deploy workflow for the pushed SHA succeeded.
