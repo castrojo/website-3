@@ -229,11 +229,17 @@ try {
 
   // Complete the remaining intro stages before exercising the playlist handoff.
   await page.getByLabel('Next section').click()
-  await page.getByLabel('Next section').click()
+
+  // Wait for the intro overlay to disappear and the soundtrack mock player to
+  // be present before using the test-only progress helper.
+  await page.waitForSelector('.wolves-intro-overlay', { state: 'hidden', timeout: 10_000 })
+  await page.waitForFunction(
+    () => window.__mockWolvesSoundtrackPlayer !== null,
+    { timeout: 10_000 },
+  )
 
   // Use the existing test-only progress helper to jump straight into Track 0
-  // playback without showing the intro overlay. Wait for the Wolves app to mount
-  // and expose the helper on window first.
+  // playback only after the trailer-to-Track 0 handoff has completed.
   await page.waitForFunction(
     () => typeof window.simulateWolvesProgress === 'function',
     { timeout: 10_000 },
@@ -241,12 +247,6 @@ try {
   await page.evaluate(() => {
     window.simulateWolvesProgress(0, 100, 0)
   })
-
-  // Wait for the soundtrack mock player to be created.
-  await page.waitForFunction(
-    () => window.__mockWolvesSoundtrackPlayer !== null,
-    { timeout: 10_000 },
-  )
 
   await page.evaluate(() => {
     window.__mockWolvesSoundtrackPlayer.seekTo(167.8, true)
