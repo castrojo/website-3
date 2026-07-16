@@ -79,3 +79,9 @@ The same user-owned parse error prevents the unmocked
 `src/tests/wolvesSoundtrack.test.ts` suite from loading. The dirty
 `src/data/wolves-intro-sequence.ts` and `public/dakota-versions.json` were inspected
 and left untouched. No live Spotify calls were made.
+
+## Commits
+
+- `b58b031d839f7b0dae777517ffc82615b98c3881` —
+  `feat(wolves): add Spotify playback adapter`
+- `3bff65c` — `docs(wolves): document Spotify playback guardrails`
