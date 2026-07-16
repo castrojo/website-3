@@ -20,3 +20,23 @@ export function pinJonoBaconAtTrackZeroWindow<T extends { id: string }>(slides: 
     ...slides.slice(jonoIndex + 1),
   ]
 }
+
+// Explicit reservation of ten user-supplied People photos for the fast finale.
+export const trackZeroFastFinalePhotoIds: ReadonlySet<string> = new Set([
+  'wolves/people/20260709-osc26-distrobox-1.jpg',
+  'wolves/people/abigailcabunoc30360.web_.jpg',
+  'wolves/people/amberleighruth_reference.jpg',
+  'wolves/people/ashleymcnamara35365.jpg',
+  'wolves/people/dirkhohndel.faces21994.web_.jpg',
+  'wolves/people/faces.jessiefrazella25358.web_.jpg',
+  'wolves/people/liz.jpg',
+  'wolves/people/rikkiendsley28095-2.jpg',
+  'wolves/people/stormy.faces23764.web_.jpg',
+  'wolves/people/vmbrasseur.webp',
+] as const)
+
+export function splitTrackZeroFastFinaleSlides<T extends { id: string }>(slides: readonly T[]) {
+  const finaleSlides = slides.filter(slide => trackZeroFastFinalePhotoIds.has(slide.id))
+  const regularSlides = slides.filter(slide => !trackZeroFastFinalePhotoIds.has(slide.id))
+  return { regularSlides, finaleSlides }
+}
