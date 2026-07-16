@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import type { YoutubePlayer } from '@/composables/useYoutubeIframeApi'
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import WolvesControlBar from '@/components/wolves/WolvesControlBar.vue'
 import { getYoutubePlayerConstructor, getYoutubePlayerState, loadYoutubeIframeApi } from '@/composables/useYoutubeIframeApi'
 import { wolvesCreatorShortsCassidyWilliams, wolvesCreatorShortsLindsayNikole } from '@/data/wolves-creator-shorts'
 
@@ -221,23 +222,22 @@ onBeforeUnmount(() => {
 
       <div class="wolves-creator-shorts-controls" :style="{ backgroundImage: wallpaperUrl }">
         <div class="wolves-creator-shorts-controls-overlay">
-          <button
-            type="button"
-            class="soundtrack-icon-btn play-pause"
-            :aria-label="isPaused ? 'Resume video' : 'Pause video'"
-            @click="togglePause"
-          >
-            <svg v-if="!isPaused" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
-            <svg v-else class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-          </button>
-          <button
-            type="button"
-            class="soundtrack-icon-btn next"
-            aria-label="Skip video"
-            @click="skip"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 6h2v12h-2zm-1 6-9 6V6z" /></svg>
-          </button>
+          <WolvesControlBar
+            container-class="wolves-creator-shorts-controls-overlay"
+            play-button-class="soundtrack-icon-btn play-pause"
+            next-button-class="soundtrack-icon-btn"
+            :show-previous="false"
+            :show-next="true"
+            :show-play-pause="true"
+            previous-aria-label="Previous video"
+            next-aria-label="Skip video"
+            play-aria-label="Resume video"
+            pause-aria-label="Pause video"
+            :is-playing="!isPaused"
+            :can-go-next="true"
+            @toggle="togglePause"
+            @next="skip"
+          />
         </div>
       </div>
     </div>

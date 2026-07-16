@@ -2,6 +2,7 @@
 import type { YoutubePlayer } from '@/composables/useYoutubeIframeApi'
 import type { IntroOverlayTextCue, IntroVideoSpec } from '@/data/wolves-intro-sequence'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import WolvesControlBar from '@/components/wolves/WolvesControlBar.vue'
 import { getYoutubePlayerConstructor, getYoutubePlayerState, loadYoutubeIframeApi } from '@/composables/useYoutubeIframeApi'
 import { dinosaurSpecies } from '@/data/wolves-dinosaur-species'
 import { wolvesGuardianDinosaurBonds } from '@/data/wolves-guardian-dinosaur-bonds'
@@ -561,25 +562,18 @@ onBeforeUnmount(() => {
       >{{ part.char }}</span>
     </p>
 
-    <div class="wolves-intro-overlay-nav">
-      <button
-        type="button"
-        class="wolves-intro-overlay-nav-btn prev"
-        aria-label="Previous section"
-        :disabled="!canGoToPrevious"
-        @click="handlePrevious"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 6h2v12H6zm3 6 9 6V6z" /></svg>
-      </button>
-      <button
-        type="button"
-        class="wolves-intro-overlay-nav-btn next"
-        aria-label="Next section"
-        @click="handleNext"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 6h2v12h-2zm-1 6-9 6V6z" /></svg>
-      </button>
-    </div>
+    <WolvesControlBar
+      container-class="wolves-intro-overlay-nav"
+      previous-button-class="wolves-intro-overlay-nav-btn"
+      next-button-class="wolves-intro-overlay-nav-btn"
+      :show-play-pause="false"
+      previous-aria-label="Previous section"
+      next-aria-label="Next section"
+      :can-go-previous="canGoToPrevious"
+      :can-go-next="true"
+      @previous="handlePrevious"
+      @next="handleNext"
+    />
 
     <!-- Permanent progress bar across the whole intro sequence (Prologue + Guardian trailer +
          Epilogue), not just the currently-playing segment. -->

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SoundtrackSource, SoundtrackTrack, WolvesSoundtrackManifest } from '@/data/wolves-soundtrack'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import WolvesControlBar from '@/components/wolves/WolvesControlBar.vue'
 import WolvesCreatorShortsInterstitial from '@/components/wolves/WolvesCreatorShortsInterstitial.vue'
 import WolvesIntroOverlay from '@/components/wolves/WolvesIntroOverlay.vue'
 import { buildIntroVideoSequence } from '@/data/wolves-intro-sequence'
@@ -547,36 +548,23 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Sleeker Controls -->
-        <div class="soundtrack-controls-group">
-          <button
-            type="button"
-            class="soundtrack-icon-btn prev"
-            aria-label="Previous track"
-            :disabled="!canGoToPreviousTrack"
-            @click="handlePreviousTrack"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 6h2v12H6zm3 6 9 6V6z" /></svg>
-          </button>
-          <button
-            type="button"
-            class="soundtrack-icon-btn play-pause soundtrack-action"
-            :aria-label="actionAriaLabel"
-            :disabled="status === 'loading'"
-            @click="handlePrimaryAction"
-          >
-            <svg v-if="isPlaying" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
-            <svg v-else class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-          </button>
-          <button
-            type="button"
-            class="soundtrack-icon-btn next"
-            aria-label="Next track"
-            :disabled="!canGoToNextTrack"
-            @click="handleNextTrack"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 6h2v12h-2zm-1 6-9 6V6z" /></svg>
-          </button>
-        </div>
+        <WolvesControlBar
+          container-class="soundtrack-controls-group"
+          previous-button-class="soundtrack-icon-btn"
+          next-button-class="soundtrack-icon-btn"
+          play-button-class="soundtrack-icon-btn play-pause soundtrack-action"
+          previous-aria-label="Previous track"
+          next-aria-label="Next track"
+          :play-aria-label="actionAriaLabel"
+          pause-aria-label="Pause soundtrack"
+          :can-go-previous="canGoToPreviousTrack"
+          :can-go-next="canGoToNextTrack"
+          :is-playing="isPlaying"
+          :play-disabled="status === 'loading'"
+          @previous="handlePreviousTrack"
+          @next="handleNextTrack"
+          @toggle="handlePrimaryAction"
+        />
       </div>
 
       <!-- Status and Links below main track info -->
@@ -674,36 +662,23 @@ onBeforeUnmount(() => {
         <span class="soundtrack-mobile-artist font-mono">{{ currentTrack.artist }}</span>
       </div>
 
-      <div class="soundtrack-controls-group">
-        <button
-          type="button"
-          class="soundtrack-icon-btn prev"
-          aria-label="Previous track"
-          :disabled="!canGoToPreviousTrack"
-          @click="handlePreviousTrack"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 6h2v12H6zm3 6 9 6V6z" /></svg>
-        </button>
-        <button
-          type="button"
-          class="soundtrack-icon-btn mobile-play-pause"
-          :aria-label="actionAriaLabel"
-          :disabled="status === 'loading'"
-          @click="handlePrimaryAction"
-        >
-          <svg v-if="isPlaying" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
-          <svg v-else class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-        </button>
-        <button
-          type="button"
-          class="soundtrack-icon-btn next"
-          aria-label="Next track"
-          :disabled="!canGoToNextTrack"
-          @click="handleNextTrack"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 6h2v12h-2zm-1 6-9 6V6z" /></svg>
-        </button>
-      </div>
+      <WolvesControlBar
+        container-class="soundtrack-controls-group"
+        previous-button-class="soundtrack-icon-btn"
+        next-button-class="soundtrack-icon-btn"
+        play-button-class="soundtrack-icon-btn mobile-play-pause"
+        previous-aria-label="Previous track"
+        next-aria-label="Next track"
+        :play-aria-label="actionAriaLabel"
+        pause-aria-label="Pause soundtrack"
+        :can-go-previous="canGoToPreviousTrack"
+        :can-go-next="canGoToNextTrack"
+        :is-playing="isPlaying"
+        :play-disabled="status === 'loading'"
+        @previous="handlePreviousTrack"
+        @next="handleNextTrack"
+        @toggle="handlePrimaryAction"
+      />
     </div>
   </div>
 </template>
