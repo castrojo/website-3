@@ -204,6 +204,11 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/20260709-osc26-distrobox-1.jpg",
+    "title": "20260709 Osc26 Distrobox 1"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/53322730377_ca5b65a035_k.jpg",
     "title": "53322730377 Ca5b65a035 K"
   },
@@ -274,8 +279,23 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/abigailcabunoc30360.web_.jpg",
+    "title": "Abigailcabunoc30360"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/alexk.png",
     "title": "Alexk"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/amberleighruth_reference.jpg",
+    "title": "Amberleighruth Reference"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/ashleymcnamara35365.jpg",
+    "title": "Ashleymcnamara35365"
   },
   {
     "type": "single",
@@ -289,8 +309,18 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/dirkhohndel.faces21994.web_.jpg",
+    "title": "Dirkhohndel.faces21994"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/enthusiasts.png",
     "title": "Enthusiasts"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/faces.jessiefrazella25358.web_.jpg",
+    "title": "Faces.jessiefrazella25358"
   },
   {
     "type": "single",
@@ -884,6 +914,11 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/liz.jpg",
+    "title": "Liz"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/nuno.webp",
     "title": "Nuno"
   },
@@ -894,8 +929,18 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/rikkiendsley28095-2.jpg",
+    "title": "Rikkiendsley28095 2"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/sherman.webp",
     "title": "Sherman"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/stormy.faces23764.web_.jpg",
+    "title": "Stormy.faces23764"
   },
   {
     "type": "single",
@@ -911,5 +956,10 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/summit-15.webp",
     "title": "Summit 15"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/vmbrasseur.webp",
+    "title": "Vmbrasseur"
   }
 ]
