@@ -53,8 +53,13 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 11. Preserve the Wolves 100ms progress contract by storing incoming SDK state and
    extrapolating a clamped position only while playing. Do not poll SDK state on the
    100ms timer. Treat an unknown SDK URI as a controlled error that stops the clock.
-12. Run the "Before You Commit" checklist in the reference: diff confined to open surfaces, lint/typecheck/test/build green, `public/dakota-versions.json` unstaged, real-player timestamp verification for timeline-adjacent edits.
-13. After pushing, confirm the pushed SHA's "Deploy to GitHub Pages" workflow succeeds before reporting completion.
+12. Treat every Spotify `start()` as a new playback generation. When replacing a
+   terminal or prior player, disconnect it, clear its device ID and progress
+   baseline, and register callbacks on the replacement player with its creating
+   generation captured. `ready`, state, and error callbacks from an older
+   generation must not resolve, fail, or revive the current lifecycle.
+13. Run the "Before You Commit" checklist in the reference: diff confined to open surfaces, lint/typecheck/test/build green, `public/dakota-versions.json` unstaged, real-player timestamp verification for timeline-adjacent edits.
+14. After pushing, confirm the pushed SHA's "Deploy to GitHub Pages" workflow succeeds before reporting completion.
 
 ## Common Rationalizations
 
@@ -81,6 +86,8 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
   reviewed URI list, or targets a device other than the SDK-ready device.
 - A 100ms Spotify timer that calls `getCurrentState()` instead of extrapolating from
   registered state callbacks.
+- Reusing an SDK player across starts while its callbacks are closed over a prior
+  generation, or allowing an old `ready` callback to resolve a newer start.
 - Emojis or ellipses introduced anywhere.
 
 ## Verification
@@ -95,6 +102,9 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
   the YouTube manifest; no unapproved mapping reaches runtime data.
 - [ ] The local Spotify sync tests cover ordered replacement, no-op reconciliation,
   absent-catalog failure before authorization, and Spotify URI preservation.
+- [ ] A focused adapter regression fails one lifecycle, starts another, and verifies
+  that the new player's state event emits normalized progress while old callbacks
+  cannot affect it.
 - [ ] After renaming or converting any Track 0 people asset, regenerate `wallpapers-list.ts` and recalculate finale-photo browser checkpoints. The generator sorts filenames, so an extension change can alter the deterministic finale shuffle even when the image content is unchanged.
 - [ ] Affected Track 0 timestamps verified on the real player; deploy workflow for the pushed SHA succeeded.
 
@@ -106,3 +116,6 @@ The Wolves page (`/wolves`) reached final production design. The canonical refer
 - Spotify playback transfer and ordered URI startup:
   `/websites/developer_spotify_web-api`. Transfer playback with one SDK device ID
   and `play: false`, then call `/me/player/play?device_id=<id>` with `{ uris }`.
+- Spotify streaming eligibility: `/websites/developer_spotify_web-api`. The
+  `streaming` scope is available to eligible Premium listeners using the Web
+  Playback SDK.
