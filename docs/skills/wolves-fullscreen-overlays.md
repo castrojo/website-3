@@ -1,6 +1,9 @@
 ---
 name: wolves-fullscreen-overlays
 description: Use when building or debugging a fullscreen overlay (intro video, cinematic, modal takeover) inside the Wolves immersive experience, or when embedding third-party video via the YouTube IFrame Player API anywhere on the Wolves page. Covers the containing-block gotcha that silently confines "fullscreen" overlays and the testability traps specific to the YouTube IFrame API.
+metadata:
+  context7-sources:
+    - /websites/developers_google_youtube
 ---
 
 # Wolves Fullscreen Overlays & YouTube IFrame Embeds
@@ -170,3 +173,6 @@ bugs before being understood.
 ## Sources
 
 - Vue scoped CSS and `:deep()` behavior: `/vuejs/vue`
+- YouTube IFrame API `origin` guidance and player error codes:
+  `/websites/developers_google_youtube` (error 150 is equivalent to 101,
+  embedding not allowed for that origin).
