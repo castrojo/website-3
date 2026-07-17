@@ -1,196 +1,54 @@
 ---
 name: wolves-fullscreen-overlays
-description: Use when building or debugging a fullscreen overlay (intro video, cinematic, modal takeover) inside the Wolves immersive experience, or when embedding third-party video via the YouTube IFrame Player API anywhere on the Wolves page. Covers the containing-block gotcha that silently confines "fullscreen" overlays and the testability traps specific to the YouTube IFrame API.
+version: "1.0"
+last_updated: 2026-07-17
+tags: [wolves, overlays, youtube]
+description: Use when explicitly authorized to build or debug a Wolves fullscreen overlay, cinematic takeover, shared control surface, or YouTube IFrame Player integration.
 metadata:
+  type: procedure
   context7-sources:
     - /websites/developers_google_youtube
     - /websites/vuejs_guide
 ---
 
-# Wolves Fullscreen Overlays & YouTube IFrame Embeds
+# Wolves Fullscreen Overlays
 
-Engineering patterns for building overlays that must cover the entire Wolves
-immersive experience (top bar, slideshow, lore column), and for embedding
-third-party video legitimately via YouTube's IFrame Player API. Learned while
-building the intro-video overlay system; both traps below produced visible
-bugs before being understood.
+This is engineering work on a frozen design surface. Explicit authorization is required. Read `docs/wolves-maintenance.md` and `docs/wolves-cinematic.md` first.
 
-## When to Use
+## Core Patterns
 
-- Adding any overlay, modal, or cinematic that must render above the entire
-  `/wolves` immersive layout, not just above its own parent component.
-- Embedding a YouTube video anywhere on the Wolves page via the IFrame Player
-  API (the only legitimate way to show third-party video — never download or
-  re-encode someone else's footage locally).
-- Writing or debugging tests for a component that loads the YouTube IFrame API
-  script or that teleports content to `document.body`.
-
-## When NOT to Use
-
-- Content-only edits to lore, playlist metadata, or slideshow images — see
-  `docs/skills/wolves-content-maintenance.md` instead.
-- Any component that doesn't need to escape its own layout box (most of the
-  page's components render fine in their natural DOM position).
-
-## Core Process
-
-1. **`position: fixed` alone does not guarantee full-viewport coverage.**
-   A CSS `transform` on *any* ancestor creates a new containing block for
-   `position: fixed` descendants, silently rescoping "fullscreen" to that
-   ancestor's box instead of the real viewport. A component nested deep in
-   the layout (e.g. inside the footer soundtrack dock) that renders a
-   `position: fixed; inset: 0` overlay will appear confined to its own
-   widget, not the whole page — with no console error or visual glitch
-   marking the cause.
-2. **Fix: `<Teleport to="body">` around the overlay's root element in the
-   template**, not just fixed positioning. This makes the overlay a true
-   top-level DOM sibling, immune to every ancestor's transform/filter/
-   perspective, guaranteeing it renders above literally everything else
-   pushed onto the page.
-3. **Testing teleported content**: `@vue/test-utils`'s `wrapper.find()` /
-   `wrapper.get()` only search the component's own render tree, which no
-   longer includes teleported content. Query `document.body` directly instead
-   (e.g. `document.body.querySelector('.my-overlay')`), and dispatch real DOM
-   events (`element.dispatchEvent(new MouseEvent('click', { bubbles: true }))`)
-   rather than Test Utils' wrapper-scoped `.trigger()`.
-4. **YouTube IFrame API script-loading is not a true singleton in
-   `<script setup>`.** A top-level `let` in `<script setup>` looks like module
-   scope but is actually per-component-instance state — fresh on every
-   `mount()` in tests. If you need genuinely shared, cached state (e.g. "has
-   the IFrame API script already been requested"), extract it into a real
-   `.ts` module (see `src/composables/useYoutubeIframeApi.ts`). Because a real
-   module-level cache persists across the whole test run, export a test-only
-   reset function (e.g. `resetYoutubeIframeApiCacheForTests()`) and call it in
-   both `beforeEach` and `afterEach`.
-5. **happy-dom rejects real `<script src>` loads by default.** Appending a
-   script tag with a real URL throws `NotSupportedError: JavaScript file
-   loading is disabled` synchronously, which happy-dom converts into an
-   immediate `error` event — meaning any `catch`/`onerror` path in your loader
-   fires before your test ever gets to mock the API. Set
-   `(window as any).happyDOM.settings.handleDisabledFileLoadingAsSuccess = true`
-   in `beforeEach` for any test exercising this path.
-6. **Guard async loaders after every `await`, not just the first.** An async
-   function with two sequential `await`s (e.g. `await loadYoutubeIframeApi()`
-   then later `await nextTick()`) must re-check for a cancelled/skipped state
-   after *each* await, not only the first. A fast user action (like clicking
-   Skip) can land in the gap between two awaits — this becomes more likely,
-   not less, once the API is already cached from an earlier action in the
-   same test run, since the first await then resolves near-instantly.
-7. **The debug scrub bar's real player poll loop can silently overwrite the
-   value you just set.** `WolvesIntroOverlay.vue` polls the live `YT.Player`'s
-   `getCurrentTime()` every ~200ms to drive `currentTime`. When frame-verifying
-   a cue boundary by programmatically setting the debug scrub `<input>`'s
-   value and dispatching an `input` event, reading any derived state (which
-   guardian plate is showing, the displayed time readout) more than ~300ms
-   later lets that poll loop drift `currentTime` forward past your intended
-   target, producing a false read that looks like the boundary is off by a
-   noticeable amount when it isn't. Read the state immediately after
-   dispatching the scrub event, and cross-check against the on-screen time
-   readout (e.g. `.wolves-intro-overlay-debug-time`) rather than assuming your
-   requested value took effect.
-8. **Shared controls own their geometry.** A parent component's `<style scoped>`
-   rules do not reach nested buttons rendered by a child component; only the
-   child's root receives the parent's scope attribute. Put required button
-   dimensions, hit targets, and disabled state in `WolvesControlBar.vue`.
-   Use `:deep()` only for deliberate context-specific overrides, and assert
-   rendered bounds in Chromium for every fullscreen movie stage.
-9. **Intro typography is theater typography.** The Wolves intro is viewed at
-   10-foot theater distance: standard cues must remain theater-readable, and
-   dominant cues must be visibly larger and heavier. Fit long user-authored
-   copy with line breaks, timing, or separate cues, never reduced type.
-   Treat this as a product requirement, not a style flourish. Use Nielsen
-   Norman Group's TV/10-foot UX guidance for large type, strong contrast,
-   clear hierarchy, and minimal clutter when adjusting any intro cue.
-10. **Use the project hostname for local real-player checks.** Some Wolves
-    YouTube embeds return error 150 on numeric loopback origins while playing
-    normally on production. Run Vite as usual, then open
-    `http://projectbluefin.io.localhost:<port>/wolves/`. The hostname resolves
-    to loopback automatically and preserves an accepted project origin. Always
-    recheck the same video at `https://projectbluefin.io/wolves/` before
-    treating a localhost-only error as a production failure.
-11. **Resize the layout around enlarged fixed media.** When a QR monitor,
-    guardian plate, or other fixed-width child grows, increase the containing
-    grid's maximum width too. Otherwise `minmax(0, 1fr) auto` gives the media
-    its requested width by collapsing the text column, producing one-word
-    wrapping even when the viewport has unused space. Check the computed grid
-    columns and each text element's bounding box in Chromium. Responsive labels
-    that inherit a large `-webkit-text-stroke` can also appear blank when the
-    stroke consumes the smaller glyph fill; explicitly remove the stroke and
-    heavy shadow at the compact breakpoint.
-
-## Common Rationalizations
-
-| Rationalization | Reality |
-|---|---|
-| "It's `position: fixed`, so it's already fullscreen." | Only if no ancestor has `transform`, `filter`, `perspective`, or `will-change: transform`. This layout has several. Verify by checking whether the overlay visually covers the whole page, not just by reading its own CSS. |
-| "`wrapper.find()` didn't find it, so the overlay isn't rendering." | If the component uses `<Teleport to="body">`, the render tree the wrapper walks doesn't include it. Check `document.body` before concluding it's broken. |
-| "I already loaded the YouTube API once this test file, no need to reset." | The module-level cache is a true singleton across the whole file. Skipping the reset leaks state into later tests and produces flaky, order-dependent failures. |
-| "One `await` guard at the top of the function is enough." | Only protects against cancellation before the first await. A second await reopens the race window. |
-| "The plate name changed right after I scrubbed, so the boundary must be off." | Check how long you waited before reading. If it's more than ~300ms, the poll loop may have already advanced `currentTime` past your target — re-test with an immediate read and cross-check the time readout. |
-| "Passing a class to `WolvesControlBar` lets this component size its buttons." | A scoped parent selector cannot style nested child DOM. Keep shared control geometry in `WolvesControlBar.vue`, or use an intentional `:deep()` override. |
-| "Error 150 on 127.0.0.1 means the video is broken." | Retry through `projectbluefin.io.localhost`, then verify production. YouTube origin restrictions can reject numeric loopback while accepting the deployed project hostname. |
-| "The enlarged QR fits, so the title-card layout is done." | The fixed media can fit by collapsing its flexible sibling. Inspect the text-column width, title wrapping, compact label paint, and footer clearance independently. |
+- A transformed ancestor contains `position: fixed`; wrap true fullscreen overlays in `<Teleport to="body">`.
+- Tests for teleported content query `document.body`, not the component wrapper.
+- Reuse `src/composables/useYoutubeIframeApi.ts`; reset its module cache in tests.
+- happy-dom tests loading a real script URL set `handleDisabledFileLoadingAsSuccess = true`.
+- Re-check cancellation or skip state after every `await` before side effects.
+- Read scrub-derived state immediately; the live player poll loop can overwrite test positions.
+- Shared control geometry belongs in the shared control component, not a parent's scoped style.
+- Test embeds through `projectbluefin.io.localhost`; compare localhost error 150 with production before declaring a source broken.
+- Keep fixed media from collapsing adjacent text columns; inspect computed grid columns and bounds.
+- Theater typography is owned by `docs/wolves-maintenance.md`; never shrink type to fit copy.
 
 ## Red Flags
 
-- A "fullscreen" overlay that visually appears confined to a widget, card, or
-  section instead of the whole page.
-- Tests for a teleported component using `wrapper.find()`/`wrapper.get()`
-  and getting empty results with no clear reason.
-- `NotSupportedError: JavaScript file loading is disabled` in test output when
-  a component loads any real external script URL.
-- A test that passes in isolation but fails when run after another test that
-  also loads the YouTube IFrame API (order-dependent failure — missing cache
-  reset).
-- Async loading logic with `await X(); ...; await Y();` where only the check
-  right after the first await exists.
-- Any local video file under `public/videos/` sourced from third-party
-  footage — this repository only permits YouTube IFrame embeds for
-  third-party video, never downloaded/re-encoded copies.
-- A cue-boundary verification that reads state hundreds of milliseconds after
-  setting the debug scrub value, rather than immediately — the reading may
-  reflect a poll-drifted time, not the value you actually set.
-- A control bar exists in the DOM but its buttons have zero-sized bounds or
-  cannot be clicked in Chromium.
-- A real-player check uses `127.0.0.1` or `localhost`, receives error 150, and
-  declares the source broken without retrying through
-  `projectbluefin.io.localhost` and production.
-- A larger fixed-width card fits the viewport while adjacent theater text wraps
-  one word per line despite unused horizontal space.
-- A compact label has visible text in the DOM and non-zero bounds but appears
-  blank in screenshots because it inherited desktop text stroke or shadow.
+- A fullscreen overlay without Teleport.
+- Wrapper-scoped selectors for teleported DOM.
+- Duplicate YouTube API loaders.
+- Async side effects after an unchecked `await`.
+- Controls present in DOM with zero or clipped bounds.
+- Downloaded or re-encoded third-party footage.
+- A visual change without desktop and mobile browser evidence.
 
 ## Verification
 
-- [ ] The overlay is wrapped in `<Teleport to="body">` and manually confirmed
-      (in a real browser, not just a green test suite) to cover the entire
-      viewport — top bar, slideshow, and lore column all included.
-- [ ] Tests for teleported content query `document.body`, not the component
-      wrapper.
-- [ ] Any new YouTube IFrame API consumer either reuses
-      `src/composables/useYoutubeIframeApi.ts` or, if it introduces its own
-      cache, exports and calls a test-reset function in `beforeEach`/`afterEach`.
-- [ ] `(window as any).happyDOM.settings.handleDisabledFileLoadingAsSuccess = true`
-      is set in `beforeEach` for any test exercising real script-tag loading.
-- [ ] Every `await` in an async loading/guard function is followed by a
-      freshness re-check before creating side effects (players, timers, DOM
-      nodes).
-- [ ] No third-party video is downloaded or re-encoded locally; only
-      `youtubeVideoId` + IFrame Player embeds are used.
-- [ ] Any cue-boundary frame verification reads state immediately after
-      dispatching the scrub event and cross-checks the on-screen time
-      readout, not just the requested scrub value.
-- [ ] Every movie stage that renders `WolvesControlBar` has visible,
-      viewport-contained, clickable controls in desktop and mobile Chromium.
-- [ ] Local real-player checks use `projectbluefin.io.localhost`; any error 150
-      is compared with the same video on production.
-- [ ] Enlarged fixed-width media leaves adjacent text columns wide enough for
-      authored wrapping, and all labels are visibly painted in desktop and
-      mobile screenshots rather than merely present in the DOM.
+- [ ] Explicit design authorization exists.
+- [ ] Desktop and mobile Chromium checks cover bounds, controls, overflow, and scroll behavior.
+- [ ] YouTube consumers reuse the shared loader and test reset.
+- [ ] Relevant real-player states are verified.
+- [ ] `build-verify-deploy.md` and the Wolves references are complete.
 
 ## Sources
 
-- Vue scoped CSS, Teleport, and scoped styling behavior: `/vuejs/vue` and `/websites/vuejs_guide`
-- YouTube IFrame API `origin` guidance, methods, parameters, and player error codes:
-  `/websites/developers_google_youtube` (error 150 is equivalent to 101,
-  embedding not allowed for that origin).
+- `docs/wolves-maintenance.md`
+- `docs/wolves-cinematic.md`
+- Vue Teleport and scoped CSS: `/websites/vuejs_guide`
+- YouTube IFrame API: `/websites/developers_google_youtube`
