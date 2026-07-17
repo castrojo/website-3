@@ -10,15 +10,12 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { shuffleWolvesGalleryPhotos } from '@/data/wolves-gallery-shuffle'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
 import {
+  bluefinGroupSlides,
   jonoBaconSlideId,
   jonoBaconTrackZeroWindow,
-  m2SlideId,
-  m2TrackZeroWindow,
   marinaMooreSlideId,
   marinaMooreTrackZeroWindow,
   pinTrackZeroHeroSlides,
-  shermanSlideId,
-  shermanTrackZeroWindow,
   splitTrackZeroFastFinaleSlides,
 } from '@/data/wolves-track-zero-slides'
 import { wallpapers } from './wallpapers-list'
@@ -328,13 +325,18 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
   const peoplePool1 = shuffledPeople.slice(0, 15)
   const jonoPhoto = peoplePool1.find(item => item.id === jonoBaconSlideId)
   const marinaPhoto = peoplePool1.find(item => item.id === marinaMooreSlideId)
-  const shermanPhoto = peoplePool1.find(item => item.id === shermanSlideId)
-  const m2Photo = peoplePool1.find(item => item.id === m2SlideId)
-  const hasShermanM2Lock = Boolean(marinaPhoto && shermanPhoto && m2Photo)
+  // The Bluefin group (sherman, m2, kyle, hikari) locks as one back-to-back run;
+  // it only engages when every member survived into the Track 0 people pool.
+  const bluefinGroupPhotos = bluefinGroupSlides.map(slide => ({
+    slide,
+    photo: peoplePool1.find(item => item.id === slide.id),
+  }))
+  const hasBluefinGroupLock = Boolean(marinaPhoto)
+    && bluefinGroupPhotos.every(entry => entry.photo !== undefined)
   const lockedHeroSlideIds = new Set([
     jonoBaconSlideId,
     ...(marinaPhoto ? [marinaMooreSlideId] : []),
-    ...(hasShermanM2Lock ? [shermanSlideId, m2SlideId] : []),
+    ...(hasBluefinGroupLock ? bluefinGroupSlides.map(slide => slide.id) : []),
   ])
   const remainingPeoplePool1 = peoplePool1.filter(item =>
     !lockedHeroSlideIds.has(item.id),
@@ -389,24 +391,17 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
       currentTime = marinaMooreTrackZeroWindow.endTime
     }
 
-    if (hasShermanM2Lock && shermanPhoto && m2Photo) {
-      result.push({
-        ...shermanPhoto,
-        path: shermanPhoto.path || '',
-        startTime: currentTime,
-        duration: shermanTrackZeroWindow.endTime - shermanTrackZeroWindow.startTime,
-        endTime: shermanTrackZeroWindow.endTime,
-      })
-      currentTime = shermanTrackZeroWindow.endTime
-
-      result.push({
-        ...m2Photo,
-        path: m2Photo.path || '',
-        startTime: currentTime,
-        duration: m2TrackZeroWindow.endTime - m2TrackZeroWindow.startTime,
-        endTime: m2TrackZeroWindow.endTime,
-      })
-      currentTime = m2TrackZeroWindow.endTime
+    if (hasBluefinGroupLock) {
+      for (const { slide, photo } of bluefinGroupPhotos) {
+        result.push({
+          ...photo!,
+          path: photo!.path || '',
+          startTime: currentTime,
+          duration: slide.window.endTime - slide.window.startTime,
+          endTime: slide.window.endTime,
+        })
+        currentTime = slide.window.endTime
+      }
     }
 
     const afterJonoDuration = (229 - currentTime) / remainingPeoplePool1.length

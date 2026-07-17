@@ -22,6 +22,31 @@ export const m2TrackZeroWindow = {
   endTime: 184.12,
 } as const
 
+export const kyleSlideId = 'wolves/people/kyle.jpg'
+export const kyleTrackZeroWindow = {
+  startTime: m2TrackZeroWindow.endTime,
+  endTime: 188.2,
+} as const
+
+export const hikariSlideId = 'wolves/people/hikari.webp'
+export const hikariTrackZeroWindow = {
+  startTime: kyleTrackZeroWindow.endTime,
+  endTime: 192.28,
+} as const
+
+/**
+ * The Bluefin group: the locked run of Bluefin community photos that plays
+ * back-to-back after Marina's window (sherman -> m2 -> kyle -> hikari).
+ */
+export const bluefinGroupSlides = [
+  { id: shermanSlideId, window: shermanTrackZeroWindow },
+  { id: m2SlideId, window: m2TrackZeroWindow },
+  { id: kyleSlideId, window: kyleTrackZeroWindow },
+  { id: hikariSlideId, window: hikariTrackZeroWindow },
+] as const
+
+export const bluefinGroupSlideIds = bluefinGroupSlides.map(slide => slide.id)
+
 /**
  * The first People slot is Jono's fixed 167.8s–171.88s Track 0 window.
  * Keep him first even when generated wallpaper input order changes.
@@ -40,7 +65,7 @@ export function pinJonoBaconAtTrackZeroWindow<T extends { id: string }>(slides: 
 }
 
 export function pinTrackZeroHeroSlides<T extends { id: string }>(slides: readonly T[]): T[] {
-  const heroSlideIds = [jonoBaconSlideId, marinaMooreSlideId, shermanSlideId, m2SlideId]
+  const heroSlideIds = [jonoBaconSlideId, marinaMooreSlideId, ...bluefinGroupSlideIds]
   const heroSlides = heroSlideIds
     .map(id => slides.find(slide => slide.id === id))
     .filter((slide): slide is T => slide !== undefined)
