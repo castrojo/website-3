@@ -326,31 +326,31 @@ async function generate() {
     })
   }
 
-  // Reorder story wallpapers to place bluefin-huntress and bluefin-dusk right after bluefin-chicken
+  // Keep the Bluefin artist trio adjacent and share the same authored title.
+  const bluefinGroupTitle = 'Bluefin by Andry Frazer and Jacob Schnurr'
   const chickenIndex = wallpapers.findIndex(w => w.name === 'wolves/wolves/bluefin-chicken.webp')
-  const huntressIndex = wallpapers.findIndex(w => w.name === 'wolves/wolves/bluefin-huntress.webp')
-  const duskIndex = wallpapers.findIndex(w => w.name === 'bluefin-dusk')
+  const bluefinGroupItems = wallpapers.filter(wallpaper => wallpaper.name === 'bluefin-dusk' || wallpaper.name === 'wolves/wolves/bluefin-huntress.webp')
 
-  const itemsToMove = []
-  if (huntressIndex !== -1) {
-    itemsToMove.push({ name: 'wolves/wolves/bluefin-huntress.webp', index: huntressIndex })
-  }
-  if (duskIndex !== -1) {
-    itemsToMove.push({ name: 'bluefin-dusk', index: duskIndex })
+  const bluefinGroup = []
+  if (chickenIndex !== -1) {
+    bluefinGroup.push(wallpapers[chickenIndex])
   }
 
-  // Sort descending by index so splicing one doesn't affect the other's index
-  itemsToMove.sort((a, b) => b.index - a.index)
-
-  const extracted = []
-  for (const item of itemsToMove) {
-    const [obj] = wallpapers.splice(item.index, 1)
-    extracted.unshift(obj)
+  for (const item of bluefinGroupItems) {
+    const index = wallpapers.findIndex(candidate => candidate === item)
+    if (index !== -1) {
+      wallpapers.splice(index, 1)
+      bluefinGroup.push(item)
+    }
   }
+
+  bluefinGroup.forEach((item) => {
+    item.title = bluefinGroupTitle
+  })
 
   if (chickenIndex !== -1) {
-    const newChickenIndex = wallpapers.findIndex(w => w.name === 'wolves/wolves/bluefin-chicken.webp')
-    wallpapers.splice(newChickenIndex + 1, 0, ...extracted)
+    wallpapers.splice(chickenIndex, 1)
+    wallpapers.splice(chickenIndex, 0, ...bluefinGroup)
   }
 
   const outputPath = join(ROOT_DIR, 'src/components/wolves/wallpapers-list.ts')
