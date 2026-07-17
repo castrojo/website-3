@@ -58,7 +58,8 @@ other holds N+1 cued and muted at opacity 0. The handoff:
   background tabs.
 - The freed side then cues N+2. Manual prev/next hard-loads the target on the
   inactive side (it has the wrong video buffered for backward jumps); the
-  transition overlay's 6s hold covers the buffering gap.
+  transition shell's 10-second hold and four-second decay cover the buffering
+  gap.
 - Authored trims are supported per segment (`startSeconds`/`endSeconds` on the
   native timeline); elapsed/duration are reported window-relative while
   `store.nativeTime` keeps the raw clock for caption/lore/thesis sync.
@@ -75,7 +76,8 @@ both players are paused, polling stops, and `store.enterCreatorShorts()` sets
 `segmentIndex = 1`, resets the segment clock, marks `shortsConsumed`, and flips
 `phase` to `creator-shorts`. `WolvesApp.vue`'s phase branch (`v-else-if`) then
 unmounts `CinematicStage.vue` entirely, so `useDualBufferPlayer`'s
-`onBeforeUnmount` hook runs `destroy()` and both `YT.Player` instances are
+`CinematicStage.vue`'s `onBeforeUnmount` hook runs `player.destroy()` and both
+`YT.Player` instances are
 destroyed, not merely paused. When the interstitial's `complete` handler calls
 `store.completeCreatorShorts()`, `WolvesApp.vue` remounts `CinematicStage` and
 calls `stage.value.start()` again: a fresh `useDualBufferPlayer` instance reads
@@ -306,13 +308,20 @@ related code.
   fade not restoring volume after seek-back, the scrim regression, and cue
   double-wrapping — none of which unit tests saw. Seek every changed
   timestamp on the live player before calling work done.
+- **Local YouTube origin matters**: some authored embeds return error 150 on
+  numeric loopback origins such as `http://127.0.0.1:5173` even though they play
+  on production. For local real-player verification, run Vite normally but open
+  `http://projectbluefin.io.localhost:<port>/wolves/`; the `.localhost` suffix
+  resolves to loopback while preserving the project hostname YouTube accepts.
+  Recheck `https://projectbluefin.io/wolves/` before classifying a
+  localhost-only error as a broken video.
 
 ## 9. Content boundaries (unchanged from the original rules)
 
 - Agents never write fiction, lore, cue copy, or titles; the owner authors all
   creative content. Timing/layout adjustments to authored cues (line-break
   rebalancing, duration extensions) happen only on explicit owner request.
-- The three Track 0 content layers stay isolated: incoming-signal ticker
+- The three Track 0 content layers stay isolated: incoming-signal communication
   (plate), thesis overlay text, and lore-column records never exchange text.
   (The plate's flip — signal line as the large label during 7 Days — is a
   presentation change within the ticker layer, not cross-layer routing.)

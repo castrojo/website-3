@@ -85,7 +85,7 @@ function restart() {
     <CinematicLobby v-if="store.phase === 'lobby'" @enter="store.enterIntro()" />
 
     <!--
-      The authored intro: the 85s prologue cold open and the guardian trailer,
+      The authored intro: the 94s prologue cold open and the guardian trailer,
       rendered by WolvesIntroOverlay exactly as authored in
       src/data/wolves-intro-sequence.ts. Transport lives in the same hero widget
       as the cinematic; the top plate is the universal title placard.

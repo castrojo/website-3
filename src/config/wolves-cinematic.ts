@@ -1,7 +1,7 @@
 /**
  * Single source of truth for the Wolves cinematic experience.
  *
- * The authored intro (85s prologue cold open + guardian trailer) is NOT part of
+ * The authored intro (94s prologue cold open + guardian trailer) is NOT part of
  * this list — it plays first through WolvesIntroOverlay, driven by
  * buildIntroVideoSequence() in src/data/wolves-intro-sequence.ts. The segments
  * below are the seven musical parts, derived from the authored Wolves soundtrack
