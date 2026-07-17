@@ -535,11 +535,10 @@ surrounded by predators.`,
       //   Purity" and "Platinum Member" (added 2026-07-15, the latter with a `blingTitle`
       //   shimmer) were removed the same day per a follow-up explicit user request to drop back
       //   to just the original two titles — do not re-add either without a fresh user request.
-      // - Natali Vlatko's title line adds a second line after "Boss B*tch" ("He's wearing a
-      //   dress, I'm wearing a FIST"), per explicit user request, confirmed 2026-07-15. The
-      //   user's original line ended in a trailing ellipsis; substituted with an em dash to
-      //   match this file's join convention and the sitewide ellipsis ban
-      //   (docs/wolves-maintenance.md), while preserving the same dramatic trail-off.
+      // - Natali Vlatko's title line is "Some build walls to protect — I build walls shatter.",
+      //   per explicit user request, confirmed 2026-07-17. The user's original line ended
+      //   in a trailing ellipsis; substituted with an em dash to match this file's join
+      //   convention and the sitewide ellipsis ban (docs/wolves-maintenance.md).
       // - The default unvoiced source (`BV3BZKbpBns`) runs ~124.0s naturally. Real-player frame
       //   verification (Playwright + `.wolves-intro-overlay-player` screenshots, 0.1s steps)
       //   showed its own authored black-frame outro beginning at ~119.0s: 118.8s still carries
@@ -572,7 +571,7 @@ surrounded by predators.`,
         { text: 'Arc Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 },
         { text: 'Solar Hunter — Laura Santamaria — Paragon to the Order of 7', start: 70.5, end: 77 },
         { text: 'Strand Warlock — Christoph Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left', leader: true },
-        { text: 'Behemoth Titan — Natali Vlatko — Boss B*tch — He\'s wearing a dress, I\'m wearing a FIST', start: 87.5, end: 96, position: 'right', raised: true },
+        { text: 'Behemoth Titan — Natali Vlatko — Some build walls to protect — I build walls shatter.', start: 87.5, end: 96, position: 'right', raised: true },
       ],
       burnedInCaptions: buildDestinyCaptionCues(),
     },

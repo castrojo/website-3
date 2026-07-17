@@ -22,10 +22,10 @@ const wideAspectStems = new Set([
 // Curated dictionary of known filename basenames to their titles
 const curatedTitles = {
   // Story illustrations
-  'bluefin-huntress': 'Huntress',
-  'bluefin-dusk': 'Dusk (Day & Night)',
+  'bluefin-huntress': 'Bluefin by Andry Frazer and Jacob Schnurr',
+  'bluefin-dusk': 'Bluefin by Andry Frazer and Jacob Schnurr',
   'bluefin-lazy-days': 'Lazy Days',
-  'bluefin-chicken': 'Chicken',
+  'bluefin-chicken': 'Bluefin by Andry Frazer and Jacob Schnurr',
   'bluefin-eyes': 'Eyes',
   'bluefin-duality': 'Duality (Day & Night)',
   'bluefin-prey': 'Prey (Day & Night)',
@@ -189,8 +189,6 @@ const curatedTitles = {
 // its actual subject/quote, not just a name). Reserved for cases like this; most slides have
 // no entry here and fall back to the standard short caption pill.
 const curatedDescriptions = {
-  'bluefin-chicken': 'Bluefin brought to life by Andy Frazier and Jacob Schnurr',
-  'bluefin-huntress': 'Bluefin brought to life by Andy Frazier and Jacob Schnurr',
 }
 
 // Owner-authorized title-only 10-foot theater banner for the Track 0 Jono cue.
@@ -328,13 +326,31 @@ async function generate() {
     })
   }
 
-  // Reorder story wallpapers to place bluefin-huntress right after bluefin-chicken
+  // Reorder story wallpapers to place bluefin-huntress and bluefin-dusk right after bluefin-chicken
   const chickenIndex = wallpapers.findIndex(w => w.name === 'wolves/wolves/bluefin-chicken.webp')
   const huntressIndex = wallpapers.findIndex(w => w.name === 'wolves/wolves/bluefin-huntress.webp')
-  if (chickenIndex !== -1 && huntressIndex !== -1) {
-    const [huntress] = wallpapers.splice(huntressIndex, 1)
+  const duskIndex = wallpapers.findIndex(w => w.name === 'bluefin-dusk')
+
+  const itemsToMove = []
+  if (huntressIndex !== -1) {
+    itemsToMove.push({ name: 'wolves/wolves/bluefin-huntress.webp', index: huntressIndex })
+  }
+  if (duskIndex !== -1) {
+    itemsToMove.push({ name: 'bluefin-dusk', index: duskIndex })
+  }
+
+  // Sort descending by index so splicing one doesn't affect the other's index
+  itemsToMove.sort((a, b) => b.index - a.index)
+
+  const extracted = []
+  for (const item of itemsToMove) {
+    const [obj] = wallpapers.splice(item.index, 1)
+    extracted.unshift(obj)
+  }
+
+  if (chickenIndex !== -1) {
     const newChickenIndex = wallpapers.findIndex(w => w.name === 'wolves/wolves/bluefin-chicken.webp')
-    wallpapers.splice(newChickenIndex + 1, 0, huntress)
+    wallpapers.splice(newChickenIndex + 1, 0, ...extracted)
   }
 
   const outputPath = join(ROOT_DIR, 'src/components/wolves/wallpapers-list.ts')

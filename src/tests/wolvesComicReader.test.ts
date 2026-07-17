@@ -266,7 +266,7 @@ describe('wolvesComicReader', () => {
       wallpaper.name === path || wallpaper.dayName === path || wallpaper.nightName === path,
     ))
 
-    for (let time = 0; time < 423; time += 0.5) {
+    for (let time = 0; time < 423; time += 0.1) {
       await wrapper.setProps({ playlistCurrentTime: time })
       const image = activeTimelineImage(wrapper) ?? ''
       if (image !== previousImage) {
@@ -717,16 +717,20 @@ describe('wolvesComicReader', () => {
     // These specific assets are far wider than the ~16:9 ratio most wallpapers
     // use, so object-fit: contain (the default) letterboxes them badly. See
     // wideAspectStems in scripts/generate-wallpapers.js.
-    const wideAspectTitles = ['Chicken', 'Duality (Day & Night)', 'Huntress', 'Lazy Days']
-    for (const title of wideAspectTitles) {
-      const wallpaper = wallpapers.find(wp => wp.title === title)
-      expect(wallpaper, `expected a wallpaper titled "${title}"`).toBeDefined()
+    const coverWallpapers = [
+      wallpapers.find(wp => wp.name === 'wolves/wolves/bluefin-chicken.webp'),
+      wallpapers.find(wp => wp.name === 'wolves/wolves/bluefin-huntress.webp'),
+      wallpapers.find(wp => wp.name === 'bluefin-duality'),
+      wallpapers.find(wp => wp.name === 'wolves/wolves/bluefin-lazy-days.webp'),
+    ]
+    for (const wallpaper of coverWallpapers) {
+      expect(wallpaper, `expected a cover wallpaper`).toBeDefined()
       expect(wallpaper?.fit).toBe('cover')
     }
 
     // A representative normal-aspect wallpaper should keep the default (no
     // override), preserving the existing letterbox-avoidance behavior.
-    const dusk = wallpapers.find(wp => wp.title === 'Dusk (Day & Night)')
+    const dusk = wallpapers.find(wp => wp.name === 'bluefin-dusk')
     expect(dusk).toBeDefined()
     expect(dusk?.fit).toBeUndefined()
   })

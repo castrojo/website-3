@@ -22,15 +22,20 @@ export const wallpapers: Wallpaper[] = [
   {
     type: 'single',
     name: 'wolves/wolves/bluefin-chicken.webp',
-    title: 'Chicken',
-    description: 'Bluefin brought to life by Andy Frazier and Jacob Schnurr',
+    title: 'Bluefin by Andry Frazer and Jacob Schnurr',
     fit: 'cover'
+  },
+  {
+    type: 'daynight',
+    name: 'bluefin-dusk',
+    dayName: 'wolves/wolves/bluefin-dusk-day.webp',
+    nightName: 'wolves/wolves/bluefin-dusk-night.webp',
+    title: 'Bluefin by Andry Frazer and Jacob Schnurr'
   },
   {
     type: 'single',
     name: 'wolves/wolves/bluefin-huntress.webp',
-    title: 'Huntress',
-    description: 'Bluefin brought to life by Andy Frazier and Jacob Schnurr',
+    title: 'Bluefin by Andry Frazer and Jacob Schnurr',
     fit: 'cover'
   },
   {
@@ -40,13 +45,6 @@ export const wallpapers: Wallpaper[] = [
     nightName: 'wolves/wolves/bluefin-duality-night.webp',
     title: 'Duality (Day & Night)',
     fit: 'cover'
-  },
-  {
-    type: 'daynight',
-    name: 'bluefin-dusk',
-    dayName: 'wolves/wolves/bluefin-dusk-day.webp',
-    nightName: 'wolves/wolves/bluefin-dusk-night.webp',
-    title: 'Dusk (Day & Night)'
   },
   {
     type: 'single',
@@ -72,6 +70,21 @@ export const wallpapers: Wallpaper[] = [
     dayName: 'wolves/wolves/bluefin-tenacious-day.webp',
     nightName: 'wolves/wolves/bluefin-tenacious-night.webp',
     title: 'Tenacious Pterosaur (Day & Night)'
+  },
+  {
+    type: 'single',
+    name: 'wolves/showcase/Bluefin Microraptor by Dr. Natalia Jagielska.webp',
+    title: 'Bluefin Microraptor by Dr'
+  },
+  {
+    type: 'single',
+    name: 'wolves/showcase/Bluefin is Born.webp',
+    title: 'Bluefin is Born'
+  },
+  {
+    type: 'single',
+    name: 'wolves/showcase/Early Bazzite Prototype from EyeCantCU.webp',
+    title: 'Early Bazzite Prototype from EyeCantCU'
   },
   {
     type: 'single',
@@ -275,8 +288,88 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     type: 'single',
+    name: 'wolves/people/AlexK - Beacon of The Final Shape.png',
+    title: 'AlexK   Beacon of The Final Shape'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Always There.webp',
+    title: 'Always There'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Assisted-by: gregkh_clanker_t1000.webp',
+    title: 'Assisted By: gregkh Clanker T1000'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Bluefin Advisor Ashley McNamara.webp',
+    title: 'Bluefin Advisor Ashley McNamara'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Bluefin Advisor Chris Aniszczyk.webp',
+    title: 'Bluefin Advisor Chris Aniszczyk'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Bluefin Advisor Craig McLuckie.webp',
+    title: 'Bluefin Advisor Craig McLuckie'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Bluefin Advisor Dustin Kirkland.png',
+    title: 'Bluefin Advisor Dustin Kirkland'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Bluefin Advisor Michael Tunnell.png',
+    title: 'Bluefin Advisor Michael Tunnell'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Bluefin Advisor Sarah Novotny.webp',
+    title: 'Bluefin Advisor Sarah Novotny'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Bluefin Advisor Stormy Peters.webp',
+    title: 'Bluefin Advisor Stormy Peters'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/CNCF Executive Directory Jonathan Bryce.webp',
+    title: 'CNCF Executive Directory Jonathan Bryce'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Christoph Blecker - First Amongst Equals - Platinum Member.webp',
+    title: 'Christoph Blecker   First Amongst Equals   Platinum Member'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Give use KubeVirt, or give us death!.webp',
+    title: 'Give use KubeVirt, or give us death!'
+  },
+  {
+    type: 'single',
     name: 'wolves/people/IMG_7295.jpeg',
     title: 'IMG 7295'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/James Strong - This Man does not give applications root to his computers..webp',
+    title: 'James Strong   This Man does not give applications root to his computers.'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Keepers of the Helm of Sorrow.jpg',
+    title: 'Keepers of the Helm of Sorrow'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Klues, K8s, and Metal.webp',
+    title: 'Klues, K8s, and Metal'
   },
   {
     type: 'single',
@@ -285,8 +378,33 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     type: 'single',
+    name: 'wolves/people/NOT John Bazzite.jpg',
+    title: 'NOT John Bazzite'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Ralph Squillace - High Administrator of the Final Shape.webp',
+    title: 'Ralph Squillace   High Administrator of the Final Shape'
+  },
+  {
+    type: 'single',
     name: 'wolves/people/Screenshot From 2026-04-15 19-13-20.webp',
     title: 'Screenshot From 2026 04 15 19 13 20'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/These three idiots.webp',
+    title: 'These three idiots'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/We dine like Lords of Old!.webp',
+    title: 'We dine like Lords of Old!'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/Yikes!.webp',
+    title: 'Yikes!'
   },
   {
     type: 'single',
@@ -312,6 +430,11 @@ export const wallpapers: Wallpaper[] = [
     type: 'single',
     name: 'wolves/people/bketelsen.webp',
     title: 'Bketelsen'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/bootc creator Colin Walters.JPG',
+    title: 'Bootc creator Colin Walters'
   },
   {
     type: 'single',
@@ -968,6 +1091,11 @@ export const wallpapers: Wallpaper[] = [
     type: 'single',
     name: 'wolves/people/liz.webp',
     title: 'Liz'
+  },
+  {
+    type: 'single',
+    name: 'wolves/people/nova4ever.webp',
+    title: 'Nova4ever'
   },
   {
     type: 'single',
