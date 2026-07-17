@@ -3,7 +3,7 @@ import { activeCaptionCue, parseCaptionCues } from '@/utils/caption-cues'
 
 describe('caption cue parsing', () => {
   it('parses seconds|text lines into ordered cues', () => {
-    const cues = parseCaptionCues('4.36|What is a guardian?\n7.35|Are we gods?\n')
+    const cues = parseCaptionCues('4.36|What is a guardian?\n7.35|Are we protectors?\n')
     expect(cues).toHaveLength(2)
     expect(cues[0]).toMatchObject({ at: 4.36, text: 'What is a guardian?', until: 7.35 })
     expect(cues[1].until).toBe(Number.POSITIVE_INFINITY)

@@ -201,12 +201,11 @@ describe('wolves intro overlay sequence', () => {
     expect(JSON.stringify(destiny.overlays)).not.toContain('Robert Killen')
   })
 
-  it('carries all 22 dialogue cues retimed to the voiced BKm0TPqeOjY transcript', () => {
+  it('carries all 21 dialogue cues retimed to the voiced BKm0TPqeOjY transcript', () => {
     const cues = buildDestinyCaptionCues().filter(cue => !cue.comicHeroTitleCard)
 
     expect(cues.map(cue => ({ start: cue.start, text: cue.text }))).toEqual([
       { start: 4.36, text: 'What is a guardian?' },
-      { start: 7.35, text: 'Are we gods?' },
       { start: 9.40, text: 'We are connected to the weft and weave of the universe.' },
       { start: 13.68, text: 'No one knows how long we live.' },
       { start: 17.04, text: 'We stand alongside those without our gifts.' },
