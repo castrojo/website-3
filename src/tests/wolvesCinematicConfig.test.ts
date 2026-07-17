@@ -8,8 +8,20 @@ import {
 } from '@/config/wolves-cinematic'
 
 describe('wolves cinematic config', () => {
-  it('defines exactly seven segments', () => {
-    expect(CINEMATIC_SEGMENTS).toHaveLength(7)
+  it('defines the prologue, intro, and seven musical parts in order', () => {
+    expect(CINEMATIC_SEGMENTS).toHaveLength(9)
+    expect(CINEMATIC_SEGMENTS[0].chapter).toBe('PROLOGUE')
+    expect(CINEMATIC_SEGMENTS[1].chapter).toBe('INTRO')
+    expect(CINEMATIC_SEGMENTS[2].title).toBe('7 Days to the Wolves')
+    expect(CINEMATIC_SEGMENTS.filter(segment => !segment.excludeFromSoundtrack)).toHaveLength(7)
+  })
+
+  it('preserves the authored trims and captions on the intro segment', () => {
+    const intro = CINEMATIC_SEGMENTS[1]
+    expect(intro.youtubeId).toBe('BKm0TPqeOjY')
+    expect(intro.startSeconds).toBe(2)
+    expect(intro.endSeconds).toBe(114)
+    expect(intro.captionsText).toContain('What is a guardian?')
   })
 
   it('has unique, well-formed YouTube ids and complete metadata', () => {
@@ -25,17 +37,19 @@ describe('wolves cinematic config', () => {
     expect(ids.size).toBe(CINEMATIC_SEGMENTS.length)
   })
 
-  it('mirrors the segment list into the Spotify track list', () => {
-    expect(SPOTIFY_TRACK_LIST).toHaveLength(CINEMATIC_SEGMENTS.length)
+  it('mirrors only the musical segments into the Spotify track list', () => {
+    const musical = CINEMATIC_SEGMENTS.filter(segment => !segment.excludeFromSoundtrack)
+    expect(SPOTIFY_TRACK_LIST).toHaveLength(musical.length)
     SPOTIFY_TRACK_LIST.forEach((track, index) => {
-      expect(track.title).toBe(CINEMATIC_SEGMENTS[index].title)
-      expect(track.artist).toBe(CINEMATIC_SEGMENTS[index].artist)
+      expect(track.title).toBe(musical[index].title)
+      expect(track.artist).toBe(musical[index].artist)
     })
+    expect(SPOTIFY_TRACK_LIST[0].title).toBe('7 Days to the Wolves')
   })
 
   it('resolves per-segment crossfades with a default fallback', () => {
     expect(segmentCrossfadeMs(0)).toBe(DEFAULT_CROSSFADE_MS)
-    expect(segmentCrossfadeMs(1)).toBe(1500)
+    expect(segmentCrossfadeMs(3)).toBe(1500)
     expect(segmentCrossfadeMs(999)).toBe(DEFAULT_CROSSFADE_MS)
   })
 

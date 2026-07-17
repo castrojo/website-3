@@ -40,13 +40,14 @@ class FakePlayer {
     this.events.onStateChange?.({ data: 2 })
   }
 
-  loadVideoById(id: string) {
-    this.loadedId = id
+  loadVideoById(video: string | { videoId: string, startSeconds?: number }) {
+    this.loadedId = typeof video === 'string' ? video : video.videoId
+    this.currentTime = typeof video === 'string' ? 0 : video.startSeconds ?? 0
     this.playVideo()
   }
 
-  cueVideoById(id: string) {
-    this.cuedId = id
+  cueVideoById(video: string | { videoId: string, startSeconds?: number }) {
+    this.cuedId = typeof video === 'string' ? video : video.videoId
   }
 
   getCurrentTime() {
@@ -162,6 +163,32 @@ describe('useDualBufferPlayer', () => {
     expect(player.activeSide.value).toBe('b')
   })
 
+  it('honors authored trims: swaps at endSeconds and reports window-relative time', async () => {
+    const player = await startPlayer()
+    const store = useCinematicStore()
+    const [playerA, playerB] = FakePlayer.instances
+
+    // Advance past segment 0 so segment 1 (INTRO, startSeconds 2, endSeconds 114) is active.
+    playerA.duration = 100
+    playerA.currentTime = 100
+    vi.advanceTimersByTime(TIME_POLL_MS)
+    vi.advanceTimersByTime(2000)
+    expect(store.segmentIndex).toBe(1)
+    expect(player.activeSide.value).toBe('b')
+
+    playerB.duration = 120
+    playerB.currentTime = 50
+    vi.advanceTimersByTime(TIME_POLL_MS)
+    expect(store.nativeTime).toBe(50)
+    expect(store.segmentElapsed).toBe(48)
+    expect(store.segmentDuration).toBe(112)
+
+    // The authored cutoff at 114s triggers the swap before the video's natural 120s end.
+    playerB.currentTime = 114 - PRE_END_THRESHOLD_S
+    vi.advanceTimersByTime(TIME_POLL_MS)
+    expect(player.activeSide.value).toBe('a')
+  })
+
   it('finishes the cinematic when the last segment ends', async () => {
     const player = await startPlayer()
     const store = useCinematicStore()
@@ -169,16 +196,17 @@ describe('useDualBufferPlayer', () => {
     // Walk every boundary to the end of the seven-segment show.
     for (let i = 0; i < CINEMATIC_SEGMENTS.length - 1; i++) {
       const active = player.activeSide.value === 'a' ? FakePlayer.instances[0] : FakePlayer.instances[1]
-      active.duration = 100
-      active.currentTime = 100
+      // Past both the natural duration and any authored endSeconds cutoff.
+      active.duration = 1000
+      active.currentTime = 1000
       vi.advanceTimersByTime(TIME_POLL_MS)
       vi.advanceTimersByTime(3000)
     }
     expect(store.segmentIndex).toBe(CINEMATIC_SEGMENTS.length - 1)
 
     const active = player.activeSide.value === 'a' ? FakePlayer.instances[0] : FakePlayer.instances[1]
-    active.duration = 100
-    active.currentTime = 100
+    active.duration = 1000
+    active.currentTime = 1000
     vi.advanceTimersByTime(TIME_POLL_MS)
 
     expect(store.phase).toBe('finished')

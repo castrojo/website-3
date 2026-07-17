@@ -68,7 +68,8 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
       return
     }
     state.segmentIndex = segmentIndex
-    state.player.cueVideoById?.(CINEMATIC_SEGMENTS[segmentIndex].youtubeId)
+    const segment = CINEMATIC_SEGMENTS[segmentIndex]
+    state.player.cueVideoById?.({ videoId: segment.youtubeId, startSeconds: segment.startSeconds })
     applyVolume(state.player, 0)
   }
 
@@ -134,13 +135,19 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     if (!player) {
       return
     }
+    const segment = CINEMATIC_SEGMENTS[store.segmentIndex]
     const time = player.getCurrentTime?.() ?? 0
     const duration = player.getDuration?.() ?? 0
+    // Authored trims: elapsed/duration are reported relative to the segment's own
+    // window, while `time` stays on the video's native timeline for caption sync.
+    const startAt = segment?.startSeconds ?? 0
+    const endAt = segment?.endSeconds ?? duration
     if (!swapping) {
-      store.updateTime(time, duration)
+      store.updateTime(Math.max(0, time - startAt), Math.max(0, endAt - startAt), time)
     }
-    // Swap slightly before the end to hide YouTube's trailing black frame.
-    if (!swapping && duration > 0 && time >= duration - PRE_END_THRESHOLD_S) {
+    // Swap slightly before the end to hide YouTube's trailing black frame (or, for
+    // trimmed segments, right at the authored cutoff).
+    if (!swapping && endAt > 0 && time >= endAt - PRE_END_THRESHOLD_S) {
       beginSwap()
     }
   }
@@ -233,7 +240,8 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     }
 
     sides.a.segmentIndex = 0
-    playerA.loadVideoById?.(CINEMATIC_SEGMENTS[0].youtubeId)
+    const first = CINEMATIC_SEGMENTS[0]
+    playerA.loadVideoById?.({ videoId: first.youtubeId, startSeconds: first.startSeconds })
     applyVolume(playerA, 100)
     cueNext('b', 1)
     startPolling()

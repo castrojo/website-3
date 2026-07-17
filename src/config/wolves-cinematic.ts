@@ -10,6 +10,8 @@
  * pre-built user playlist is required.
  */
 
+import destinyCaptionsRaw from '@/data/wolves-destiny-captions.txt?raw'
+
 export interface CinematicSegment {
   /** YouTube video id for this segment. */
   youtubeId: string
@@ -19,17 +21,22 @@ export interface CinematicSegment {
   title: string
   /** Authored artist name from the Wolves soundtrack manifest. */
   artist: string
-  /** Artwork path relative to BASE_URL (served from public/). */
+  /** Artwork path relative to BASE_URL (served from public/), or an absolute URL. */
   artwork: string
   /** Per-segment crossfade override in milliseconds. */
   crossfadeMs?: number
+  /** Start playback this many seconds into the source video (authored trim). */
+  startSeconds?: number
+  /** Treat this native timestamp as the end of the segment (authored trim). */
+  endSeconds?: number
+  /** True for non-musical segments that have no Spotify soundtrack counterpart. */
+  excludeFromSoundtrack?: boolean
   /**
-   * Optional caption track URL (relative to BASE_URL). Format: one cue per line,
-   * `seconds|text`, matching src/data/wolves-destiny-captions.txt. No caption data
-   * is currently authored for these segments; the render pipeline is fully wired
-   * and activates as soon as a file is referenced here.
+   * Optional caption track. Format: one cue per line, `seconds|text`, timestamps
+   * keyed to the source video's native timeline (matching
+   * src/data/wolves-destiny-captions.txt).
    */
-  captionsUrl?: string
+  captionsText?: string
 }
 
 export interface SpotifyTrackRef {
@@ -54,6 +61,28 @@ export const PRE_END_THRESHOLD_S = 0.3
 export const TIME_POLL_MS = 250
 
 export const CINEMATIC_SEGMENTS: CinematicSegment[] = [
+  {
+    // Authored prologue audio track (wolves-prologue in src/data/wolves-intro-sequence.ts).
+    youtubeId: 'EB3IokHelRk',
+    chapter: 'PROLOGUE',
+    title: 'Gayane Ballet Suite (Adagio)',
+    artist: 'Aram Khachaturian',
+    artwork: 'https://i.ytimg.com/vi/EB3IokHelRk/hqdefault.jpg',
+    excludeFromSoundtrack: true,
+  },
+  {
+    // Authored intro segment (wolves-intro in src/data/wolves-intro-sequence.ts):
+    // start 2s in to skip the ESRB rating card, end at 114s before the promo card.
+    youtubeId: 'BKm0TPqeOjY',
+    chapter: 'INTRO',
+    title: 'Destiny 2: Into the Light Cinematic',
+    artist: 'Bungie',
+    artwork: 'https://i.ytimg.com/vi/BKm0TPqeOjY/hqdefault.jpg',
+    startSeconds: 2,
+    endSeconds: 114,
+    excludeFromSoundtrack: true,
+    captionsText: destinyCaptionsRaw,
+  },
   {
     youtubeId: 'LASru9j0oIc',
     chapter: 'PART I',
@@ -111,11 +140,13 @@ export const CINEMATIC_SEGMENTS: CinematicSegment[] = [
   },
 ]
 
-/** Mirrors the authored soundtrack; resolved to URIs at runtime via Spotify Search. */
-export const SPOTIFY_TRACK_LIST: SpotifyTrackRef[] = CINEMATIC_SEGMENTS.map(segment => ({
-  title: segment.title,
-  artist: segment.artist,
-}))
+/** Mirrors the authored soundtrack (musical segments only); resolved via Spotify Search. */
+export const SPOTIFY_TRACK_LIST: SpotifyTrackRef[] = CINEMATIC_SEGMENTS
+  .filter(segment => !segment.excludeFromSoundtrack)
+  .map(segment => ({
+    title: segment.title,
+    artist: segment.artist,
+  }))
 
 export function segmentCrossfadeMs(index: number): number {
   return CINEMATIC_SEGMENTS[index]?.crossfadeMs ?? DEFAULT_CROSSFADE_MS

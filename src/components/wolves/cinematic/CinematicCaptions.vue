@@ -1,36 +1,18 @@
 <script setup lang="ts">
-import type { CaptionCue } from '@/utils/caption-cues'
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useCinematicStore } from '@/stores/cinematic'
 import { activeCaptionCue, parseCaptionCues } from '@/utils/caption-cues'
 
 const store = useCinematicStore()
-const cues = ref<CaptionCue[]>([])
 
-// Reload the caption track whenever the segment changes; segments without an
-// authored track simply render nothing.
-watch(
-  () => store.segmentIndex,
-  async () => {
-    cues.value = []
-    const url = store.segment.captionsUrl
-    if (!url) {
-      return
-    }
-    try {
-      const response = await fetch(`${import.meta.env.BASE_URL}${url}`)
-      if (response.ok) {
-        cues.value = parseCaptionCues(await response.text())
-      }
-    }
-    catch {
-      // A missing caption file must never interrupt the cinematic.
-    }
-  },
-  { immediate: true },
-)
+// Caption tracks ship with the config as raw text; timestamps are keyed to the
+// source video's native timeline, so cues stay aligned with authored trims.
+const cues = computed(() => {
+  const text = store.segment.captionsText
+  return text ? parseCaptionCues(text) : []
+})
 
-const currentCue = computed(() => activeCaptionCue(cues.value, store.segmentElapsed))
+const currentCue = computed(() => activeCaptionCue(cues.value, store.nativeTime))
 </script>
 
 <template>

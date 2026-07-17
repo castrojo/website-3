@@ -19,8 +19,10 @@ export const useCinematicStore = defineStore('cinematic', {
   state: () => ({
     phase: 'lobby' as CinematicPhase,
     segmentIndex: 0,
-    /** Seconds elapsed inside the current segment. */
+    /** Seconds elapsed inside the current segment (relative to any authored trim). */
     segmentElapsed: 0,
+    /** Current time on the source video's native timeline (drives caption sync). */
+    nativeTime: 0,
     /** Reported duration of the current segment (0 until the player knows it). */
     segmentDuration: 0,
     /** Seconds of fully completed segments (recorded at each handoff). */
@@ -48,8 +50,9 @@ export const useCinematicStore = defineStore('cinematic', {
     enterCinematic() {
       this.phase = 'cinematic'
     },
-    updateTime(elapsed: number, duration: number) {
+    updateTime(elapsed: number, duration: number, nativeTime?: number) {
       this.segmentElapsed = elapsed
+      this.nativeTime = nativeTime ?? elapsed
       if (duration > 0) {
         this.segmentDuration = duration
       }
@@ -64,6 +67,7 @@ export const useCinematicStore = defineStore('cinematic', {
       this.completedElapsed += this.segmentDuration || this.segmentElapsed
       this.segmentIndex = Math.min(this.segmentIndex + 1, CINEMATIC_SEGMENTS.length - 1)
       this.segmentElapsed = 0
+      this.nativeTime = 0
       this.segmentDuration = 0
       this.crossfading = false
     },

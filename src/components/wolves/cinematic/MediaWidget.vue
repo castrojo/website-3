@@ -8,6 +8,9 @@ const emit = defineEmits<{ togglePlay: [] }>()
 
 const store = useCinematicStore()
 const base = import.meta.env.BASE_URL
+const artworkSrc = computed(() =>
+  store.segment.artwork.startsWith('http') ? store.segment.artwork : `${base}${store.segment.artwork}`,
+)
 
 function formatTime(totalSeconds: number): string {
   const seconds = Math.max(0, Math.floor(totalSeconds))
@@ -33,7 +36,7 @@ const spotifyLine = computed(() => {
   <footer class="wc-widget wc-plate wc-plate--sheen">
     <img
       class="wc-widget-art"
-      :src="`${base}${store.segment.artwork}`"
+      :src="artworkSrc"
       alt=""
     >
     <div class="wc-widget-info">

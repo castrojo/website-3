@@ -60,17 +60,24 @@ Premium; the store surfaces a clear error otherwise.
 
 ## Segment configuration
 
-Everything lives in `src/config/wolves-cinematic.ts`. A segment is:
+Everything lives in `src/config/wolves-cinematic.ts`. The show runs nine segments:
+the prologue (Gayane Ballet Suite Adagio) and the Destiny 2 Into the Light intro
+(both carried over from the authored intro sequence in
+`src/data/wolves-intro-sequence.ts`, including its 2s/114s trims), then the seven
+musical parts. A segment is:
 
 ```ts
 const segment: CinematicSegment = {
-  youtubeId: 'LASru9j0oIc', // 11-char YouTube video id
-  chapter: 'PART I', // nameplate detail line
-  title: '7 Days to the Wolves',
-  artist: 'Nightwish',
-  artwork: 'wolves-artwork/LASru9j0oIc.jpg', // relative to public/
+  youtubeId: 'BKm0TPqeOjY', // 11-char YouTube video id
+  chapter: 'INTRO', // nameplate detail line
+  title: 'Destiny 2: Into the Light Cinematic',
+  artist: 'Bungie',
+  artwork: 'https://i.ytimg.com/vi/BKm0TPqeOjY/hqdefault.jpg', // public/ path or URL
   crossfadeMs: 1500, // optional; DEFAULT_CROSSFADE_MS (800) otherwise
-  captionsUrl: 'captions/part1.txt', // optional; `seconds|text` per line
+  startSeconds: 2, // optional authored trim into the source video
+  endSeconds: 114, // optional authored cutoff on the native timeline
+  excludeFromSoundtrack: true, // non-musical: skipped by the Spotify list
+  captionsText: destinyCaptionsRaw, // optional; `seconds|text` per line
 }
 ```
 
@@ -81,10 +88,10 @@ and `TIME_POLL_MS` (250ms current-time poll; the IFrame API has no timeupdate
 event).
 
 Caption tracks use the existing repository format (`seconds|text`, one cue per
-line, a cue displays until the next begins — see
-`src/data/wolves-destiny-captions.txt`). No caption data is currently authored for
-these seven segments; the styled render pipeline activates as soon as a
-`captionsUrl` is set.
+line, a cue displays until the next begins), with timestamps keyed to the source
+video's native timeline. The intro segment renders
+`src/data/wolves-destiny-captions.txt` through the styled Destiny caption system;
+any other segment activates the same pipeline by setting `captionsText`.
 
 ## The dual-buffer player
 
@@ -198,8 +205,6 @@ that solves the actual problem.
   manifest, in order. Swapping in different series videos is a config-only change.
 - The "segment 3 widget layout" is implemented as the compact unified layout:
   artwork | chapter + title + progress + times | transport controls.
-- No caption data exists for these segments yet; the styled caption system is
-  fully wired and data-activated.
 - The YouTube choice is deliberately tokenless: embedded playback works with the
   viewer's existing YouTube browser session, so requiring a Google OAuth client
   would add configuration and consent friction for zero functional gain.

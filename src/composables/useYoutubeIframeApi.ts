@@ -24,12 +24,12 @@ export interface YoutubePlayer {
   /** Restores the player's audio output after `mute`. */
   unMute?: () => void
   /** Loads and immediately plays a new video in this same player instance. */
-  loadVideoById?: (videoId: string) => void
+  loadVideoById?: (video: string | { videoId: string, startSeconds?: number }) => void
   /**
    * Loads a new video into this player without playing it — used to silently preload the
    * next video on an inactive side of a ping-pong player pair so switching is instant.
    */
-  cueVideoById?: (videoId: string) => void
+  cueVideoById?: (video: string | { videoId: string, startSeconds?: number }) => void
 }
 
 export interface YoutubePlayerState {
