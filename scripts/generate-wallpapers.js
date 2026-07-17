@@ -22,16 +22,16 @@ const wideAspectStems = new Set([
 // Curated dictionary of known filename basenames to their titles
 const curatedTitles = {
   // Story illustrations
-  'bluefin-huntress': 'Bluefin by Andry Frazer and Jacob Schnurr',
-  'bluefin-dusk': 'Bluefin by Andry Frazer and Jacob Schnurr',
-  'bluefin-lazy-days': 'Lazy Days',
-  'bluefin-chicken': 'Bluefin by Andry Frazer and Jacob Schnurr',
-  'bluefin-eyes': 'Eyes',
-  'bluefin-duality': 'Duality (Day & Night)',
-  'bluefin-prey': 'Prey (Day & Night)',
-  'bluefin-collapse': 'Collapse (Day & Night)',
-  'bluefin-xe_red_tulip': 'Red Tulip',
-  'bluefin-tenacious': 'Tenacious Pterosaur (Day & Night)',
+  'bluefin-huntress': 'Huntress by Andy Frazer',
+  'bluefin-dusk': 'Dusk by Andy Frazer',
+  'bluefin-lazy-days': 'Lazy Days by Jay Balamurugan',
+  'bluefin-chicken': 'Bluefin by Andy Frazer',
+  'bluefin-eyes': 'Eyes by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',
+  'bluefin-duality': 'Duality (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',
+  'bluefin-prey': 'Prey (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',
+  'bluefin-collapse': 'Collapse (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',
+  'bluefin-xe_red_tulip': 'Red Tulip by Xe Iaso',
+  'bluefin-tenacious': 'Tenacious Pterosaur (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',
 
   // Showcase
   'showcase-1': 'Community Showcase by ki',
@@ -326,8 +326,7 @@ async function generate() {
     })
   }
 
-  // Keep the Bluefin artist trio adjacent and share the same authored title.
-  const bluefinGroupTitle = 'Bluefin by Andry Frazer and Jacob Schnurr'
+  // Keep the Bluefin artist trio adjacent.
   const chickenIndex = wallpapers.findIndex(w => w.name === 'wolves/wolves/bluefin-chicken.webp')
   const bluefinGroupItems = wallpapers.filter(wallpaper => wallpaper.name === 'bluefin-dusk' || wallpaper.name === 'wolves/wolves/bluefin-huntress.webp')
 
@@ -343,10 +342,6 @@ async function generate() {
       bluefinGroup.push(item)
     }
   }
-
-  bluefinGroup.forEach((item) => {
-    item.title = bluefinGroupTitle
-  })
 
   if (chickenIndex !== -1) {
     wallpapers.splice(chickenIndex, 1)

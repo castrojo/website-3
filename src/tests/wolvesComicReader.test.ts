@@ -735,6 +735,23 @@ describe('wolvesComicReader', () => {
     expect(dusk?.fit).toBeUndefined()
   })
 
+  it('includes authoritative artwork credits in local Bluefin artwork slide titles', () => {
+    const expectedCredits = new Map([
+      ['wolves/wolves/bluefin-chicken.webp', 'Bluefin by Andy Frazer'],
+      ['bluefin-duality', 'Duality (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
+      ['bluefin-dusk', 'Dusk by Andy Frazer'],
+      ['wolves/wolves/bluefin-eyes.webp', 'Eyes by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
+      ['wolves/wolves/bluefin-huntress.webp', 'Huntress by Andy Frazer'],
+      ['wolves/wolves/bluefin-lazy-days.webp', 'Lazy Days by Jay Balamurugan'],
+      ['bluefin-prey', 'Prey (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
+      ['bluefin-tenacious', 'Tenacious Pterosaur (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
+    ])
+
+    for (const [name, title] of expectedCredits) {
+      expect(wallpapers.find(wp => wp.name === name)?.title).toBe(title)
+    }
+  })
+
   it('renders title-only theater captions only for explicitly flagged wallpapers', async () => {
     const wallpapersWithDescription = wallpapers.filter(wp => wp.name.includes('wolves/people/') && wp.description)
     expect(wallpapersWithDescription.length, 'expected no wallpaper to carry a description after simplifying these interview captions').toBe(0)

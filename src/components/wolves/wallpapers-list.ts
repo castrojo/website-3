@@ -22,7 +22,7 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/wolves/bluefin-chicken.webp",
-    "title": "Bluefin by Andry Frazer and Jacob Schnurr",
+    "title": "Bluefin by Andy Frazer",
     "fit": "cover"
   },
   {
@@ -30,12 +30,12 @@ export const wallpapers: Wallpaper[] = [
     "name": "bluefin-dusk",
     "dayName": "wolves/wolves/bluefin-dusk-day.webp",
     "nightName": "wolves/wolves/bluefin-dusk-night.webp",
-    "title": "Bluefin by Andry Frazer and Jacob Schnurr"
+    "title": "Dusk by Andy Frazer"
   },
   {
     "type": "single",
     "name": "wolves/wolves/bluefin-huntress.webp",
-    "title": "Bluefin by Andry Frazer and Jacob Schnurr",
+    "title": "Huntress by Andy Frazer",
     "fit": "cover"
   },
   {
@@ -43,18 +43,18 @@ export const wallpapers: Wallpaper[] = [
     "name": "bluefin-duality",
     "dayName": "wolves/wolves/bluefin-duality-day.webp",
     "nightName": "wolves/wolves/bluefin-duality-night.webp",
-    "title": "Duality (Day & Night)",
+    "title": "Duality (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)",
     "fit": "cover"
   },
   {
     "type": "single",
     "name": "wolves/wolves/bluefin-eyes.webp",
-    "title": "Eyes"
+    "title": "Eyes by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)"
   },
   {
     "type": "single",
     "name": "wolves/wolves/bluefin-lazy-days.webp",
-    "title": "Lazy Days",
+    "title": "Lazy Days by Jay Balamurugan",
     "fit": "cover"
   },
   {
@@ -62,14 +62,14 @@ export const wallpapers: Wallpaper[] = [
     "name": "bluefin-prey",
     "dayName": "wolves/wolves/bluefin-prey-day.webp",
     "nightName": "wolves/wolves/bluefin-prey-night.webp",
-    "title": "Prey (Day & Night)"
+    "title": "Prey (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)"
   },
   {
     "type": "daynight",
     "name": "bluefin-tenacious",
     "dayName": "wolves/wolves/bluefin-tenacious-day.webp",
     "nightName": "wolves/wolves/bluefin-tenacious-night.webp",
-    "title": "Tenacious Pterosaur (Day & Night)"
+    "title": "Tenacious Pterosaur (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)"
   },
   {
     "type": "single",
@@ -681,11 +681,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/interview-l4e-games-for-everyone-2-linux-gaming.webp",
     "title": "Linux For Everyone — \"Games For Everyone #2: Linux Gaming Is WINNING\""
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/james.jpg",
-    "title": "James"
   },
   {
     "type": "single",
