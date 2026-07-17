@@ -27,7 +27,7 @@ only fires it on the natural or manual Part I -> Part II boundary, and
 |---|---|---|
 | lobby | `cinematic/CinematicLobby.vue` | Destiny-styled gate. No account, no OAuth; the click is the browser autoplay gesture. |
 | intro | `WolvesIntroOverlay.vue` | The locked 94s Gayane prologue and Destiny guardian trailer, driven by `src/data/wolves-intro-sequence.ts`. |
-| cinematic | `cinematic/CinematicStage.vue` | Dual-buffer YouTube playback of the seven musical parts, with the theater layer above. |
+| cinematic | `cinematic/CinematicStage.vue` | Dual-buffer YouTube playback of the six musical parts, with the theater layer above. |
 | creator-shorts | `WolvesCreatorShortsInterstitial.vue` | One-time fullscreen bridge between Part I and Part II. `CinematicStage.vue` (and its two `YT.Player` instances) is unmounted for the duration, not merely hidden; see section 2. |
 | finished | inline in `WolvesApp.vue` | End plate + replay. |
 
@@ -203,8 +203,8 @@ surfaces:
   every other synced surface (section 7).
 - **Team chat authoring**: per-song chat is authored in
   `src/data/wolves-team-chats.ts`, keyed by segment id (`ghosts-in-the-mist`,
-  `tonight-we-must-be-warriors`, `not-your-monster`, `end-of-you`, `soulbound`,
-  `last-ride-of-the-day` — the six Part II-VII songs; Part I has no entry).
+  `tonight-we-must-be-warriors`, `not-your-monster`, `soulbound`,
+  `last-ride-of-the-day` — the five Part II-VI songs; Part I has no entry).
   Each entry is a `WolvesTeamChatSequence` (`messages: []` plus
   `finalMessageEndsAtSeconds`), with messages timestamped by `atSeconds` and
   revealed as `store.segmentElapsed` reaches them; the log holds at full

@@ -602,14 +602,14 @@ AN4-ChK-12: Potential. Unlimited. Solution. Imagination. Probability? Most certa
     expect(wrapper.get('.wolves-intro-overlay-text').classes()).not.toContain('wolves-intro-overlay-text-dominant')
   })
 
-  it('preserves authored slate commas and periods when a cue opts in', async () => {
+  it('preserves authored punctuation when a cue opts in', async () => {
     const textSequence = [
       {
-        id: 'bluefin-cinematic-universe',
+        id: 'bluefin-briefing',
         kind: 'text' as const,
         duration: 5,
         overlays: [{
-          text: 'and this one. The Bluefin Cinematic Universe. Buckle up, nerds —',
+          text: 'and this one. The Blue Delivers. Buckle up, nerds —',
           start: 0,
           end: 5,
           preservePunctuation: true,
@@ -619,7 +619,7 @@ AN4-ChK-12: Potential. Unlimited. Solution. Imagination. Probability? Most certa
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: textSequence } })
     await flushPromises()
 
-    expect(wrapper.get('.wolves-intro-overlay-text').text()).toBe('and this one. The Bluefin Cinematic Universe. Buckle up, nerds —')
+    expect(wrapper.get('.wolves-intro-overlay-text').text()).toBe('and this one. The Blue Delivers. Buckle up, nerds —')
   })
 
   it('still strips periods and commas for normal Gayane cues', async () => {

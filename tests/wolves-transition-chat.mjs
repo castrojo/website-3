@@ -88,18 +88,6 @@ const transitions = [
   {
     name: 'transition-4',
     chapter: 'PART V',
-    title: 'End of You',
-    texts: [
-      '* knock the pod door *',
-      '[Use one dramatic metal bulkhead knock here.]',
-      'sabot-6',
-      '* knock * * knock *',
-    ],
-    selectors: ['[data-transition-effect="bulkhead-knock"]', '[data-transition-effect="bulkhead-response"]'],
-  },
-  {
-    name: 'transition-5',
-    chapter: 'PART VI',
     title: 'Soulbound',
     texts: [
       'angie:',
@@ -109,8 +97,8 @@ const transitions = [
     selectors: ['[data-transition-effect="explosion"]'],
   },
   {
-    name: 'transition-6',
-    chapter: 'PART VII',
+    name: 'transition-5',
+    chapter: 'PART VI',
     title: 'Last Ride of the Day',
     texts: [
       '// CLOUD NATIVE TRANSFORMATION DETECTED',

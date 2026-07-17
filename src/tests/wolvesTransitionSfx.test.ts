@@ -102,8 +102,7 @@ describe('transition-sfx helper', () => {
 
   it('extracts exactly the authored static and sfx cues from the structured transition lines', () => {
     expect(transitionSfxCues(CINEMATIC_SEGMENTS[4].transitionLore ?? [])).toEqual([
-      { effect: 'bulkhead-knock' },
-      { effect: 'bulkhead-response' },
+      { effect: 'explosion' },
     ])
 
     expect(transitionSfxCues(CINEMATIC_SEGMENTS[3].transitionLore ?? [])).toEqual([
