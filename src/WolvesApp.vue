@@ -167,24 +167,59 @@ async function handleCreatorShortsComplete() {
   await startCinematicStage()
 }
 
-async function seekIntroTarget(ratio: number) {
-  if (store.phase !== 'intro') {
-    stage.value?.destroy?.()
-    const meta = INTRO_DISPLAY['wolves-prologue']
-    store.setDisplayOverride({
-      ...meta,
-      canPrevious: false,
-    })
-    store.enterIntro()
-    await nextTick()
-    try {
-      await stage.value?.prepare?.()
-    }
-    catch {
-      return
-    }
+async function restoreIntroForNavigation(): Promise<number | null> {
+  const token = ++handoffToken
+  if (store.phase === 'intro') {
+    return token
   }
 
+  stage.value?.destroy?.()
+  introHandoff.value = false
+  introTransparent.value = false
+  await nextTick()
+  if (unmounted || token !== handoffToken) {
+    return null
+  }
+  const meta = INTRO_DISPLAY['wolves-prologue']
+  store.setDisplayOverride({
+    ...meta,
+    canPrevious: false,
+  })
+  store.enterIntro()
+  await nextTick()
+  if (unmounted || token !== handoffToken) {
+    return null
+  }
+  try {
+    await stage.value?.prepare?.()
+  }
+  catch {
+    return null
+  }
+  return token
+}
+
+async function handleIntroSkip(delta: number) {
+  const token = await restoreIntroForNavigation()
+  if (token === null || unmounted || token !== handoffToken) {
+    return
+  }
+
+  if (delta > 0) {
+    intro.value?.next()
+    return
+  }
+  intro.value?.previous()
+}
+
+async function seekIntroTarget(ratio: number) {
+  const token = await restoreIntroForNavigation()
+  if (token === null) {
+    return
+  }
+  if (unmounted || token !== handoffToken) {
+    return
+  }
   const target = resolveOverallRatioTarget(ratio)
   if (target.phase !== 'intro' || !intro.value) {
     return
@@ -193,14 +228,23 @@ async function seekIntroTarget(ratio: number) {
   for (let index = store.segmentIndex; index < target.segmentIndex; index++) {
     intro.value.next()
     await nextTick()
+    if (unmounted || token !== handoffToken) {
+      return
+    }
   }
 
   for (let index = store.segmentIndex; index > target.segmentIndex; index--) {
     intro.value.previous()
     await nextTick()
+    if (unmounted || token !== handoffToken) {
+      return
+    }
   }
 
   await waitForIntroTarget(target.segmentIndex, target.segmentDuration)
+  if (unmounted || token !== handoffToken) {
+    return
+  }
   intro.value.seekToRatio(target.seekRatio)
 }
 
@@ -330,7 +374,7 @@ onBeforeUnmount(() => {
           voice-over-label="Ikora voice over"
           @toggle-play="intro?.toggle()"
           @toggle-voice-over="(enabled: boolean) => intro?.setVoiceOverEnabled(enabled)"
-          @skip="(delta: number) => (delta > 0 ? intro?.next() : intro?.previous())"
+          @skip="handleIntroSkip"
           @seek="handleOverallSeek"
         />
       </template>

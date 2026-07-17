@@ -219,6 +219,25 @@ describe('useDualBufferPlayer', () => {
     expect(FakePlayer.instances.slice(2).every(instance => instance.cuedId.length > 0)).toBe(true)
   })
 
+  it('resets to side A before the fresh intro-to-cinematic prewarm starts Part I', async () => {
+    const player = await startPlayer()
+    const store = useCinematicStore()
+    store.shortsConsumed = true
+    FakePlayer.instances[0].events.onStateChange?.({ data: 0 })
+    vi.advanceTimersByTime(2000)
+    expect(player.activeSide.value).toBe('b')
+
+    player.destroy()
+    store.enterIntro()
+    await player.prepare()
+    store.enterCinematic()
+    await player.start()
+
+    expect(player.activeSide.value).toBe('a')
+    expect(FakePlayer.instances[2].playing).toBe(true)
+    expect(FakePlayer.instances[2].cuedId).toBe(CINEMATIC_SEGMENTS[0].youtubeId)
+  })
+
   it('rejects preparation and releases both sides when a player errors before ready', async () => {
     FakePlayer.emitReadyOnConstruct = false
     const hostA = ref<HTMLElement | null>(document.createElement('div'))

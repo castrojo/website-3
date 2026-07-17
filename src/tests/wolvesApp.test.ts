@@ -12,13 +12,18 @@ const CinematicLobbyStub = defineComponent({
 })
 
 const handoffCalls: string[] = []
+let introMounts = 0
+let introNexts = 0
+let startStage = async () => {
+  handoffCalls.push('start')
+}
 
 const CinematicStageStub = defineComponent({
   name: 'CinematicStage',
   setup(_, { expose }) {
     expose({
       prepare: vi.fn(async () => handoffCalls.push('prepare')),
-      start: vi.fn(async () => handoffCalls.push('start')),
+      start: () => startStage(),
       releaseHandoff: vi.fn(() => handoffCalls.push('release')),
       destroy: vi.fn(() => handoffCalls.push('destroy')),
       togglePlay: vi.fn(),
@@ -49,8 +54,13 @@ const WolvesIntroOverlayStub = defineComponent({
       handoffCalls.push('transparent')
     }
   },
+  mounted() {
+    introMounts++
+  },
   methods: {
-    next: vi.fn(),
+    next() {
+      introNexts++
+    },
     previous: vi.fn(),
     toggle: vi.fn(),
     seekToRatio: vi.fn(),
@@ -61,7 +71,7 @@ const WolvesIntroOverlayStub = defineComponent({
 
 const MediaWidgetStub = defineComponent({
   name: 'MediaWidget',
-  emits: ['seek'],
+  emits: ['seek', 'skip'],
   props: {
     showVoiceOverToggle: { type: Boolean, default: false },
     voiceOverEnabled: { type: Boolean, default: false },
@@ -87,6 +97,11 @@ describe('wolvesApp intro status handling', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     handoffCalls.length = 0
+    introMounts = 0
+    introNexts = 0
+    startStage = async () => {
+      handoffCalls.push('start')
+    }
   })
 
   afterEach(() => {
@@ -182,6 +197,68 @@ describe('wolvesApp intro status handling', () => {
 
     expect(handoffCalls).toEqual(['destroy', 'prepare'])
     expect(store.phase).toBe('intro')
+  })
+
+  it('cancels a delayed handoff before remounting the intro for a seek', async () => {
+    let resolveStart: (() => void) | undefined
+    startStage = () => {
+      handoffCalls.push('start')
+      return new Promise<void>((resolve) => {
+        resolveStart = resolve
+      })
+    }
+    const store = useCinematicStore()
+    store.enterIntro()
+    const wrapper = shallowMount(WolvesApp, {
+      global: { stubs: stubs() },
+    })
+
+    wrapper.getComponent(WolvesIntroOverlayStub).vm.$emit('complete')
+    await flushPromises()
+    expect(store.phase).toBe('cinematic')
+
+    wrapper.getComponent(MediaWidgetStub).vm.$emit('seek', 0)
+    await flushPromises()
+    await nextTick()
+
+    expect(store.phase).toBe('intro')
+    expect(introMounts).toBe(2)
+
+    resolveStart?.()
+    await flushPromises()
+
+    expect(handoffCalls).toEqual(['start', 'destroy', 'prepare'])
+    expect(wrapper.find('.wolves-intro-overlay-stub').exists()).toBe(true)
+  })
+
+  it('cancels a delayed handoff before using a fresh intro overlay for a skip', async () => {
+    let resolveStart: (() => void) | undefined
+    startStage = () => {
+      handoffCalls.push('start')
+      return new Promise<void>((resolve) => {
+        resolveStart = resolve
+      })
+    }
+    const store = useCinematicStore()
+    store.enterIntro()
+    const wrapper = shallowMount(WolvesApp, {
+      global: { stubs: stubs() },
+    })
+
+    wrapper.getComponent(WolvesIntroOverlayStub).vm.$emit('complete')
+    await flushPromises()
+    wrapper.getComponent(MediaWidgetStub).vm.$emit('skip', 1)
+    await flushPromises()
+    await nextTick()
+
+    expect(store.phase).toBe('intro')
+    expect(introMounts).toBe(2)
+    expect(introNexts).toBe(1)
+
+    resolveStart?.()
+    await flushPromises()
+
+    expect(handoffCalls).toEqual(['start', 'destroy', 'prepare'])
   })
 
   it('hides the prologue nameplate absent a cue-level title and shows it only for the authored override', async () => {

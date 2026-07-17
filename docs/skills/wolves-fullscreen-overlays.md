@@ -9,6 +9,7 @@ metadata:
   context7-sources:
     - /websites/developers_google_youtube
     - /websites/vuejs_guide
+    - /vuejs/vue
     - /mdn/content
 ---
 
@@ -38,6 +39,12 @@ Routine Wolves content uses `wolves-content-maintenance.md`. Unapproved visual w
 - Before an overall seek re-enters the intro from the cinematic, destroy the
   retained stage first so its players and poller stop, then prewarm the same
   stage again under the new intro.
+- An intro navigation that interrupts a handoff must increment its cancellation
+  token before awaiting, destroy the stage, clear the held/transparent overlay
+  flags, then await `nextTick()` while the phase is still cinematic. Enter the
+  intro only afterward so Vue remounts a usable overlay before its controls run.
+- `destroy()` must reset the dual buffer's active side to `a`; a later intro
+  prewarm then starts Part I from its canonical buffer.
 - Feature-detect `document.startViewTransition`; put the reactive handoff
   update in its callback, and run the same update directly when unsupported.
 - Read scrub-derived state immediately; the live player poll loop can overwrite test positions.

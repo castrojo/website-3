@@ -438,6 +438,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     resolveStart = null
     rejectPendingReadiness(new Error('YouTube player destroyed before readiness'))
     releasePlayers()
+    activeSide.value = 'a'
     prepared.value = false
     started.value = false
     swapping = false
