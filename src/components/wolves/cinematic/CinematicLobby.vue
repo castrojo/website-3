@@ -92,6 +92,26 @@ async function connect(provider: AuthProvider) {
       >
         BEGIN TRANSMISSION
       </button>
+
+      <blockquote class="wc-lobby-quote wc-plate wc-plate--sheen">
+        <p>
+          I've watched AI empower and destroy open source communities faster than
+          anything yet. And it's getting faster. No one is talking, everyone is
+          yelling past each other. I'm just as guilty as anyone.
+        </p>
+        <p>
+          So I did what any good open source maintainer would do -- I turned to my
+          friends. And together, we turned to metal. This project is designed to
+          prove the value of the human spirity of creation. This is a collection of
+          artists involved in Bluefin, who have been compensated for their work
+          thanks to your donations, we hope you enjoy the world they've created.
+          (If you don't like the metal then that's your problem.)
+        </p>
+        <div class="wc-lobby-quote-attribution">
+          <span class="wc-lobby-quote-name">-- Jorge Castro //projectbluefin.io</span>
+          <span class="wc-lobby-quote-detail">sabot-6 - Order of the Lost Saint - Die Vicesimo Primo mensis Iulii, Anno MMXXVI</span>
+        </div>
+      </blockquote>
     </div>
   </div>
 </template>
@@ -236,5 +256,44 @@ async function connect(provider: AuthProvider) {
     opacity: 0.35;
     cursor: default;
   }
+}
+
+.wc-lobby-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-top: 1.6rem;
+  padding: 2rem 2.4rem;
+  border-left: 2px solid var(--wc-gold);
+  text-align: left;
+
+  p {
+    font-size: 1.4rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--wc-white);
+  }
+}
+
+.wc-lobby-quote-attribution {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--wc-line);
+}
+
+.wc-lobby-quote-name {
+  font-family: var(--wc-font-mono);
+  font-size: 1.2rem;
+  letter-spacing: 0.14em;
+  color: var(--wc-gold);
+}
+
+.wc-lobby-quote-detail {
+  font-family: var(--wc-font-mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+  color: var(--wc-grey);
 }
 </style>
