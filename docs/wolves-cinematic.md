@@ -26,7 +26,7 @@ only fires it on the natural or manual Part I -> Part II boundary, and
 | Phase | Component | Role |
 |---|---|---|
 | lobby | `cinematic/CinematicLobby.vue` | Destiny-styled gate. No account, no OAuth; the click is the browser autoplay gesture. |
-| intro | `WolvesIntroOverlay.vue` | The authored species prelude, locked 94s Gayane prologue, cinematic-universe slate, and Destiny guardian trailer, driven by `src/data/wolves-intro-sequence.ts`. |
+| intro | `WolvesIntroOverlay.vue` | The locked 94s Gayane prologue and Destiny guardian trailer, driven by `src/data/wolves-intro-sequence.ts`. |
 | cinematic | `cinematic/CinematicStage.vue` | Dual-buffer YouTube playback of the seven musical parts, with the theater layer above. |
 | creator-shorts | `WolvesCreatorShortsInterstitial.vue` | One-time fullscreen bridge between Part I and Part II. `CinematicStage.vue` (and its two `YT.Player` instances) is unmounted for the duration, not merely hidden; see section 2. |
 | finished | inline in `WolvesApp.vue` | End plate + replay. |
@@ -141,12 +141,9 @@ make the viewport large; without them the reader letterboxes small.
 
 ## 4. The intro overlay (`WolvesIntroOverlay.vue`)
 
-Five authored segments from `buildIntroVideoSequence()`:
+Two authored segments from `buildIntroVideoSequence()`:
 
-1. **`species-prelude`** — a silent factual prelude about *Dimetrodon
-   limbatus* and *Deinonychus antirrhopus*, using only verified factual copy in
-   the existing Bluefin technical typography.
-2. **`wolves-prologue`** — 94s text cold open over authored backgrounds, with
+1. **`wolves-prologue`** — 94s text cold open over authored backgrounds, with
    the Gayane Ballet Suite (Adagio) as a background-only YouTube audio embed.
    The 94s figure is not arbitrary: per-second RMS loudness analysis of the
    track showed the final swell building from 89s, cresting at 92-94s, and
@@ -156,12 +153,7 @@ Five authored segments from `buildIntroVideoSequence()`:
    fade window is recomputed every tick so seeking back out of it restores
    full volume. Cue-level `nameplateTitle` can temporarily replace the top HUD
    title while a specific line is active.
-3. **`universal-blue-briefing`** — the authored terminal briefing, rendered as
-   text-only cards between the prologue and trailer.
-4. **`bluefin-cinematic-universe`** — the authored slate cards immediately
-   before the trailer handoff, including the exact single-character backtick
-   highlight in ``For Nova```.
-5. **`wolves-intro`** — the Destiny 2 guardian trailer with the six guardian
+2. **`wolves-intro`** — the Destiny 2 guardian trailer with the six guardian
    nameplates. It now defaults to the unvoiced source (`BV3BZKbpBns`) and
    exposes an intro-widget-only `Ikora voice over` toggle to the voiced cut
    (`BKm0TPqeOjY`) using object-form `loadVideoById({ videoId, startSeconds })`
