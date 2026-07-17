@@ -765,11 +765,11 @@ describe('wolvesComicReader', () => {
 
   it('includes authoritative artwork credits in local Bluefin artwork slide titles', () => {
     const expectedCredits = new Map([
-      ['wolves/wolves/bluefin-chicken.webp', 'Bluefin by Andy Frazer'],
+      ['wolves/wolves/bluefin-chicken.webp', 'Bluefin created by Andy Frazer and Jacob Schnurr'],
       ['bluefin-duality', 'Duality (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
-      ['bluefin-dusk', 'Dusk by Andy Frazer'],
+      ['bluefin-dusk', 'Bluefin created by Andy Frazer and Jacob Schnurr'],
       ['wolves/wolves/bluefin-eyes.webp', 'Eyes by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
-      ['wolves/wolves/bluefin-huntress.webp', 'Huntress by Andy Frazer'],
+      ['wolves/wolves/bluefin-huntress.webp', 'Bluefin created by Andy Frazer and Jacob Schnurr'],
       ['wolves/wolves/bluefin-lazy-days.webp', 'Lazy Days by Jay Balamurugan'],
       ['bluefin-prey', 'Prey (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
       ['bluefin-tenacious', 'Tenacious Pterosaur (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)'],
@@ -818,17 +818,19 @@ describe('wolvesComicReader', () => {
     expect(generator).toContain('\'bluefin-huntress\': \'Bluefin created by Andy Frazer and Jacob Schnurr\'')
   })
 
-  it('keeps long wallpaper page titles visible in the compact archive caption', async () => {
-    const wrapper = mount(WolvesComicReader)
-    const shuffledWallpapers = (wrapper.vm as any).shuffledWallpapers as Array<{ title?: string }>
-    const clydeWallpaper = shuffledWallpapers.find(wp => wp.title?.includes('Clyde Seepersad'))
-    expect(clydeWallpaper).toBeDefined()
+  it('renders Clyde as a theater-scale title card', async () => {
+    mockGalleryData([coverTrack])
+    const wrapper = mount(WolvesComicReader, {
+      props: { trackIndex: 0, playlistCurrentTime: 0 },
+    })
+    await flushPromises()
 
-    ;(wrapper.vm as any).page = shuffledWallpapers.indexOf(clydeWallpaper!) + 2
-    await nextTick()
+    const clydeSlide = ((wrapper.vm as any).timelineSlides as Array<{ id: string, startTime: number }>)
+      .find(slide => slide.id === 'wolves/people/interview-clyde-seepersad-linux-foundation.webp')
+    expect(clydeSlide).toBeDefined()
+    await wrapper.setProps({ playlistCurrentTime: clydeSlide!.startTime + 0.1 })
 
-    const caption = wrapper.find('.wallpaper-caption')
-    expect(caption.exists()).toBe(true)
+    const caption = wrapper.get('.wallpaper-theater-caption.is-title-only')
     expect(caption.text()).toContain('Clyde Seepersad')
   })
 })

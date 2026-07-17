@@ -33,23 +33,25 @@ describe('cinematicLobby.vue', () => {
     try {
       const storeLink = wrapper.get('a[href="https://store.projectbluefin.io"]')
       const enterButton = wrapper.get('button[type="button"]')
-      const tabStops = Array.from(wrapper.element.querySelectorAll<HTMLElement>('a[href], button:not(:disabled)'))
-        .filter(element => element.tabIndex >= 0)
+      const storeLinkElement = storeLink.element as HTMLAnchorElement
+      const enterButtonElement = enterButton.element as HTMLButtonElement
+      const tabStops = Array.from((wrapper.element as HTMLElement).querySelectorAll('a[href], button:not(:disabled)'))
+        .filter((element): element is HTMLElement => element instanceof HTMLElement && element.tabIndex >= 0)
 
-      expect(tabStops).toContain(storeLink.element)
-      expect(tabStops.indexOf(storeLink.element)).toBeLessThan(tabStops.indexOf(enterButton.element))
-      expect(storeLink.element.tabIndex).toBe(0)
-      expect(enterButton.element.tagName).toBe('BUTTON')
+      expect(tabStops).toContain(storeLinkElement)
+      expect(tabStops.indexOf(storeLinkElement)).toBeLessThan(tabStops.indexOf(enterButtonElement))
+      expect(storeLinkElement.tabIndex).toBe(0)
+      expect(enterButtonElement.tagName).toBe('BUTTON')
 
       // Happy DOM does not run browser-native button activation. Browsers dispatch
       // click on Enter keydown and Space keyup, so reproduce those default actions.
       for (const key of ['Enter', ' ']) {
-        ;(enterButton.element as HTMLButtonElement).focus()
+        enterButtonElement.focus()
         await enterButton.trigger('keydown', { key })
         if (key === ' ') {
           await enterButton.trigger('keyup', { key })
         }
-        ;(enterButton.element as HTMLButtonElement).click()
+        enterButtonElement.click()
       }
 
       expect(wrapper.emitted('enter')).toEqual([[], []])

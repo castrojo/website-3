@@ -22,10 +22,10 @@ const wideAspectStems = new Set([
 // Curated dictionary of known filename basenames to their titles
 const curatedTitles = {
   // Story illustrations
-  'bluefin-huntress': 'Huntress by Andy Frazer',
-  'bluefin-dusk': 'Dusk by Andy Frazer',
+  'bluefin-huntress': 'Bluefin created by Andy Frazer and Jacob Schnurr',
+  'bluefin-dusk': 'Bluefin created by Andy Frazer and Jacob Schnurr',
   'bluefin-lazy-days': 'Lazy Days by Jay Balamurugan',
-  'bluefin-chicken': 'Bluefin by Andy Frazer',
+  'bluefin-chicken': 'Bluefin created by Andy Frazer and Jacob Schnurr',
   'bluefin-eyes': 'Eyes by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',
   'bluefin-duality': 'Duality (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',
   'bluefin-prey': 'Prey (Day & Night) by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)',

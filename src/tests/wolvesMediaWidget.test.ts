@@ -13,7 +13,7 @@ describe('media widget', () => {
   it('drives its primary progress telemetry from the authored overall timeline while keeping segment time secondary', () => {
     const store = useCinematicStore()
     store.enterCinematic()
-    store.jumpToSegment(6)
+    store.jumpToSegment(5)
     store.updateTime(10, 271, 10)
 
     const wrapper = mount(MediaWidget)
@@ -24,6 +24,6 @@ describe('media widget', () => {
     expect(wrapper.text()).toContain('DEPLOYMENT: wolves-decryption-engine-7')
     expect(wrapper.text()).toContain(`${Math.round(store.overallProgress * 100)}%`)
     expect(wrapper.text()).toContain('0:10 / 4:31')
-    expect(wrapper.text()).toContain('TOTAL 34:16 / 38:37')
+    expect(wrapper.text()).toContain('TOTAL 30:22 / 34:06')
   })
 })

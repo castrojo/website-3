@@ -22,7 +22,7 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/wolves/bluefin-chicken.webp",
-    "title": "Bluefin by Andy Frazer",
+    "title": "Bluefin created by Andy Frazer and Jacob Schnurr",
     "fit": "cover"
   },
   {
@@ -30,12 +30,12 @@ export const wallpapers: Wallpaper[] = [
     "name": "bluefin-dusk",
     "dayName": "wolves/wolves/bluefin-dusk-day.webp",
     "nightName": "wolves/wolves/bluefin-dusk-night.webp",
-    "title": "Dusk by Andy Frazer"
+    "title": "Bluefin created by Andy Frazer and Jacob Schnurr"
   },
   {
     "type": "single",
     "name": "wolves/wolves/bluefin-huntress.webp",
-    "title": "Huntress by Andy Frazer",
+    "title": "Bluefin created by Andy Frazer and Jacob Schnurr",
     "fit": "cover"
   },
   {
@@ -669,7 +669,8 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/interview-clyde-seepersad-linux-foundation.webp",
-    "title": "Clyde Seepersad, Linux Foundation — \"AI Is Not Killing Tech Jobs\""
+    "title": "AI Is Not Killing Tech Jobs — The Data Says Otherwise | Clyde Seepersad, Linux Foundation",
+    "theaterTitleOnly": true
   },
   {
     "type": "single",
@@ -1095,7 +1096,8 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/nova4ever.webp",
-    "title": "Nova4ever"
+    "title": "Jay Balamurugan",
+    "theaterTitleOnly": true
   },
   {
     "type": "single",
