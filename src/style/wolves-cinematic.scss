@@ -18,6 +18,12 @@ body:has(> #app > .wolves-cinematic) {
   --wc-font-display: 'Inter', 'Arial Narrow', sans-serif;
   --wc-font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', monospace;
 
+  // Weyland-era type, used only by the intro overlay: Michroma stands in for the
+  // Microgramma/Eurostile Bold Extended of the Alien/Prometheus universe; Share
+  // Tech Mono is its terminal readout.
+  --wc-font-weyland: 'Michroma', 'Arial Narrow', sans-serif;
+  --wc-font-weyland-mono: 'Share Tech Mono', ui-monospace, monospace;
+
   background: var(--wc-bg);
   color: var(--wc-white);
   font-family: var(--wc-font-display);

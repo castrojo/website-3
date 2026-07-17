@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { YoutubePlayer } from '@/composables/useYoutubeIframeApi'
 import type { IntroOverlayTextCue, IntroVideoSpec } from '@/data/wolves-intro-sequence'
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import WolvesControlBar from '@/components/wolves/WolvesControlBar.vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 import { getYoutubePlayerConstructor, getYoutubePlayerState, loadYoutubeIframeApi } from '@/composables/useYoutubeIframeApi'
 import { dinosaurSpecies } from '@/data/wolves-dinosaur-species'
 import { wolvesGuardianDinosaurBonds } from '@/data/wolves-guardian-dinosaur-bonds'
@@ -10,6 +9,7 @@ import {
   activeOverlayCue,
   activeOverlayCues,
   advanceIntroSequence,
+  buildOverlayTextParts,
   createIntroSequenceState,
   isTextSegment,
   isTextSegmentComplete,
@@ -27,6 +27,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'complete'): void
+  (e: 'status', payload: {
+    currentTime: number
+    duration: number
+    paused: boolean
+    segmentId: string
+    canGoPrevious: boolean
+  }): void
 }>()
 
 const baseUrl = import.meta.env.BASE_URL
@@ -34,8 +41,8 @@ const baseUrl = import.meta.env.BASE_URL
 const sequenceState = ref(createIntroSequenceState())
 const currentTime = ref(0)
 const isPaused = ref(false)
-/** TEMPORARY REVIEW TOOLING -- see the debug-scrubber block below. Removed together with it. */
-const debugSegmentDuration = ref(0)
+/** The active segment's known duration, driving the hero widget's progress readout. */
+const activeSegmentDuration = ref(0)
 const mountHost = ref<HTMLDivElement | null>(null)
 const audioMountHost = ref<HTMLDivElement | null>(null)
 
@@ -51,7 +58,22 @@ const currentSegment = computed<IntroVideoSpec | undefined>(() => props.videos[s
 const canGoToPrevious = computed(() => sequenceState.value.index > 0)
 
 const activeCue = computed<IntroOverlayTextCue | undefined>(() => activeOverlayCue(currentSegment.value?.overlays, currentTime.value))
-const overlayText = computed(() => activeCue.value?.text)
+const burnedInCaptionCues = computed<readonly IntroOverlayTextCue[] | undefined>(() => {
+  if (!currentSegment.value || !isVideoSegment(currentSegment.value)) {
+    return undefined
+  }
+  return currentSegment.value.burnedInCaptions
+})
+const activeComicTitleCardCue = computed<IntroOverlayTextCue | undefined>(() => {
+  const cues = burnedInCaptionCues.value ?? currentSegment.value?.overlays
+  if (!cues) {
+    return undefined
+  }
+  return cues.find((cue: IntroOverlayTextCue) => cue.comicHeroTitleCard && currentTime.value >= cue.start && currentTime.value < cue.end)
+})
+const overlayCueForDisplay = computed<IntroOverlayTextCue | undefined>(() => activeComicTitleCardCue.value?.comicHeroTitleCard ? activeComicTitleCardCue.value : activeCue.value)
+const overlayText = computed(() => overlayCueForDisplay.value?.text)
+const activeBurnedInCaptions = computed<readonly IntroOverlayTextCue[]>(() => activeOverlayCues(burnedInCaptionCues.value, currentTime.value))
 /**
  * All cues active right now, not just the first match — the Guardian trailer intentionally
  * overlaps Christopher Blecker's and Natali Vlatko's windows since they share the same shot, so
@@ -127,17 +149,6 @@ function guardianDinosaurArtwork(guardianName: string): string | undefined {
   return species && `${import.meta.env.BASE_URL}${species.artwork.slice(2)}`
 }
 
-/** Total progress-bar duration across every segment, once each one's real duration is known. */
-const totalDuration = computed(() => segmentDurations.value.reduce((sum, duration) => sum + duration, 0))
-/** Sum of every segment's duration before the one currently playing. */
-const elapsedBeforeCurrentSegment = computed(() =>
-  segmentDurations.value.slice(0, sequenceState.value.index).reduce((sum, duration) => sum + duration, 0),
-)
-/** Total elapsed time across the whole intro sequence, for the permanent progress bar. */
-const totalElapsed = computed(() => elapsedBeforeCurrentSegment.value + currentTime.value)
-const progressPercent = computed(() =>
-  totalDuration.value > 0 ? Math.min(100, (totalElapsed.value / totalDuration.value) * 100) : 0,
-)
 /**
  * The Prologue/Epilogue's somber, BPM-paced fade only applies to text-card segments; the
  * trailer's Guardian overlays stay snappy since they're synced to fast-moving footage.
@@ -193,29 +204,19 @@ const activeSceneKey = computed(() => {
   return 'blank'
 })
 
-/**
- * TEMPORARY REVIEW TOOLING -- remove this whole block (and its template/CSS counterparts marked
- * the same way) once the Prologue content pass is signed off. It exists only so the user can
- * scrub quickly through the sequence and see which file backs each background while giving
- * direction; it is not part of the production intro experience.
- */
-const debugBackgroundLabel = computed(() => {
-  if (activeCue.value?.backgroundImage) {
-    return activeCue.value.backgroundImage
-  }
-  if (activeCrossfadeStage.value) {
-    return `${activeCrossfadeStage.value.crossfade.day} / ${activeCrossfadeStage.value.crossfade.night}`
-  }
-  return '(black)'
-})
-
 /** Splits text into single-character parts so every literal B/F can be highlighted without v-html. */
+/**
+ * Punctuation is stripped from displayed intro text only (authored data keeps
+ * it): periods and commas read as clutter at theater scale, per owner request.
+ */
+function stripIntroPunctuation(text: string): string {
+  return text.replace(/[.,]/g, '')
+}
+
 const overlayTextParts = computed(() => {
-  const text = overlayText.value ?? ''
-  return Array.from(text).map(char => ({
-    char,
-    highlight: char.toUpperCase() === 'B' || char.toUpperCase() === 'F',
-  }))
+  const text = stripIntroPunctuation(overlayText.value ?? '')
+  const highlight = overlayCueForDisplay.value?.highlightSubstring
+  return buildOverlayTextParts(text, highlight ? stripIntroPunctuation(highlight) : highlight)
 })
 
 let player: YoutubePlayer | null = null
@@ -224,12 +225,15 @@ let pollTimer: ReturnType<typeof setInterval> | null = null
 let textTimer: ReturnType<typeof setInterval> | null = null
 let loadToken = 0
 
-/** TEMPORARY REVIEW TOOLING -- removed together with the block above. */
-function debugHandleScrub(event: Event) {
-  const value = Number((event.target as HTMLInputElement).value)
-  currentTime.value = value
+/** Seek within the active segment by 0..1 ratio, driven by the hero widget's progress bar. */
+function seekToRatio(ratio: number) {
+  if (activeSegmentDuration.value <= 0) {
+    return
+  }
+  const target = Math.min(Math.max(ratio, 0), 1) * activeSegmentDuration.value
+  currentTime.value = target
   if (currentSegment.value?.kind === 'video') {
-    player?.seekTo?.(value, true)
+    player?.seekTo?.(target, true)
   }
 }
 
@@ -304,7 +308,7 @@ async function loadAudioTrack(youtubeVideoId: string | undefined) {
 function startTextSegment(segment: Extract<IntroVideoSpec, { kind: 'text' }>) {
   stopTextTimer()
   currentTime.value = 0
-  debugSegmentDuration.value = segment.duration
+  activeSegmentDuration.value = segment.duration
   void loadAudioTrack(segment.audioYoutubeVideoId)
 
   textTimer = setInterval(() => {
@@ -362,22 +366,26 @@ async function loadVideoSegment(segment: Extract<IntroVideoSpec, { kind: 'video'
   const mountNode = document.createElement('div')
   mountHost.value.appendChild(mountNode)
 
+  const playerVars = {
+    autoplay: 1,
+    controls: 0,
+    playsinline: 1,
+    rel: 0,
+    modestbranding: 1,
+    // Keep YouTube's own captions off so the burned-in subtitles remain the only overlay.
+    cc_load_policy: 0,
+    ...(segment.startOffset ? { start: Math.round(segment.startOffset) } : {}),
+  }
+
   player = new PlayerCtor(mountNode, {
     width: '100%',
     height: '100%',
     videoId: segment.youtubeVideoId,
-    playerVars: {
-      autoplay: 1,
-      controls: 0,
-      playsinline: 1,
-      rel: 0,
-      modestbranding: 1,
-      ...(segment.startOffset ? { start: Math.round(segment.startOffset) } : {}),
-    },
+    playerVars,
     events: {
       onReady: () => {
-        debugSegmentDuration.value = segment.maxDuration ?? player?.getDuration?.() ?? 0
-        segmentDurations.value[sequenceState.value.index] = debugSegmentDuration.value
+        activeSegmentDuration.value = segment.maxDuration ?? player?.getDuration?.() ?? 0
+        segmentDurations.value[sequenceState.value.index] = activeSegmentDuration.value
         stopPolling()
         pollTimer = setInterval(() => {
           currentTime.value = player?.getCurrentTime?.() ?? 0
@@ -458,6 +466,25 @@ onBeforeUnmount(() => {
   stopTextTimer()
   destroyAudioPlayer()
 })
+
+// Publishes playback state so the app-level Destiny hero widget (the single
+// transport surface) can render intro progress without owning any player.
+watchEffect(() => {
+  emit('status', {
+    currentTime: currentTime.value,
+    duration: activeSegmentDuration.value,
+    paused: isPaused.value,
+    segmentId: currentSegment.value?.id ?? '',
+    canGoPrevious: canGoToPrevious.value,
+  })
+})
+
+defineExpose({
+  next: handleNext,
+  previous: handlePrevious,
+  toggle: handleTogglePlayback,
+  seekToRatio,
+})
 </script>
 
 <template>
@@ -506,6 +533,20 @@ onBeforeUnmount(() => {
     </template>
 
     <template v-if="!isSomberTextSegment">
+      <div v-if="activeComicTitleCardCue" class="wolves-intro-overlay-title-card">
+        <p class="wolves-intro-overlay-title-card-line">
+          {{ activeComicTitleCardCue.text }}
+        </p>
+        <p class="wolves-intro-overlay-title-card-line wolves-intro-overlay-title-card-line-small">
+          Made by Paid Artists
+        </p>
+      </div>
+      <div v-else-if="activeBurnedInCaptions.length" class="wolves-intro-overlay-burned-captions">
+        <div v-for="cue in activeBurnedInCaptions" :key="`${cue.start}-${cue.end}-${cue.text}`" class="wolves-intro-overlay-burned-caption">
+          {{ stripIntroPunctuation(cue.text) }}
+        </div>
+      </div>
+
       <div
         v-for="cue in activeCues"
         :key="cue.text"
@@ -566,9 +607,10 @@ onBeforeUnmount(() => {
       class="wolves-intro-overlay-text font-mono"
       :class="{
         'wolves-intro-overlay-text-somber': isSomberTextSegment,
-        'wolves-intro-overlay-text-dominant': activeCue?.emphasis === 'dominant',
-        'wolves-intro-overlay-text-top': activeCue?.backgroundCrossfade && activeCue.emphasis !== 'dominant' && !activeCue.calamity && activeCue.textPosition !== 'bottom' && activeCue.textPosition !== 'bottom-right',
-        'wolves-intro-overlay-text-bottom-right': activeCue?.textPosition === 'bottom-right',
+        'wolves-intro-overlay-text-dominant': overlayCueForDisplay?.emphasis === 'dominant',
+        'wolves-intro-overlay-text-slim': overlayCueForDisplay?.slim,
+        'wolves-intro-overlay-text-top': overlayCueForDisplay?.backgroundCrossfade && overlayCueForDisplay.emphasis !== 'dominant' && !overlayCueForDisplay.calamity && overlayCueForDisplay.textPosition !== 'bottom' && overlayCueForDisplay.textPosition !== 'bottom-right',
+        'wolves-intro-overlay-text-bottom-right': overlayCueForDisplay?.textPosition === 'bottom-right',
       }"
       :style="isSomberTextSegment ? { animationDuration: `${somberFadeDuration}s` } : undefined"
     >
@@ -579,52 +621,8 @@ onBeforeUnmount(() => {
       >{{ part.char }}</span>
     </p>
 
-    <WolvesControlBar
-      container-class="wolves-intro-overlay-nav"
-      previous-button-class="wolves-intro-overlay-nav-btn"
-      next-button-class="wolves-intro-overlay-nav-btn"
-      play-button-class="wolves-intro-overlay-nav-btn"
-      previous-aria-label="Previous section"
-      next-aria-label="Next section"
-      play-aria-label="Resume intro"
-      pause-aria-label="Pause intro"
-      :can-go-previous="canGoToPrevious"
-      :can-go-next="true"
-      :is-playing="!isPaused"
-      @previous="handlePrevious"
-      @next="handleNext"
-      @toggle="handleTogglePlayback"
-    />
-
-    <!-- Permanent progress bar across the whole intro sequence (Prologue + Guardian trailer +
-         Epilogue), not just the currently-playing segment. -->
-    <div
-      class="wolves-intro-overlay-progress"
-      role="progressbar"
-      aria-label="Intro progress"
-      :aria-valuenow="Math.round(progressPercent)"
-      aria-valuemin="0"
-      aria-valuemax="100"
-    >
-      <div class="wolves-intro-overlay-progress-fill" :style="{ width: `${progressPercent}%` }" />
-    </div>
-
-    <!-- TEMPORARY REVIEW TOOLING -- remove this whole debug bar once the Prologue content pass
-         is signed off. Not part of the production intro experience. -->
-    <div class="wolves-intro-overlay-debug-bar">
-      <span class="wolves-intro-overlay-debug-filename">{{ debugBackgroundLabel }}</span>
-      <input
-        type="range"
-        min="0"
-        :max="debugSegmentDuration || 1"
-        step="0.1"
-        :value="currentTime"
-        class="wolves-intro-overlay-debug-scrub"
-        aria-label="Scrub intro sequence"
-        @input="debugHandleScrub"
-      >
-      <span class="wolves-intro-overlay-debug-time">{{ currentTime.toFixed(1) }}s / {{ debugSegmentDuration.toFixed(1) }}s</span>
-    </div>
+    <!-- Transport now lives in the app-level Destiny hero widget; the overlay
+         exposes next/previous/toggle/seekToRatio and emits status instead. -->
   </div>
 </template>
 
@@ -798,16 +796,94 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
+.wolves-intro-overlay-burned-captions {
+  position: absolute;
+  inset: 13rem 0 auto; /* top band: clear of the bottom guardian plates and the hero widget */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6vw;
+  pointer-events: none;
+  z-index: 4;
+}
+.wolves-intro-overlay-burned-caption {
+  max-width: 72rem;
+  padding: 1rem 2.2rem;
+  background: rgb(8 9 12 / 78%);
+  border: 1px solid rgb(200 180 137 / 28%);
+  border-left: 2px solid #c8b489;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 0.9rem), calc(100% - 0.9rem) 100%, 0 100%);
+  font-family: var(--wc-font-weyland-mono, 'Share Tech Mono', monospace);
+  font-size: clamp(1.9rem, 2.2vw, 2.6rem);
+  line-height: 1.45;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #e9e9e5;
+  text-align: center;
+}
+
+.wolves-intro-overlay-title-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 32px;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  z-index: 6;
+}
+
+.wolves-intro-overlay-title-card-line {
+  margin: 0;
+  max-width: min(90vw, 960px);
+  font-family: 'Eurostile', 'Uni Sans', 'Arial Narrow', 'Segoe UI', sans-serif;
+  font-size: clamp(2.6rem, 8vw, 6.2rem);
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff4c8;
+  text-shadow:
+    -3px -3px 0 #000,
+    3px -3px 0 #000,
+    -3px 3px 0 #000,
+    3px 3px 0 #000,
+    0 0 24px rgb(0 0 0 / 90%);
+  -webkit-text-stroke: 2.8px #000;
+}
+
+.wolves-intro-overlay-title-card-line-small {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  border: 1px solid rgb(255 244 200 / 45%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 45%);
+  font-size: clamp(1.6rem, 3.8vw, 3rem);
+  letter-spacing: 0.24em;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
 .wolves-intro-overlay-text {
   position: absolute;
   left: 5%;
   bottom: 12%;
   right: 5%;
   margin: 0;
-  color: #f5f5f5;
-  font-size: clamp(3.25rem, 7vw, 6.5rem);
-  line-height: 1.25;
-  text-shadow: 0 2px 12px rgb(0 0 0 / 80%);
+  color: #e9e9e5;
+  /* Weyland-era display type (Michroma = Microgramma/Eurostile Extended stand-in). */
+  font-family: var(--wc-font-weyland, 'Michroma', 'Arial Narrow', sans-serif);
+  font-size: clamp(2.6rem, 5.2vw, 5rem);
+  line-height: 1.2;
+  font-weight: 400; /* Michroma ships one weight; synthetic bold ruins it */
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 85%);
   /* Some prologue cues author an explicit line break in their `text` (a JS/TS template
      literal newline) to control where a long line wraps -- preserve it instead of collapsing
      to a single line, per explicit user request (2026-07-15). */
@@ -876,6 +952,7 @@ onBeforeUnmount(() => {
 
 .wolves-intro-letter-highlight {
   color: var(--color-blue);
+  font-weight: 900;
 }
 
 /* The Arthur C. Clarke quote is the emotional hinge of the Prologue (the line that explains
@@ -895,40 +972,9 @@ onBeforeUnmount(() => {
   text-shadow: 0 4px 24px rgb(0 0 0 / 90%);
 }
 
-.wolves-intro-overlay-nav {
-  position: absolute;
-  top: 5%;
-  right: 5%;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.wolves-intro-overlay-nav-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0;
-  border: 1px solid rgb(255 255 255 / 40%);
-  border-radius: 999px;
-  background: rgb(0 0 0 / 40%);
-  color: #f5f5f5;
-  cursor: pointer;
-}
-
-.wolves-intro-overlay-nav-btn svg {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.wolves-intro-overlay-nav-btn:hover:not(:disabled) {
-  background: rgb(0 0 0 / 65%);
-}
-
-.wolves-intro-overlay-nav-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
+.wolves-intro-overlay-text-slim {
+  font-weight: 500;
+  letter-spacing: 0.03em;
 }
 
 /* Guardian trailer callout, redesigned as a Destiny 2 "Guardian Rank Up" style HUD burst:
@@ -1088,6 +1134,7 @@ onBeforeUnmount(() => {
 
 .wolves-guardian-plate-label {
   margin: 0;
+  font-family: var(--wc-font-weyland-mono, 'Share Tech Mono', monospace);
   font-size: clamp(1.4rem, 1.1rem + 0.6vw, 1.8rem);
   letter-spacing: 0.35em;
   color: #93c5fd;
@@ -1095,6 +1142,7 @@ onBeforeUnmount(() => {
 
 .wolves-guardian-plate-class {
   margin: 0.35rem 0 0;
+  font-family: var(--wc-font-weyland-mono, 'Share Tech Mono', monospace);
   font-size: clamp(1.6rem, 1.2rem + 0.9vw, 2.1rem);
   letter-spacing: 0.05em;
   color: #bfdbfe;
@@ -1103,8 +1151,10 @@ onBeforeUnmount(() => {
 
 .wolves-guardian-plate-name {
   margin: 0.2rem 0 0;
-  font-size: clamp(2.6rem, 1.9rem + 1.6vw, 3.6rem);
-  font-weight: 700;
+  /* Weyland display face; single weight, so no synthetic bolding. */
+  font-family: var(--wc-font-weyland, 'Michroma', sans-serif);
+  font-size: clamp(2.2rem, 1.7rem + 1.3vw, 3.1rem);
+  font-weight: 400;
   color: #f5f5f5;
   background: linear-gradient(to bottom, #fff 0%, #e2e8f0 60%, #a0aec0 100%);
   -webkit-background-clip: text;
@@ -1116,6 +1166,7 @@ onBeforeUnmount(() => {
 
 .wolves-guardian-plate-title {
   margin: 0.35rem 0 0;
+  font-family: var(--wc-font-weyland-mono, 'Share Tech Mono', monospace);
   font-size: clamp(1.5rem, 1.2rem + 0.7vw, 1.9rem);
   color: #94a3b8;
 }
@@ -1251,50 +1302,6 @@ onBeforeUnmount(() => {
 /* Permanent progress bar for the whole intro sequence (Prologue + Guardian trailer +
    Epilogue), so the runtime of the full experience is always visible, not just whichever
    segment happens to be playing. */
-.wolves-intro-overlay-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background: rgb(255 255 255 / 15%);
-}
-
-.wolves-intro-overlay-progress-fill {
-  height: 100%;
-  background: #93c5fd;
-  transition: width 0.2s linear;
-}
-
 /* TEMPORARY REVIEW TOOLING -- remove this whole rule block once the Prologue content pass is
    signed off. Not part of the production intro experience. */
-.wolves-intro-overlay-debug-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: rgb(0 0 0 / 75%);
-  font-family: monospace;
-  font-size: 1.5rem;
-  color: #0f0;
-}
-
-.wolves-intro-overlay-debug-filename {
-  flex: 1 1 auto;
-  font-weight: bold;
-}
-
-.wolves-intro-overlay-debug-scrub {
-  flex: 2 1 auto;
-}
-
-.wolves-intro-overlay-debug-time {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
 </style>

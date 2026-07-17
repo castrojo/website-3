@@ -13,7 +13,7 @@ const emit = defineEmits<{
 const store = useCinematicStore()
 const base = import.meta.env.BASE_URL
 const artworkSrc = computed(() =>
-  store.segment.artwork.startsWith('http') ? store.segment.artwork : `${base}${store.segment.artwork}`,
+  store.display.artwork.startsWith('http') ? store.display.artwork : `${base}${store.display.artwork}`,
 )
 
 function formatTime(totalSeconds: number): string {
@@ -42,8 +42,8 @@ const progressBlocks = computed(() => {
   return `[${'#'.repeat(filled)}${'-'.repeat(PROGRESS_CELLS - filled)}]`
 })
 
-const canPrevious = computed(() => store.segmentIndex > 0 && !store.crossfading)
-const canNext = computed(() => !store.isLastSegment && !store.crossfading)
+const canPrevious = computed(() => store.widgetCanPrevious)
+const canNext = computed(() => store.widgetCanNext)
 
 const progressEl = ref<HTMLElement | null>(null)
 
@@ -64,8 +64,8 @@ function handleSeek(event: MouseEvent) {
       alt=""
     >
     <div class="wc-widget-info">
-      <span class="wc-label">{{ store.segment.chapter }} · {{ store.segmentIndex + 1 }}/{{ store.segmentCount }}</span>
-      <span class="wc-widget-title">{{ store.segment.title }}</span>
+      <span class="wc-label">{{ store.display.counter }}</span>
+      <span class="wc-widget-title">{{ store.display.title }}</span>
       <div
         ref="progressEl"
         class="wc-widget-progress"
@@ -132,7 +132,7 @@ function handleSeek(event: MouseEvent) {
   position: fixed;
   inset-inline: 0;
   bottom: 0;
-  z-index: 40;
+  z-index: 1000; // above the intro overlay's fixed layer so one transport rules both phases
   display: flex;
   align-items: center;
   gap: 1.6rem;

@@ -103,6 +103,15 @@ describe('wolvesIntroOverlay video segments', () => {
     expect(wrapper.find('video').exists()).toBe(false)
   })
 
+  it('disables YouTube captions so the burned-in subtitles stay the only captions', async () => {
+    mount(WolvesIntroOverlay, { props: { videos: videoOnlySequence } })
+    await flushPromises()
+    resolveIframeApi()
+    await flushPromises()
+
+    expect(players[0].config.playerVars.cc_load_policy).toBe(0)
+  })
+
   it('advances to done and emits complete when the video ends', async () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: videoOnlySequence } })
     await flushPromises()
@@ -139,6 +148,22 @@ describe('wolvesIntroOverlay video segments', () => {
     expect(wrapper.text()).toContain('Guardians')
   })
 
+  it('renders a comic-book placeholder card for an active title-card cue', async () => {
+    const wrapper = mount(WolvesIntroOverlay, {
+      props: {
+        videos: [{
+          id: 'wolves-intro',
+          kind: 'video' as const,
+          youtubeVideoId: 'BKm0TPqeOjY',
+          overlays: [{ text: 'Comic Hero Shots of YOU', start: 0, end: 5, comicHeroTitleCard: true }],
+        }],
+      },
+    })
+
+    expect(wrapper.text()).toContain('Comic Hero Shots of YOU')
+    expect(wrapper.text()).toContain('Made by Paid Artists')
+  })
+
   it('force-advances at maxDuration instead of waiting for the natural end', async () => {
     const cutoffSequence = [
       { id: 'wolves-intro', kind: 'video' as const, youtubeVideoId: 'BKm0TPqeOjY', maxDuration: 1 },
@@ -166,7 +191,8 @@ describe('wolvesIntroOverlay video segments', () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: cutoffSequence } })
     await flushPromises()
 
-    await wrapper.get('button[aria-label="Next section"]').trigger('click')
+    // Transport is exposed to the app-level hero widget instead of an in-overlay bar.
+    wrapper.vm.next()
     await flushPromises()
 
     expect(wrapper.emitted('complete')).toBeUndefined()
@@ -176,13 +202,13 @@ describe('wolvesIntroOverlay video segments', () => {
   it('next completes when there is no following segment', async () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: videoOnlySequence } })
 
-    await wrapper.get('button[aria-label="Next section"]').trigger('click')
+    wrapper.vm.next()
     await flushPromises()
 
     expect(wrapper.emitted('complete')).toHaveLength(1)
   })
 
-  it('previous is disabled on the first segment and re-enabled after advancing', async () => {
+  it('previous gating is published through status and previous steps back a segment', async () => {
     const cutoffSequence = [
       { id: 'wolves-prologue', kind: 'text' as const, duration: 5 },
       { id: 'wolves-intro', kind: 'video' as const, youtubeVideoId: 'BKm0TPqeOjY' },
@@ -190,30 +216,36 @@ describe('wolvesIntroOverlay video segments', () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: cutoffSequence } })
     await flushPromises()
 
-    const previousButton = wrapper.get('button[aria-label="Previous section"]')
-    expect(previousButton.attributes('disabled')).toBeDefined()
+    // Gating is published through the status emit for the hero widget.
+    const lastStatus = () => {
+      const events = wrapper.emitted('status') as Array<[{ canGoPrevious: boolean }]>
+      return events[events.length - 1][0]
+    }
+    expect(lastStatus().canGoPrevious).toBe(false)
 
-    await wrapper.get('button[aria-label="Next section"]').trigger('click')
+    wrapper.vm.next()
     await flushPromises()
 
-    expect(previousButton.attributes('disabled')).toBeUndefined()
+    expect(lastStatus().canGoPrevious).toBe(true)
 
-    await previousButton.trigger('click')
+    wrapper.vm.previous()
     await flushPromises()
 
     expect(wrapper.find('.wolves-intro-overlay-player').exists()).toBe(false)
   })
 
-  it('pauses and resumes the Destiny segment from the permanent control bar', async () => {
+  it('pauses and resumes the Destiny segment through the exposed transport', async () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: videoOnlySequence } })
     await flushPromises()
     resolveIframeApi()
     await flushPromises()
 
-    await wrapper.get('button[aria-label="Pause intro"]').trigger('click')
+    wrapper.vm.toggle()
+    await flushPromises()
     expect(players[0].pauseVideo).toHaveBeenCalledOnce()
 
-    await wrapper.get('button[aria-label="Resume intro"]').trigger('click')
+    wrapper.vm.toggle()
+    await flushPromises()
     expect(players[0].playVideo).toHaveBeenCalledOnce()
   })
 
@@ -226,7 +258,7 @@ describe('wolvesIntroOverlay video segments', () => {
 })
 
 describe('wolvesIntroOverlay text segments', () => {
-  it('pauses and resumes the prologue from its permanent control bar', async () => {
+  it('pauses and resumes the prologue through the exposed transport', async () => {
     const textSequence = [
       { id: 'wolves-prologue', kind: 'text' as const, duration: 1 },
     ]
@@ -234,13 +266,13 @@ describe('wolvesIntroOverlay text segments', () => {
     await flushPromises()
 
     await vi.advanceTimersByTimeAsync(200)
-    await wrapper.get('button[aria-label="Pause intro"]').trigger('click')
+    wrapper.vm.toggle()
     await vi.advanceTimersByTimeAsync(1000)
     await flushPromises()
 
     expect(wrapper.emitted('complete')).toBeUndefined()
 
-    await wrapper.get('button[aria-label="Resume intro"]').trigger('click')
+    wrapper.vm.toggle()
     await vi.advanceTimersByTimeAsync(800)
     await flushPromises()
 

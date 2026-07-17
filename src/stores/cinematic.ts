@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { CINEMATIC_SEGMENTS } from '@/config/wolves-cinematic'
 
-export type CinematicPhase = 'lobby' | 'cinematic' | 'finished'
+export type CinematicPhase = 'lobby' | 'intro' | 'cinematic' | 'finished'
 
 export interface SpotifyPlaybackState {
   status: 'inactive' | 'initializing' | 'ready' | 'playing' | 'paused' | 'error'
@@ -29,6 +29,18 @@ export const useCinematicStore = defineStore('cinematic', {
     completedElapsed: 0,
     playing: false,
     crossfading: false,
+    /**
+     * When the authored intro overlay is on stage it owns playback; this override
+     * feeds the hero widget its display metadata and transport gating instead of
+     * the segment config.
+     */
+    displayOverride: null as null | {
+      chapter: string
+      title: string
+      artist: string
+      artwork: string
+      canPrevious: boolean
+    },
     spotify: {
       status: 'inactive',
       trackTitle: '',
@@ -44,9 +56,39 @@ export const useCinematicStore = defineStore('cinematic', {
     segmentProgress: state =>
       state.segmentDuration > 0 ? Math.min(1, state.segmentElapsed / state.segmentDuration) : 0,
     isLastSegment: state => state.segmentIndex >= CINEMATIC_SEGMENTS.length - 1,
+    /** What the hero widget shows: the intro override when present, else the segment. */
+    display(state): { chapter: string, title: string, artist: string, artwork: string, counter: string } {
+      if (state.displayOverride) {
+        return { ...state.displayOverride, counter: state.displayOverride.chapter }
+      }
+      const segment = this.segment
+      return {
+        chapter: segment.chapter,
+        title: segment.title,
+        artist: segment.artist,
+        artwork: segment.artwork,
+        counter: `${segment.chapter} · ${state.segmentIndex + 1}/${CINEMATIC_SEGMENTS.length}`,
+      }
+    },
+    widgetCanPrevious(state): boolean {
+      if (state.displayOverride) {
+        return state.displayOverride.canPrevious
+      }
+      return state.segmentIndex > 0 && !state.crossfading
+    },
+    widgetCanNext(state): boolean {
+      if (state.displayOverride) {
+        return true // the intro's Next doubles as Skip
+      }
+      return !this.isLastSegment && !state.crossfading
+    },
   },
 
   actions: {
+    /** Lobby exit: the authored intro overlay (prologue + guardian trailer) plays first. */
+    enterIntro() {
+      this.phase = 'intro'
+    },
     enterCinematic() {
       this.phase = 'cinematic'
     },
@@ -87,6 +129,16 @@ export const useCinematicStore = defineStore('cinematic', {
     },
     setSpotifyState(patch: Partial<SpotifyPlaybackState>) {
       this.spotify = { ...this.spotify, ...patch }
+    },
+    setDisplayOverride(override: typeof this.displayOverride) {
+      this.displayOverride = override
+    },
+    /** Fresh clock for the cinematic proper; intro watch time does not count. */
+    resetClock() {
+      this.segmentElapsed = 0
+      this.completedElapsed = 0
+      this.nativeTime = 0
+      this.segmentDuration = 0
     },
   },
 })

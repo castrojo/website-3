@@ -5,7 +5,9 @@ import CinematicLobby from '@/components/wolves/cinematic/CinematicLobby.vue'
 import CinematicStage from '@/components/wolves/cinematic/CinematicStage.vue'
 import MediaWidget from '@/components/wolves/cinematic/MediaWidget.vue'
 import Nameplate from '@/components/wolves/cinematic/Nameplate.vue'
+import WolvesIntroOverlay from '@/components/wolves/WolvesIntroOverlay.vue'
 import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback'
+import { buildIntroVideoSequence } from '@/data/wolves-intro-sequence'
 import { useAuthStore } from '@/stores/auth'
 import { useCinematicStore } from '@/stores/cinematic'
 
@@ -67,6 +69,46 @@ async function enterCinematic() {
   }
 }
 
+const introVideos = buildIntroVideoSequence()
+const intro = ref<InstanceType<typeof WolvesIntroOverlay> | null>(null)
+
+// Factual display metadata for the two intro segments (see wolves-intro-sequence.ts).
+const INTRO_DISPLAY: Record<string, { chapter: string, title: string, artist: string, artwork: string }> = {
+  'wolves-prologue': {
+    chapter: 'PROLOGUE',
+    title: 'Gayane Ballet Suite (Adagio)',
+    artist: 'Aram Khachaturian',
+    artwork: 'https://i.ytimg.com/vi/EB3IokHelRk/hqdefault.jpg',
+  },
+  'wolves-intro': {
+    chapter: 'INTRO',
+    title: 'Destiny 2: Into the Light Cinematic',
+    artist: 'Bungie',
+    artwork: 'https://i.ytimg.com/vi/BKm0TPqeOjY/hqdefault.jpg',
+  },
+}
+
+function handleIntroStatus(payload: {
+  currentTime: number
+  duration: number
+  paused: boolean
+  segmentId: string
+  canGoPrevious: boolean
+}) {
+  const meta = INTRO_DISPLAY[payload.segmentId]
+  if (meta) {
+    store.setDisplayOverride({ ...meta, canPrevious: payload.canGoPrevious })
+  }
+  store.updateTime(payload.currentTime, payload.duration)
+  store.setPlaying(!payload.paused)
+}
+
+async function handleIntroComplete() {
+  store.setDisplayOverride(null)
+  store.resetClock()
+  await enterCinematic()
+}
+
 function restart() {
   window.location.reload()
 }
@@ -74,7 +116,30 @@ function restart() {
 
 <template>
   <div class="wolves-cinematic">
-    <CinematicLobby v-if="store.phase === 'lobby'" @enter="enterCinematic" />
+    <CinematicLobby v-if="store.phase === 'lobby'" @enter="store.enterIntro()" />
+
+    <!--
+      The authored intro: the 85s prologue cold open and the guardian trailer,
+      rendered by WolvesIntroOverlay exactly as authored in
+      src/data/wolves-intro-sequence.ts. Transport lives in the same hero widget
+      as the cinematic; the top plate is the universal title placard.
+    -->
+    <div v-else-if="store.phase === 'intro'" class="wc-runtime">
+      <WolvesIntroOverlay
+        ref="intro"
+        :videos="introVideos"
+        @status="handleIntroStatus"
+        @complete="handleIntroComplete"
+      />
+      <div class="wc-intro-nameplate">
+        <Nameplate :detail="store.display.chapter" :label="store.display.title" />
+      </div>
+      <MediaWidget
+        @toggle-play="intro?.toggle()"
+        @skip="(delta: number) => (delta > 0 ? intro?.next() : intro?.previous())"
+        @seek="(ratio: number) => intro?.seekToRatio(ratio)"
+      />
+    </div>
 
     <div v-else-if="store.phase === 'cinematic'" class="wc-runtime">
       <CinematicStage ref="stage" :audio-enabled="audioEnabled" />
@@ -115,5 +180,15 @@ function restart() {
 .wc-finished-replay {
   width: 5.6rem;
   height: 5.6rem;
+}
+
+.wc-intro-nameplate {
+  // Above the intro overlay's fixed z-index 999 layer.
+  position: fixed;
+  top: 3rem;
+  left: 3rem;
+  z-index: 1000;
+  max-width: min(72rem, calc(100vw - 6rem));
+  pointer-events: none;
 }
 </style>

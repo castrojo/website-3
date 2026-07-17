@@ -164,8 +164,6 @@ describe('useDualBufferPlayer', () => {
     player.skip(1)
     expect(player.activeSide.value).toBe('b')
     expect(playerB.loadedId).toBe(CINEMATIC_SEGMENTS[1].youtubeId)
-    // Trimmed segments load at their authored start.
-    expect(playerB.currentTime).toBe(2)
 
     vi.advanceTimersByTime(2000)
     expect(store.segmentIndex).toBe(1)
@@ -201,30 +199,40 @@ describe('useDualBufferPlayer', () => {
     expect(player.activeSide.value).toBe('b')
   })
 
-  it('honors authored trims: swaps at endSeconds and reports window-relative time', async () => {
-    const player = await startPlayer()
-    const store = useCinematicStore()
-    const [playerA, playerB] = FakePlayer.instances
+  it('supports authored trims when a segment defines a startSeconds/endSeconds window', async () => {
+    // No current segment is trimmed; pin a temporary authored window on segment 1
+    // to keep the trim capability covered.
+    const segment = CINEMATIC_SEGMENTS[1] as { startSeconds?: number, endSeconds?: number }
+    segment.startSeconds = 2
+    segment.endSeconds = 114
+    try {
+      const player = await startPlayer()
+      const store = useCinematicStore()
+      const [playerA, playerB] = FakePlayer.instances
 
-    // Advance past segment 0 so segment 1 (INTRO, startSeconds 2, endSeconds 114) is active.
-    playerA.duration = 100
-    playerA.currentTime = 100
-    vi.advanceTimersByTime(TIME_POLL_MS)
-    vi.advanceTimersByTime(2000)
-    expect(store.segmentIndex).toBe(1)
-    expect(player.activeSide.value).toBe('b')
+      playerA.duration = 100
+      playerA.currentTime = 100
+      vi.advanceTimersByTime(TIME_POLL_MS)
+      vi.advanceTimersByTime(2000)
+      expect(store.segmentIndex).toBe(1)
+      expect(player.activeSide.value).toBe('b')
 
-    playerB.duration = 120
-    playerB.currentTime = 50
-    vi.advanceTimersByTime(TIME_POLL_MS)
-    expect(store.nativeTime).toBe(50)
-    expect(store.segmentElapsed).toBe(48)
-    expect(store.segmentDuration).toBe(112)
+      playerB.duration = 120
+      playerB.currentTime = 50
+      vi.advanceTimersByTime(TIME_POLL_MS)
+      expect(store.nativeTime).toBe(50)
+      expect(store.segmentElapsed).toBe(48)
+      expect(store.segmentDuration).toBe(112)
 
-    // The authored cutoff at 114s triggers the swap before the video's natural 120s end.
-    playerB.currentTime = 114 - PRE_END_THRESHOLD_S
-    vi.advanceTimersByTime(TIME_POLL_MS)
-    expect(player.activeSide.value).toBe('a')
+      // The authored cutoff at 114s triggers the swap before the video's natural 120s end.
+      playerB.currentTime = 114 - PRE_END_THRESHOLD_S
+      vi.advanceTimersByTime(TIME_POLL_MS)
+      expect(player.activeSide.value).toBe('a')
+    }
+    finally {
+      delete segment.startSeconds
+      delete segment.endSeconds
+    }
   })
 
   it('finishes the cinematic when the last segment ends', async () => {

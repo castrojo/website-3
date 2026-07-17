@@ -1,16 +1,17 @@
 /**
  * Single source of truth for the Wolves cinematic experience.
  *
- * The seven segments below are derived from the authored Wolves soundtrack manifest
- * (public/wolves-playlist.json, tracks 1-7). Adding, removing, or reordering segments
- * is a data change here — no component or composable code needs to be touched.
+ * The authored intro (85s prologue cold open + guardian trailer) is NOT part of
+ * this list — it plays first through the locked WolvesIntroOverlay, driven by
+ * buildIntroVideoSequence() in src/data/wolves-intro-sequence.ts. The segments
+ * below are the seven musical parts, derived from the authored Wolves soundtrack
+ * manifest (public/wolves-playlist.json, tracks 1-7). Adding, removing, or
+ * reordering segments is a data change here — no component code changes.
  *
- * The Spotify track list mirrors the same authored soundtrack (title/artist pairs);
- * the application resolves these to Spotify URIs at runtime via the Search API, so no
- * pre-built user playlist is required.
+ * The Spotify track list mirrors the same authored soundtrack (title/artist
+ * pairs); the application resolves these to Spotify URIs at runtime via the
+ * Search API, so no pre-built user playlist is required.
  */
-
-import destinyCaptionsRaw from '@/data/wolves-destiny-captions.txt?raw'
 
 export interface CinematicSegment {
   /** YouTube video id for this segment. */
@@ -73,28 +74,6 @@ export const PRE_END_THRESHOLD_S = 0.3
 export const TIME_POLL_MS = 100
 
 export const CINEMATIC_SEGMENTS: CinematicSegment[] = [
-  {
-    // Authored prologue audio track (wolves-prologue in src/data/wolves-intro-sequence.ts).
-    youtubeId: 'EB3IokHelRk',
-    chapter: 'PROLOGUE',
-    title: 'Gayane Ballet Suite (Adagio)',
-    artist: 'Aram Khachaturian',
-    artwork: 'https://i.ytimg.com/vi/EB3IokHelRk/hqdefault.jpg',
-    excludeFromSoundtrack: true,
-  },
-  {
-    // Authored intro segment (wolves-intro in src/data/wolves-intro-sequence.ts):
-    // start 2s in to skip the ESRB rating card, end at 114s before the promo card.
-    youtubeId: 'BKm0TPqeOjY',
-    chapter: 'INTRO',
-    title: 'Destiny 2: Into the Light Cinematic',
-    artist: 'Bungie',
-    artwork: 'https://i.ytimg.com/vi/BKm0TPqeOjY/hqdefault.jpg',
-    startSeconds: 2,
-    endSeconds: 114,
-    excludeFromSoundtrack: true,
-    captionsText: destinyCaptionsRaw,
-  },
   {
     youtubeId: 'LASru9j0oIc',
     chapter: 'PART I',

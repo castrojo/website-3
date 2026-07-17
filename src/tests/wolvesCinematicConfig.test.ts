@@ -8,20 +8,11 @@ import {
 } from '@/config/wolves-cinematic'
 
 describe('wolves cinematic config', () => {
-  it('defines the prologue, intro, and seven musical parts in order', () => {
-    expect(CINEMATIC_SEGMENTS).toHaveLength(9)
-    expect(CINEMATIC_SEGMENTS[0].chapter).toBe('PROLOGUE')
-    expect(CINEMATIC_SEGMENTS[1].chapter).toBe('INTRO')
-    expect(CINEMATIC_SEGMENTS[2].title).toBe('7 Days to the Wolves')
+  it('defines the seven musical parts with 7 Days first', () => {
+    expect(CINEMATIC_SEGMENTS).toHaveLength(7)
+    expect(CINEMATIC_SEGMENTS[0].title).toBe('7 Days to the Wolves')
+    expect(CINEMATIC_SEGMENTS[0].chapter).toBe('PART I')
     expect(CINEMATIC_SEGMENTS.filter(segment => !segment.excludeFromSoundtrack)).toHaveLength(7)
-  })
-
-  it('preserves the authored trims and captions on the intro segment', () => {
-    const intro = CINEMATIC_SEGMENTS[1]
-    expect(intro.youtubeId).toBe('BKm0TPqeOjY')
-    expect(intro.startSeconds).toBe(2)
-    expect(intro.endSeconds).toBe(114)
-    expect(intro.captionsText).toContain('What is a guardian?')
   })
 
   it('mounts the seven-days immersive experience only on the 7 Days segment', () => {
@@ -55,7 +46,7 @@ describe('wolves cinematic config', () => {
 
   it('resolves per-segment crossfades with a default fallback', () => {
     expect(segmentCrossfadeMs(0)).toBe(DEFAULT_CROSSFADE_MS)
-    expect(segmentCrossfadeMs(3)).toBe(1500)
+    expect(segmentCrossfadeMs(1)).toBe(1500)
     expect(segmentCrossfadeMs(999)).toBe(DEFAULT_CROSSFADE_MS)
   })
 
