@@ -23,10 +23,10 @@ const isTrackZero = computed(() => store.segment.trackZeroExperience === true)
 // owner request), with the track title as the detail line; everywhere else the
 // plate shows chapter + title.
 const plateLabel = computed(() =>
-  isTrackZero.value ? getWolvesHudLabel(store.nativeTime) : store.segment.title,
+  isTrackZero.value ? 'kubectl apply -f ublue.yaml -n k8s-community' : store.segment.title,
 )
 const plateDetail = computed(() =>
-  isTrackZero.value ? 'kubectl apply -f ublue.yaml -n k8s-community' : store.segment.chapter,
+  isTrackZero.value ? getWolvesHudLabel(store.nativeTime) : store.segment.chapter,
 )
 
 onBeforeUnmount(() => player.destroy())
