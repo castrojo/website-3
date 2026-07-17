@@ -1,14 +1,17 @@
 GNOME logo
-Source: https://commons.wikimedia.org/wiki/File:Gnomelogo-footprint.svg
-Direct file: https://upload.wikimedia.org/wikipedia/commons/3/39/Gnomelogo-footprint.svg
-License: GNU Lesser General Public License (LGPL); GNOME footprint logo is a
-trademark of the GNOME Foundation (https://foundation.gnome.org/logo-and-trademarks/).
+Source: https://brand.gnome.org/logos/gnome-logos.zip (official GNOME brand
+kit, "Download Complete Asset Kit" on https://brand.gnome.org/)
+File: gnome_brandmark_dark.svg, extracted from that kit unmodified
+License: CC BY-SA 4.0, per the cc:license metadata embedded in the SVG file
+itself; GNOME logo and name are also trademarks of the GNOME Foundation, see
+https://foundation.gnome.org/trademark-and-logo/.
 Note: the brief's originally specified source
 (https://design.gnome.org/static/media/gnome-footprint-black.6890a3fa.svg) no
-longer resolves; design.gnome.org has been superseded by brand.gnome.org,
-which does not expose a direct static asset URL for this file. This Wikimedia
-Commons file mirrors the official GNOME Foundation LGPL-licensed footprint
-artwork and is used as the current verified stable source.
+longer resolves; design.gnome.org has been superseded by brand.gnome.org.
+brand.gnome.org links out to the official downloadable asset kit above rather
+than exposing individual static file URLs; the kit was downloaded and the
+"_dark" brandmark variant (a dark-background-suited footprint mark) was
+extracted for use on the theater's dark background.
 
 Flathub logo
 Source: https://github.com/flathub-infra/assets
@@ -24,7 +27,8 @@ KDE logo
 Source: https://kde.org/stuff/clipart/
 File: https://kde.org/stuff/clipart/logo/kde-logo-white-blue-rounded-source.svg
 License: KDE Logo copying is subject to the LGPL copyright license; trademark
-usage is subject to the KDE trademark policy (https://kde.org/community/whatiskde/trademark/).
+usage is subject to KDE e.V.'s trademark notice (https://kde.org/community/whatiskde/impressum/),
+linked as "Legal" from the trademark statement in the footer of every kde.org page.
 Note: the brief's originally specified source
 (https://invent.kde.org/teams/artwork/branding/-/raw/master/logos/app/kde-logo-blueonwhite.svg)
 requires GitLab sign-in and is not publicly reachable; kde.org/stuff/clipart/
