@@ -1,44 +1,5 @@
 <script setup lang="ts">
-import type { AuthProvider } from '@/stores/auth'
-import { computed } from 'vue'
-import { beginSpotifyLogin } from '@/auth/spotifyOauth'
-import { useAuthStore } from '@/stores/auth'
-
 const emit = defineEmits<{ enter: [] }>()
-
-const auth = useAuthStore()
-
-const statusLine = computed(() => {
-  if (auth.status === 'error') {
-    return auth.error || 'CONNECTION FAILED'
-  }
-  if (auth.status === 'connecting') {
-    return 'ESTABLISHING LINK'
-  }
-  if (auth.isConnected) {
-    return `LINK ESTABLISHED · ${auth.provider === 'spotify' ? 'SPOTIFY' : 'YOUTUBE'}`
-  }
-  return 'AWAITING AUTHORIZATION'
-})
-
-async function connect(provider: AuthProvider) {
-  if (auth.status === 'connecting') {
-    return
-  }
-  if (provider === 'youtube') {
-    // No app OAuth needed: playback rides the viewer's own YouTube browser session.
-    auth.connectYoutube()
-    return
-  }
-  auth.beginConnecting(provider)
-  try {
-    // Full-page redirect; completeSpotifyLogin() picks the flow back up on return.
-    await beginSpotifyLogin()
-  }
-  catch (error) {
-    auth.fail(error instanceof Error ? error.message : 'Authorization failed')
-  }
-}
 </script>
 
 <template>
@@ -55,39 +16,13 @@ async function connect(provider: AuthProvider) {
         SEVEN PARTS · ONE TRANSMISSION
       </p>
 
-      <div class="wc-lobby-choices">
-        <button
-          class="wc-lobby-choice wc-plate wc-plate--sheen"
-          type="button"
-          :class="{ 'wc-lobby-choice--active': auth.provider === 'youtube' && auth.isConnected }"
-          :disabled="auth.status === 'connecting'"
-          @click="connect('youtube')"
-        >
-          <span class="wc-label">AUDIO LINK</span>
-          <span class="wc-lobby-choice-name">YOUTUBE</span>
-          <span class="wc-lobby-choice-hint">Soundtrack carried by the transmission, using your YouTube session</span>
-        </button>
-        <button
-          class="wc-lobby-choice wc-plate wc-plate--sheen"
-          type="button"
-          :class="{ 'wc-lobby-choice--active': auth.provider === 'spotify' && auth.isConnected }"
-          :disabled="auth.status === 'connecting'"
-          @click="connect('spotify')"
-        >
-          <span class="wc-label">AUDIO LINK</span>
-          <span class="wc-lobby-choice-name">SPOTIFY</span>
-          <span class="wc-lobby-choice-hint">Soundtrack streamed in-browser (Premium required)</span>
-        </button>
-      </div>
-
-      <p class="wc-lobby-status wc-label" :class="{ 'wc-lobby-status--error': auth.status === 'error' }">
-        {{ statusLine }}
+      <p class="wc-lobby-status wc-label">
+        SIGNAL READY · NO ACCOUNT REQUIRED
       </p>
 
       <button
         class="wc-lobby-enter wc-plate"
         type="button"
-        :disabled="!auth.isConnected"
         @click="emit('enter')"
       >
         BEGIN TRANSMISSION
@@ -176,62 +111,8 @@ async function connect(provider: AuthProvider) {
   color: var(--wc-grey);
 }
 
-.wc-lobby-choices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.6rem;
-
-  @media (max-width: 560px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.wc-lobby-choice {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 1.8rem 1.6rem;
-  text-align: left;
-  cursor: pointer;
-  color: var(--wc-white);
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
-
-  &:hover:not(:disabled),
-  &:focus-visible {
-    border-color: var(--wc-gold);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-}
-
-.wc-lobby-choice--active {
-  border-color: var(--wc-gold);
-  background: rgb(200 180 137 / 10%);
-}
-
-.wc-lobby-choice-name {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
-.wc-lobby-choice-hint {
-  font-size: 1.3rem;
-  color: var(--wc-grey);
-  line-height: 1.4;
-}
-
 .wc-lobby-status {
   min-height: 1.6rem;
-}
-
-.wc-lobby-status--error {
-  color: #c96a5a;
 }
 
 .wc-lobby-enter {

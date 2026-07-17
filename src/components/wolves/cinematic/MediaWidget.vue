@@ -24,17 +24,6 @@ function formatTime(totalSeconds: number): string {
 }
 
 const segmentTime = computed(() => `${formatTime(store.segmentElapsed)} / ${formatTime(store.segmentDuration)}`)
-const spotifyLine = computed(() => {
-  const spotify = store.spotify
-  if (spotify.status === 'playing' || spotify.status === 'paused') {
-    return `${spotify.trackTitle} — ${spotify.trackArtist}`
-  }
-  if (spotify.status === 'error') {
-    return spotify.error
-  }
-  return ''
-})
-
 // Unix-style block progress readout in the old HUD's spirit.
 const PROGRESS_CELLS = 24
 const progressBlocks = computed(() => {
@@ -82,7 +71,6 @@ function handleSeek(event: MouseEvent) {
         <span class="wc-widget-time">{{ progressBlocks }}</span>
         <span class="wc-widget-time">{{ segmentTime }}</span>
         <span class="wc-widget-time">TOTAL {{ formatTime(store.totalElapsed) }}</span>
-        <span v-if="spotifyLine" class="wc-widget-spotify">{{ spotifyLine }}</span>
       </div>
     </div>
     <div class="wc-widget-telemetry">
@@ -203,15 +191,6 @@ function handleSeek(event: MouseEvent) {
   font-size: 1.1rem;
   letter-spacing: 0.12em;
   color: var(--wc-grey);
-}
-
-.wc-widget-spotify {
-  font-family: var(--wc-font-mono);
-  font-size: 1.1rem;
-  letter-spacing: 0.08em;
-  color: var(--wc-gold);
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 .wc-widget-telemetry {

@@ -19,8 +19,6 @@ export type PlayerSide = 'a' | 'b'
 interface DualBufferOptions {
   hostA: Ref<HTMLElement | null>
   hostB: Ref<HTMLElement | null>
-  /** False when Spotify supplies the soundtrack: both YouTube players stay muted. */
-  audioEnabled: boolean
 }
 
 interface SideState {
@@ -56,9 +54,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
   const activePlayer = () => sides[activeSide.value].player
 
   function applyVolume(player: YoutubePlayer | null, volume: number) {
-    if (options.audioEnabled) {
-      player?.setVolume?.(Math.round(volume))
-    }
+    player?.setVolume?.(Math.round(volume))
   }
 
   function cueNext(side: PlayerSide, segmentIndex: number) {
@@ -76,7 +72,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
   /** rAF volume ramp between the two players over the segment's crossfade window. */
   function rampVolumes(outgoing: YoutubePlayer | null, incoming: YoutubePlayer | null, durationMs: number, onDone: () => void) {
     cancelAnimationFrame(rampFrame)
-    if (!options.audioEnabled || durationMs <= 0) {
+    if (durationMs <= 0) {
       applyVolume(outgoing, 0)
       applyVolume(incoming, 100)
       onDone()
@@ -267,12 +263,6 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     ])
     sides.a.player = playerA
     sides.b.player = playerB
-
-    if (!options.audioEnabled) {
-      // Spotify owns the soundtrack; YouTube must never emit audio.
-      playerA.mute?.()
-      playerB.mute?.()
-    }
 
     sides.a.segmentIndex = 0
     const first = CINEMATIC_SEGMENTS[0]

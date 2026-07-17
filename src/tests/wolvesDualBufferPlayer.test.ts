@@ -82,10 +82,10 @@ function installFakeYoutubeApi() {
   }
 }
 
-async function startPlayer(audioEnabled = true) {
+async function startPlayer() {
   const hostA = ref<HTMLElement | null>(document.createElement('div'))
   const hostB = ref<HTMLElement | null>(document.createElement('div'))
-  const player = useDualBufferPlayer({ hostA, hostB, audioEnabled })
+  const player = useDualBufferPlayer({ hostA, hostB })
   await player.start()
   // onReady fires on a microtask; flush it.
   await Promise.resolve()
@@ -256,22 +256,6 @@ describe('useDualBufferPlayer', () => {
     vi.advanceTimersByTime(TIME_POLL_MS)
 
     expect(store.phase).toBe('finished')
-  })
-
-  it('keeps both players muted when Spotify owns the audio', async () => {
-    await startPlayer(false)
-    const [playerA, playerB] = FakePlayer.instances
-
-    playerA.volume = 55
-    playerB.volume = 55
-    playerA.duration = 100
-    playerA.currentTime = 100
-    vi.advanceTimersByTime(TIME_POLL_MS)
-    vi.advanceTimersByTime(3000)
-
-    // audioEnabled=false means setVolume is never called by the composable.
-    expect(playerA.volume).toBe(55)
-    expect(playerB.volume).toBe(55)
   })
 
   it('destroys both players on teardown', async () => {

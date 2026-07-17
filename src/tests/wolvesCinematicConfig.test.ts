@@ -4,7 +4,6 @@ import {
   DEFAULT_CROSSFADE_MS,
   PRE_END_THRESHOLD_S,
   segmentCrossfadeMs,
-  SPOTIFY_TRACK_LIST,
 } from '@/config/wolves-cinematic'
 
 describe('wolves cinematic config', () => {
@@ -12,7 +11,6 @@ describe('wolves cinematic config', () => {
     expect(CINEMATIC_SEGMENTS).toHaveLength(7)
     expect(CINEMATIC_SEGMENTS[0].title).toBe('7 Days to the Wolves')
     expect(CINEMATIC_SEGMENTS[0].chapter).toBe('PART I')
-    expect(CINEMATIC_SEGMENTS.filter(segment => !segment.excludeFromSoundtrack)).toHaveLength(7)
   })
 
   it('mounts the seven-days immersive experience only on the 7 Days segment', () => {
@@ -32,16 +30,6 @@ describe('wolves cinematic config', () => {
       ids.add(segment.youtubeId)
     }
     expect(ids.size).toBe(CINEMATIC_SEGMENTS.length)
-  })
-
-  it('mirrors only the musical segments into the Spotify track list', () => {
-    const musical = CINEMATIC_SEGMENTS.filter(segment => !segment.excludeFromSoundtrack)
-    expect(SPOTIFY_TRACK_LIST).toHaveLength(musical.length)
-    SPOTIFY_TRACK_LIST.forEach((track, index) => {
-      expect(track.title).toBe(musical[index].title)
-      expect(track.artist).toBe(musical[index].artist)
-    })
-    expect(SPOTIFY_TRACK_LIST[0].title).toBe('7 Days to the Wolves')
   })
 
   it('resolves per-segment crossfades with a default fallback', () => {

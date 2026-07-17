@@ -2,15 +2,11 @@
  * Single source of truth for the Wolves cinematic experience.
  *
  * The authored intro (85s prologue cold open + guardian trailer) is NOT part of
- * this list — it plays first through the locked WolvesIntroOverlay, driven by
+ * this list — it plays first through WolvesIntroOverlay, driven by
  * buildIntroVideoSequence() in src/data/wolves-intro-sequence.ts. The segments
  * below are the seven musical parts, derived from the authored Wolves soundtrack
  * manifest (public/wolves-playlist.json, tracks 1-7). Adding, removing, or
  * reordering segments is a data change here — no component code changes.
- *
- * The Spotify track list mirrors the same authored soundtrack (title/artist
- * pairs); the application resolves these to Spotify URIs at runtime via the
- * Search API, so no pre-built user playlist is required.
  */
 
 export interface CinematicSegment {
@@ -30,8 +26,6 @@ export interface CinematicSegment {
   startSeconds?: number
   /** Treat this native timestamp as the end of the segment (authored trim). */
   endSeconds?: number
-  /** True for non-musical segments that have no Spotify soundtrack counterpart. */
-  excludeFromSoundtrack?: boolean
   /**
    * Mounts the authored seven-days immersive experience over this segment:
    * the Track 0 beat-synced slideshow, lore column, and thesis overlay, all
@@ -49,11 +43,6 @@ export interface CinematicSegment {
    * src/data/wolves-destiny-captions.txt).
    */
   captionsText?: string
-}
-
-export interface SpotifyTrackRef {
-  title: string
-  artist: string
 }
 
 /** Default audio/visual crossfade window at segment boundaries. */
@@ -131,14 +120,6 @@ export const CINEMATIC_SEGMENTS: CinematicSegment[] = [
     crossfadeMs: 2500,
   },
 ]
-
-/** Mirrors the authored soundtrack (musical segments only); resolved via Spotify Search. */
-export const SPOTIFY_TRACK_LIST: SpotifyTrackRef[] = CINEMATIC_SEGMENTS
-  .filter(segment => !segment.excludeFromSoundtrack)
-  .map(segment => ({
-    title: segment.title,
-    artist: segment.artist,
-  }))
 
 export function segmentCrossfadeMs(index: number): number {
   return CINEMATIC_SEGMENTS[index]?.crossfadeMs ?? DEFAULT_CROSSFADE_MS

@@ -315,7 +315,16 @@ function startTextSegment(segment: Extract<IntroVideoSpec, { kind: 'text' }>) {
     if (isPaused.value) {
       return
     }
-    currentTime.value += 0.2
+    // Ad resilience: when a background audio embed exists, cues key off the
+    // audio's real getCurrentTime(). Pre-roll ads hold it at 0 and mid-roll ads
+    // freeze it, so the cold open waits for the music instead of desyncing.
+    // Without an audio embed there is nothing to sync to, so wall-clock ticks.
+    if (audioPlayer && typeof audioPlayer.getCurrentTime === 'function') {
+      currentTime.value = audioPlayer.getCurrentTime() ?? 0
+    }
+    else {
+      currentTime.value += 0.2
+    }
     if (isTextSegmentComplete(segment, currentTime.value)) {
       advance()
     }

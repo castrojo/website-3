@@ -3,16 +3,9 @@ import { CINEMATIC_SEGMENTS } from '@/config/wolves-cinematic'
 
 export type CinematicPhase = 'lobby' | 'intro' | 'cinematic' | 'finished'
 
-export interface SpotifyPlaybackState {
-  status: 'inactive' | 'initializing' | 'ready' | 'playing' | 'paused' | 'error'
-  trackTitle: string
-  trackArtist: string
-  error: string
-}
-
 /**
- * All cinematic runtime state lives here. The player composable and the Spotify
- * composable publish into this store; the media widget, captions, and nameplates
+ * All cinematic runtime state lives here. The player composable and the intro
+ * overlay publish into this store; the media widget, captions, and nameplates
  * are pure subscribers. Components never pass playback data to each other.
  */
 export const useCinematicStore = defineStore('cinematic', {
@@ -41,12 +34,6 @@ export const useCinematicStore = defineStore('cinematic', {
       artwork: string
       canPrevious: boolean
     },
-    spotify: {
-      status: 'inactive',
-      trackTitle: '',
-      trackArtist: '',
-      error: '',
-    } as SpotifyPlaybackState,
   }),
 
   getters: {
@@ -126,9 +113,6 @@ export const useCinematicStore = defineStore('cinematic', {
       this.phase = 'finished'
       this.playing = false
       this.crossfading = false
-    },
-    setSpotifyState(patch: Partial<SpotifyPlaybackState>) {
-      this.spotify = { ...this.spotify, ...patch }
     },
     setDisplayOverride(override: typeof this.displayOverride) {
       this.displayOverride = override

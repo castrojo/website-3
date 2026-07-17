@@ -1,7 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CINEMATIC_SEGMENTS } from '@/config/wolves-cinematic'
-import { useAuthStore } from '@/stores/auth'
 import { useCinematicStore } from '@/stores/cinematic'
 
 describe('cinematic store', () => {
@@ -63,65 +62,5 @@ describe('cinematic store', () => {
     expect(store.phase).toBe('finished')
     expect(store.playing).toBe(false)
     expect(store.crossfading).toBe(false)
-  })
-
-  it('patches spotify state without clobbering other fields', () => {
-    const store = useCinematicStore()
-    store.setSpotifyState({ status: 'playing', trackTitle: 'A', trackArtist: 'B' })
-    store.setSpotifyState({ status: 'paused' })
-    expect(store.spotify.trackTitle).toBe('A')
-    expect(store.spotify.status).toBe('paused')
-  })
-})
-
-describe('auth store', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    sessionStorage.clear()
-  })
-
-  it('persists and restores a session within its lifetime', () => {
-    const store = useAuthStore()
-    store.setTokens('spotify', 'token-1', 3600, 'refresh-1')
-    expect(store.isConnected).toBe(true)
-
-    setActivePinia(createPinia())
-    const restored = useAuthStore()
-    restored.restoreSession()
-    expect(restored.provider).toBe('spotify')
-    expect(restored.accessToken).toBe('token-1')
-    expect(restored.refreshToken).toBe('refresh-1')
-    expect(restored.isConnected).toBe(true)
-  })
-
-  it('connects the youtube path instantly without a token', () => {
-    const store = useAuthStore()
-    store.connectYoutube()
-    expect(store.isConnected).toBe(true)
-    expect(store.accessToken).toBe('')
-
-    setActivePinia(createPinia())
-    const restored = useAuthStore()
-    restored.restoreSession()
-    expect(restored.provider).toBe('youtube')
-    expect(restored.isConnected).toBe(true)
-  })
-
-  it('does not restore expired sessions', () => {
-    const store = useAuthStore()
-    store.setTokens('spotify', 'token-2', -10)
-
-    setActivePinia(createPinia())
-    const restored = useAuthStore()
-    restored.restoreSession()
-    expect(restored.isConnected).toBe(false)
-  })
-
-  it('clears everything on disconnect', () => {
-    const store = useAuthStore()
-    store.connectYoutube()
-    store.disconnect()
-    expect(store.isConnected).toBe(false)
-    expect(sessionStorage.getItem('wolves-cinematic-auth')).toBeNull()
   })
 })

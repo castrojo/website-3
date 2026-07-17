@@ -1,68 +1,21 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { completeSpotifyLogin, refreshSpotifyToken } from '@/auth/spotifyOauth'
+import { nextTick, ref } from 'vue'
 import CinematicLobby from '@/components/wolves/cinematic/CinematicLobby.vue'
 import CinematicStage from '@/components/wolves/cinematic/CinematicStage.vue'
 import MediaWidget from '@/components/wolves/cinematic/MediaWidget.vue'
 import Nameplate from '@/components/wolves/cinematic/Nameplate.vue'
 import WolvesIntroOverlay from '@/components/wolves/WolvesIntroOverlay.vue'
-import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback'
 import { buildIntroVideoSequence } from '@/data/wolves-intro-sequence'
-import { useAuthStore } from '@/stores/auth'
 import { useCinematicStore } from '@/stores/cinematic'
 
-const auth = useAuthStore()
 const store = useCinematicStore()
-const spotify = useSpotifyPlayback()
 
 const stage = ref<InstanceType<typeof CinematicStage> | null>(null)
-const audioEnabled = computed(() => auth.provider !== 'spotify')
-
-let refreshTimer: ReturnType<typeof setInterval> | null = null
-
-// Renew the Spotify token well before it expires via its PKCE refresh grant.
-// The YouTube path is session-based and has no token to refresh.
-async function maybeRefreshToken() {
-  if (auth.provider !== 'spotify' || !auth.refreshToken
-    || auth.expiresAt - Date.now() > 5 * 60 * 1000) {
-    return
-  }
-  try {
-    const tokens = await refreshSpotifyToken(auth.refreshToken)
-    auth.setTokens('spotify', tokens.accessToken, tokens.expiresIn, tokens.refreshToken)
-  }
-  catch {
-    auth.fail('Session expired — reconnect to continue')
-  }
-}
-
-onMounted(async () => {
-  auth.restoreSession()
-  try {
-    const tokens = await completeSpotifyLogin()
-    if (tokens) {
-      auth.setTokens('spotify', tokens.accessToken, tokens.expiresIn, tokens.refreshToken)
-    }
-  }
-  catch (error) {
-    auth.fail(error instanceof Error ? error.message : 'Spotify authorization failed')
-  }
-  refreshTimer = setInterval(maybeRefreshToken, 60 * 1000)
-})
-
-onBeforeUnmount(() => {
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-  }
-})
 
 async function enterCinematic() {
   store.enterCinematic()
   await nextTick() // stage mounts with the new phase before players are created
   await stage.value?.start()
-  if (auth.provider === 'spotify') {
-    await spotify.start()
-  }
   if (import.meta.env.DEV) {
     // Dev-only hook so browser-based boundary verification can drive the real player.
     ;(window as any).__wolvesCinematic = { seekTo: (s: number) => stage.value?.seekTo(s) }
@@ -142,7 +95,7 @@ function restart() {
     </div>
 
     <div v-else-if="store.phase === 'cinematic'" class="wc-runtime">
-      <CinematicStage ref="stage" :audio-enabled="audioEnabled" />
+      <CinematicStage ref="stage" />
       <MediaWidget
         @toggle-play="stage?.togglePlay()"
         @skip="(delta: number) => stage?.skip(delta)"

@@ -9,16 +9,11 @@ import CinematicTransition from './CinematicTransition.vue'
 import Nameplate from './Nameplate.vue'
 import TrackZeroExperience from './TrackZeroExperience.vue'
 
-const props = defineProps<{
-  /** False when Spotify supplies the soundtrack (YouTube stays muted). */
-  audioEnabled: boolean
-}>()
-
 const store = useCinematicStore()
 const hostA = ref<HTMLElement | null>(null)
 const hostB = ref<HTMLElement | null>(null)
 
-const player = useDualBufferPlayer({ hostA, hostB, audioEnabled: props.audioEnabled })
+const player = useDualBufferPlayer({ hostA, hostB })
 
 const isTrackZero = computed(() => store.segment.trackZeroExperience === true)
 
