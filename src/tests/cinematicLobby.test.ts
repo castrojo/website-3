@@ -26,4 +26,36 @@ describe('cinematicLobby.vue', () => {
       wrapper.unmount()
     }
   })
+
+  it('keeps the store QR link in tab order and emits enter for native keyboard CTA activation', async () => {
+    const wrapper = mount(CinematicLobby, { attachTo: document.body })
+
+    try {
+      const storeLink = wrapper.get('a[href="https://store.projectbluefin.io"]')
+      const enterButton = wrapper.get('button[type="button"]')
+      const tabStops = Array.from(wrapper.element.querySelectorAll<HTMLElement>('a[href], button:not(:disabled)'))
+        .filter(element => element.tabIndex >= 0)
+
+      expect(tabStops).toContain(storeLink.element)
+      expect(tabStops.indexOf(storeLink.element)).toBeLessThan(tabStops.indexOf(enterButton.element))
+      expect(storeLink.element.tabIndex).toBe(0)
+      expect(enterButton.element.tagName).toBe('BUTTON')
+
+      // Happy DOM does not run browser-native button activation. Browsers dispatch
+      // click on Enter keydown and Space keyup, so reproduce those default actions.
+      for (const key of ['Enter', ' ']) {
+        ;(enterButton.element as HTMLButtonElement).focus()
+        await enterButton.trigger('keydown', { key })
+        if (key === ' ') {
+          await enterButton.trigger('keyup', { key })
+        }
+        ;(enterButton.element as HTMLButtonElement).click()
+      }
+
+      expect(wrapper.emitted('enter')).toEqual([[], []])
+    }
+    finally {
+      wrapper.unmount()
+    }
+  })
 })
