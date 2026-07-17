@@ -12,7 +12,13 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <div class="wc-nameplate wc-plate wc-plate--sheen" :class="{ 'wc-nameplate--slow-fade': slowFade }">
+  <div
+    class="wc-nameplate wc-plate wc-plate--sheen"
+    :class="{
+      'wc-nameplate--slow-fade': slowFade,
+      'wc-nameplate--blue-delivers': label === 'The Blue Delivers',
+    }"
+  >
     <span class="wc-nameplate-detail wc-label">{{ detail }}</span>
     <Transition v-if="slowFade" name="wc-nameplate-label" mode="out-in">
       <span :key="label" class="wc-nameplate-label">{{ label }}</span>
@@ -44,6 +50,12 @@ withDefaults(defineProps<{
 
 .wc-nameplate--slow-fade .wc-nameplate-label {
   transition: opacity 1.5s ease;
+}
+
+.wc-nameplate--blue-delivers .wc-nameplate-label {
+  color: #ffffff;
+  font-size: clamp(2.5rem, 2.2rem + 1.2vw, 3.2rem);
+  text-shadow: 0 0 10px rgb(255 255 255 / 35%);
 }
 
 .wc-nameplate-label-enter-from,
