@@ -80,9 +80,22 @@ describe('auth store', () => {
     expect(restored.isConnected).toBe(true)
   })
 
+  it('connects the youtube path instantly without a token', () => {
+    const store = useAuthStore()
+    store.connectYoutube()
+    expect(store.isConnected).toBe(true)
+    expect(store.accessToken).toBe('')
+
+    setActivePinia(createPinia())
+    const restored = useAuthStore()
+    restored.restoreSession()
+    expect(restored.provider).toBe('youtube')
+    expect(restored.isConnected).toBe(true)
+  })
+
   it('does not restore expired sessions', () => {
     const store = useAuthStore()
-    store.setTokens('youtube', 'token-2', -10)
+    store.setTokens('spotify', 'token-2', -10)
 
     setActivePinia(createPinia())
     const restored = useAuthStore()
@@ -92,7 +105,7 @@ describe('auth store', () => {
 
   it('clears everything on disconnect', () => {
     const store = useAuthStore()
-    store.setTokens('youtube', 'token-3', 3600)
+    store.connectYoutube()
     store.disconnect()
     expect(store.isConnected).toBe(false)
     expect(sessionStorage.getItem('wolves-cinematic-auth')).toBeNull()

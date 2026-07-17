@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { AuthProvider } from '@/stores/auth'
 import { computed } from 'vue'
-import { beginGoogleLogin } from '@/auth/googleOauth'
 import { beginSpotifyLogin } from '@/auth/spotifyOauth'
 import { useAuthStore } from '@/stores/auth'
 
@@ -26,15 +25,15 @@ async function connect(provider: AuthProvider) {
   if (auth.status === 'connecting') {
     return
   }
+  if (provider === 'youtube') {
+    // No app OAuth needed: playback rides the viewer's own YouTube browser session.
+    auth.connectYoutube()
+    return
+  }
   auth.beginConnecting(provider)
   try {
-    if (provider === 'spotify') {
-      // Full-page redirect; completeSpotifyLogin() picks the flow back up on return.
-      await beginSpotifyLogin()
-      return
-    }
-    const tokens = await beginGoogleLogin()
-    auth.setTokens('youtube', tokens.accessToken, tokens.expiresIn)
+    // Full-page redirect; completeSpotifyLogin() picks the flow back up on return.
+    await beginSpotifyLogin()
   }
   catch (error) {
     auth.fail(error instanceof Error ? error.message : 'Authorization failed')
@@ -66,7 +65,7 @@ async function connect(provider: AuthProvider) {
         >
           <span class="wc-label">AUDIO LINK</span>
           <span class="wc-lobby-choice-name">YOUTUBE</span>
-          <span class="wc-lobby-choice-hint">Soundtrack carried by the transmission itself</span>
+          <span class="wc-lobby-choice-hint">Soundtrack carried by the transmission, using your YouTube session</span>
         </button>
         <button
           class="wc-lobby-choice wc-plate wc-plate--sheen"

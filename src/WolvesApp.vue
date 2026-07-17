@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { refreshGoogleToken } from '@/auth/googleOauth'
 import { completeSpotifyLogin, refreshSpotifyToken } from '@/auth/spotifyOauth'
 import CinematicLobby from '@/components/wolves/cinematic/CinematicLobby.vue'
 import CinematicStage from '@/components/wolves/cinematic/CinematicStage.vue'
@@ -19,22 +18,16 @@ const audioEnabled = computed(() => auth.provider !== 'spotify')
 
 let refreshTimer: ReturnType<typeof setInterval> | null = null
 
-// Renew whichever provider token is active well before it expires. Spotify uses
-// its refresh grant; Google (public SPA, no refresh token) silently re-requests
-// against the live session and only surfaces an error if interaction is needed.
+// Renew the Spotify token well before it expires via its PKCE refresh grant.
+// The YouTube path is session-based and has no token to refresh.
 async function maybeRefreshToken() {
-  if (!auth.isConnected || auth.expiresAt - Date.now() > 5 * 60 * 1000) {
+  if (auth.provider !== 'spotify' || !auth.refreshToken
+    || auth.expiresAt - Date.now() > 5 * 60 * 1000) {
     return
   }
   try {
-    if (auth.provider === 'spotify' && auth.refreshToken) {
-      const tokens = await refreshSpotifyToken(auth.refreshToken)
-      auth.setTokens('spotify', tokens.accessToken, tokens.expiresIn, tokens.refreshToken)
-    }
-    else if (auth.provider === 'youtube') {
-      const tokens = await refreshGoogleToken()
-      auth.setTokens('youtube', tokens.accessToken, tokens.expiresIn)
-    }
+    const tokens = await refreshSpotifyToken(auth.refreshToken)
+    auth.setTokens('spotify', tokens.accessToken, tokens.expiresIn, tokens.refreshToken)
   }
   catch {
     auth.fail('Session expired — reconnect to continue')

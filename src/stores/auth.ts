@@ -23,7 +23,9 @@ function readSession(): StoredSession | null {
       return null
     }
     const parsed = JSON.parse(raw) as StoredSession
-    if (!parsed.accessToken || parsed.expiresAt <= Date.now()) {
+    // The YouTube path is session-based (the embedded player uses the viewer's own
+    // browser session) and carries no token; only token-bearing sessions can expire.
+    if (parsed.provider !== 'youtube' && (!parsed.accessToken || parsed.expiresAt <= Date.now())) {
       return null
     }
     return parsed
@@ -45,7 +47,8 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isConnected: state => state.status === 'connected' && !!state.accessToken,
+    isConnected: state => state.status === 'connected'
+      && (state.provider === 'youtube' || !!state.accessToken),
   },
 
   actions: {
@@ -65,6 +68,29 @@ export const useAuthStore = defineStore('auth', {
       this.provider = provider
       this.status = 'connecting'
       this.error = ''
+    },
+    /**
+     * YouTube needs no app-level OAuth: the embedded player rides the viewer's own
+     * YouTube login in this browser, so choosing it connects immediately.
+     */
+    connectYoutube() {
+      this.provider = 'youtube'
+      this.accessToken = ''
+      this.refreshToken = ''
+      this.expiresAt = 0
+      this.status = 'connected'
+      this.error = ''
+      try {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+          provider: 'youtube',
+          accessToken: '',
+          refreshToken: '',
+          expiresAt: 0,
+        } satisfies StoredSession))
+      }
+      catch {
+        // Storage may be unavailable (private mode); in-memory auth still works.
+      }
     },
     setTokens(provider: AuthProvider, accessToken: string, expiresInSeconds: number, refreshToken = '') {
       this.provider = provider

@@ -10,9 +10,9 @@ Vue 3 (Composition API) + Pinia. Three independent systems, each modifiable with
 touching the others:
 
 - **Lobby** (`src/components/wolves/cinematic/CinematicLobby.vue`) — pre-flight
-  authorization staging ground. The user connects with exactly one provider,
-  YouTube (Google OAuth) or Spotify (PKCE); entry unlocks only once the chosen
-  token is in the auth store.
+  staging ground. The user connects with exactly one provider: YouTube (instant,
+  uses the viewer's own browser session) or Spotify (OAuth PKCE); entry unlocks
+  only once the chosen link is established in the auth store.
 - **Cinematic runtime** (`CinematicStage.vue` + `src/composables/useDualBufferPlayer.ts`)
   — double-buffered YouTube playback with pre-end handoff and programmatic
   audio/visual crossfades.
@@ -38,19 +38,11 @@ Verification: `npm run typecheck`, `npm run lint`, `npm run test:run`, `npm run 
 
 Both providers are public browser clients. No secrets exist anywhere in this app.
 
-### Google (YouTube path)
+### YouTube path
 
-1. Google Cloud Console > APIs and Services > Credentials > Create OAuth client ID,
-   type "Web application".
-2. Authorized JavaScript origins: `https://wolves.projectbluefin.io` and
-   `http://localhost:5173`.
-3. Put the client id in `VITE_GOOGLE_CLIENT_ID`.
-
-Flow: Google Identity Services token model (`initTokenClient`). Scope:
-`https://www.googleapis.com/auth/youtube.readonly`. Public SPA clients cannot hold
-Google refresh tokens; renewal is a silent `prompt: ''` re-request against the live
-Google session, done automatically five minutes before expiry. If the session is
-gone the lobby surfaces a reconnect error.
+No configuration required. Choosing YouTube in the lobby connects immediately: the
+embedded IFrame players ride the viewer's own YouTube login in this browser, so
+there is no app-level OAuth client, token, or refresh to manage.
 
 ### Spotify
 
@@ -145,8 +137,9 @@ grounds. This application's Spotify path plays the assembled soundtrack while th
 YouTube video layer runs, which is exactly that synchronization. The integration
 is implemented per the product brief, but a provider-approved audiovisual
 arrangement should be obtained before enabling the Spotify path in production;
-until then, deploy with only `VITE_GOOGLE_CLIENT_ID` set — the Spotify lobby
-choice fails cleanly when its client id is absent.
+until then, deploy with `VITE_SPOTIFY_CLIENT_ID` unset — the Spotify lobby
+choice fails cleanly when its client id is absent, and the YouTube path needs
+no configuration at all.
 
 ## Deployment (wolves.projectbluefin.io)
 
@@ -158,9 +151,9 @@ The app builds as the `wolves` entry of the site (`npm run build`, output in
 2. Serve `dist/wolves/index.html` at the domain root (a Pages redirect or proxy
    rewrite from `/` to `/wolves/` both work; the app itself is path-agnostic —
    all asset fetches use `import.meta.env.BASE_URL`).
-3. Register the final public URL as the Spotify redirect URI and Google authorized
-   origin (see above).
-4. Set the two client ids as build-time env vars in the deploy workflow.
+3. Register the final public URL as the Spotify redirect URI (see above).
+4. Set `VITE_SPOTIFY_CLIENT_ID` as a build-time env var in the deploy workflow
+   (only if the Spotify path is enabled — see the policy note above).
 
 ## Simplicity audit findings
 
@@ -171,8 +164,9 @@ that solves the actual problem.
 
 - No vue-router: the app has three phases (lobby, cinematic, finished) — a single
   store field, not routes.
-- No auth library: Spotify PKCE is ~100 lines of documented fetch calls; Google's
-  own GIS script is the documented SPA path and owns all popup/consent UX.
+- No auth library: Spotify PKCE is ~100 lines of documented fetch calls; the
+  YouTube path needs no OAuth at all because the embedded player uses the
+  viewer's own browser session.
 - No animation library: the visual crossfade is a CSS opacity transition keyed off
   one reactive value; only the audio ramp needs JavaScript (rAF) because
   `setVolume` has no CSS equivalent.
@@ -206,5 +200,6 @@ that solves the actual problem.
   artwork | chapter + title + progress + times | transport controls.
 - No caption data exists for these segments yet; the styled caption system is
   fully wired and data-activated.
-- Google token renewal uses silent re-request (the only option for a public SPA
-  client); a fully expired Google session requires one reconnect click.
+- The YouTube choice is deliberately tokenless: embedded playback works with the
+  viewer's existing YouTube browser session, so requiring a Google OAuth client
+  would add configuration and consent friction for zero functional gain.
