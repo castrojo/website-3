@@ -42,6 +42,17 @@ describe('cinematicTransition player-timed decay', () => {
     await wrapper.vm.$nextTick()
     expect(Number(wrapper.get('.wc-transition-shell').attributes('data-opacity'))).toBe(1)
   })
+
+  it('does not render the transition shell for track index 0', async () => {
+    const store = useCinematicStore()
+    store.enterCinematic()
+    store.segmentIndex = 0
+    const wrapper = mount(CinematicTransition)
+
+    store.updateTime(2, 180)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.wc-transition-shell').exists()).toBe(false)
+  })
 })
 
 describe('cinematicTransition layer separation', () => {

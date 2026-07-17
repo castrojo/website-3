@@ -28,6 +28,9 @@ const loreLines = computed(() => segment.value?.transitionLore ?? [])
 // window, derived solely from the real player clock so pause, seek, and
 // YouTube ads freeze/restore state correctly (no wall-clock timers).
 const shellOpacity = computed(() => {
+  if (store.segmentIndex === 0) {
+    return 0
+  }
   const elapsed = store.segmentElapsed
   if (elapsed <= TRANSITION_HOLD_SECONDS) {
     return 1
