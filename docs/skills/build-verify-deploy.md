@@ -55,6 +55,7 @@ Use the smallest relevant checks. Documentation-only changes need path/link chec
 - A successful build is not proof that a visual or timeline change works.
 - CI runs Vitest and `tests/wolves-movie-flow.mjs`. Other browser scripts, including navbar and timestamp-specific Wolves oracles, remain manual unless the workflow source shows otherwise.
 - If the browser cannot exercise the changed visual flow, stop before pushing. A historical snapshot, unit test, or successful build is not a substitute for browser evidence.
+- When Playwright captures screenshots, set `TMPDIR` and `WOLVES_SCREENSHOT_DIR` to a persistent filesystem with adequate free space instead of a full `/tmp` tmpfs. `page.screenshot({ path })` writes the image at the supplied path.
 
 ## Production Completion
 
@@ -100,3 +101,4 @@ Production is complete only when the run for the exact pushed SHA is `completed`
 - `package.json`
 - `.github/workflows/deploy.yml`
 - `docs/wolves-maintenance.md`
+- Playwright screenshot API: `/microsoft/playwright`
