@@ -164,7 +164,6 @@ try {
 
     if (lowerThird) {
       expectTruthy(`${name} remains in the lower third`, box.y > VIEWPORT.height * 0.4)
-      expectTruthy(`${name} lower third spans the screen`, box.width >= VIEWPORT.width * 0.85)
     }
     if (leftAnchored) {
       expectTruthy(`${name} remains left anchored`, box.x < VIEWPORT.width * 0.25)

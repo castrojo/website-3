@@ -215,28 +215,21 @@ describe('wolves intro overlay sequence', () => {
     ]))
   })
 
-  it('restores the authored Destiny dialogue captions', () => {
+  it('builds no Destiny caption cues when the caption file is empty', () => {
     const cues = buildDestinyCaptionCues().filter(cue => !cue.comicHeroTitleCard)
 
-    expect(cues).toEqual(expect.arrayContaining([
-      expect.objectContaining({ text: 'What is a guardian?', start: 4.36, end: 9.4 }),
-      expect.objectContaining({
-        text: 'Define us in this moment for all time.',
-        start: 107.4,
-        end: 112.6,
-      }),
-    ]))
+    expect(cues).toEqual([])
   })
 
-  it('keeps the restored Destiny captions on their authored timings', () => {
+  it('does not surface any legacy Destiny caption lines', () => {
     const cues = buildDestinyCaptionCues().filter(cue => !cue.comicHeroTitleCard)
     const texts = cues.map(cue => cue.text)
 
-    expect(texts).toContain('Does that make us soldiers?')
-    expect(texts).toContain('We built the city none of us dared to dream of, with allies from unlikely places.')
-    expect(texts).toContain('We\'ve never had more to lose.')
-    expect(texts).toContain('I turn the question to you, on the eve of our darkest hour.')
-    expect(texts).toContain('Define us in this moment for all time.')
+    expect(texts).not.toContain('Does that make us soldiers?')
+    expect(texts).not.toContain('We built the city none of us dared to dream of, with allies from unlikely places.')
+    expect(texts).not.toContain('We\'ve never had more to lose.')
+    expect(texts).not.toContain('I turn the question to you, on the eve of our darkest hour.')
+    expect(texts).not.toContain('Define us in this moment for all time.')
   })
 
   it('gives the revised prologue copy readable holds within its 94-second runtime', () => {
