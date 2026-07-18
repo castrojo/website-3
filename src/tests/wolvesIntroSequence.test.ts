@@ -319,7 +319,7 @@ to shape the Garden of Earth.`,
         end: 29.5,
         emphasis: 'dominant',
         textPosition: 'bottom',
-        backgroundCrossfade: [{ day: 'wolves-intro/bluefin-collapse-day.webp', night: 'wolves-intro/bluefin-collapse-night.webp' }],
+        backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
       }),
       expect.objectContaining({
         text: 'Until an AI-fueled Society deemed Guardians unnecessary.\nAnd then, a threat.',
