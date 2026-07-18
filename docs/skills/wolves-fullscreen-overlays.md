@@ -52,6 +52,7 @@ Routine Wolves content uses `wolves-content-maintenance.md`. Unapproved visual w
 - Test embeds through `projectbluefin.io.localhost`; compare localhost error 150 with production before declaring a source broken.
 - Keep fixed media from collapsing adjacent text columns; inspect computed grid columns and bounds.
 - Theater typography is owned by `docs/wolves-maintenance.md`; never shrink type to fit copy.
+- For a frozen visual recovery, preserve the current player path and its tests; add targeted coverage for the documented element and transplant only the matching template/CSS hunks.
 
 ## Common Rationalizations
 
@@ -59,6 +60,7 @@ Routine Wolves content uses `wolves-content-maintenance.md`. Unapproved visual w
 |---|---|
 | "`position: fixed` is already fullscreen." | Transformed ancestors create containing blocks; use Teleport. |
 | "The DOM node exists, so controls work." | Verify bounds and clicks in Chromium. |
+| "A historical component and test can be restored together." | Historical snapshots can carry unrelated video regressions; recover only the documented visual contract. |
 
 ## Red Flags
 
@@ -69,6 +71,7 @@ Routine Wolves content uses `wolves-content-maintenance.md`. Unapproved visual w
 - Controls present in DOM with zero or clipped bounds.
 - Downloaded or re-encoded third-party footage.
 - A visual change without desktop and mobile browser evidence.
+- Replacing a current overlay test with a historical test snapshot.
 
 ## Verification
 

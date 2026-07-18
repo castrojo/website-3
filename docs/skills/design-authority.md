@@ -47,7 +47,7 @@ An explicit content, behavior, or bug-fix request does not authorize redesign.
 4. Capture desktop and mobile screenshots.
 5. Verify interaction, responsive behavior, console output, and bounds.
 6. Do not commit or push until the screenshots are approved.
-7. For a recovery, establish the source design against its documented contract and historical behavioral tests; do not assume the immediate pre-removal revision is correct. Transplant only the affected hunks and keep later content, behavior, and unrelated fixes intact.
+7. For a recovery, establish the source design against its documented contract and historical behavioral tests; do not assume the immediate pre-removal revision is correct. Keep current behavior tests, add a failing assertion for the recovered contract, and transplant only the affected hunks. Missing browser evidence blocks push.
 
 ## Common Rationalizations
 
@@ -55,6 +55,7 @@ An explicit content, behavior, or bug-fix request does not authorize redesign.
 |---|---|
 | "It is only spacing." | Spacing is design and needs approval on established pages. |
 | "The bug report implies a redesign." | Fix behavior without changing visual authority. |
+| "The historical test proves the historical component is safe." | It can encode the regression; retain the current behavior tests and add targeted recovery coverage. |
 
 ## Red Flags
 
@@ -63,6 +64,7 @@ An explicit content, behavior, or bug-fix request does not authorize redesign.
 - Making content fit by shrinking type.
 - Promoting an unlisted page through navigation.
 - Any Wolves visual diff.
+- Replacing a current component or test file with a historical snapshot.
 
 ## Verification
 

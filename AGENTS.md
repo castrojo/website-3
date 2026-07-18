@@ -18,6 +18,7 @@ For external tools, libraries, and platform APIs, read current authoritative doc
 - Never invent fiction, lore, quotes, attributions, marketing prose, or release-note narrative. The user authors editorial content.
 - A content, data, behavior, or bug-fix request does not authorize a redesign.
 - Wolves design is frozen. Read `docs/skills/wolves-content-maintenance.md` before any Wolves change.
+- For an explicitly authorized Wolves visual recovery, use the documented contract and current behavior tests to identify the source; do not replace whole historical component or test files. Browser evidence remains required before push.
 - Established-page visual changes require explicit human approval before editing.
 - Explicitly requested new pages or components may use the design workflow in `docs/skills/design-authority.md`.
 - Never modify, stage, restore, or commit unrelated dirty worktree files.

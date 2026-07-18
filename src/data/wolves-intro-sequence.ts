@@ -557,8 +557,8 @@ surrounded by predators.`,
       // Starting 2s in skips past it entirely without touching any of the cue windows below,
       // since those are keyed to the video's absolute/native timeline, not this offset.
       startOffset: 2,
-      // Applies the retained unvoiced-source visual cutoff described above; this is
-      // independent of the caption track's explicit 112.60s end.
+      // Applies the retained unvoiced-source visual cutoff described above. Destiny
+      // dialogue captions are intentionally disabled; only Guardian plates are timed here.
       maxDuration: 121.5,
       alternateMaxDuration: 120.2,
       overlays: [

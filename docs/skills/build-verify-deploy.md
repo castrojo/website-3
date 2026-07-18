@@ -54,6 +54,7 @@ Use the smallest relevant checks. Documentation-only changes need path/link chec
 - Wolves changes follow `docs/wolves-maintenance.md`, including real-player checks at affected Track 0 timestamps.
 - A successful build is not proof that a visual or timeline change works.
 - CI runs Vitest and `tests/wolves-movie-flow.mjs`. Other browser scripts, including navbar and timestamp-specific Wolves oracles, remain manual unless the workflow source shows otherwise.
+- If the browser cannot exercise the changed visual flow, stop before pushing. A historical snapshot, unit test, or successful build is not a substitute for browser evidence.
 
 ## Production Completion
 
@@ -77,12 +78,14 @@ Production is complete only when the run for the exact pushed SHA is `completed`
 |---|---|
 | "The build passed, so it is live." | Only the exact pushed-SHA Pages run proves deployment. |
 | "Staging everything is faster." | It risks committing unrelated user work. |
+| "The browser is unavailable, but the unit tests pass." | Visual work remains blocked until a browser-capable environment verifies the affected flow. |
 
 ## Red Flags
 
 - Completion claimed from a local build.
 - A Pages run for a different SHA is cited.
 - `git add .` or `git add -A`.
+- Pushing a visual change without browser evidence.
 
 ## Verification
 

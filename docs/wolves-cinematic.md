@@ -153,18 +153,17 @@ Two authored segments from `buildIntroVideoSequence()`:
    full volume. Cue-level `nameplateTitle` can temporarily replace the top HUD
    title while a specific line is active.
 2. **`wolves-intro`** — the Destiny 2 guardian trailer with the six guardian
-   nameplates. It now defaults to the unvoiced source (`BV3BZKbpBns`) and
-   exposes an intro-widget-only `Ikora voice over` toggle to the voiced cut
+   nameplates. It defaults to the unvoiced source (`BV3BZKbpBns`) and exposes
+   an intro-widget-only `Ikora voice over` toggle to the voiced cut
    (`BKm0TPqeOjY`) using object-form `loadVideoById({ videoId, startSeconds })`
-   so native time and pause state survive the swap. The local caption file is
-   timed to the voiced `BKm0TPqeOjY` transcript, whose restored full dialogue
-   ends explicitly at 112.60s, and stays canonical (displayed) in both modes,
-   including the Chonky title-card overlap. Separately, the default unvoiced
-   source keeps its own existing black-frame cutoff (`maxDuration: 121.5`),
-   unchanged by the caption timing; the voiced cutoff remains
-   `alternateMaxDuration: 120.2`. Plate CSS is byte-exact original
-   (restored after an attempted font substitution); `leader: true` gilds
-   Christoph Blecker's plate only.
+   so native time and pause state survive the swap. The local Destiny caption
+   file is intentionally empty and no timed dialogue caption overlay is
+   rendered; the Guardian nameplates are the only timed overlay on this
+   segment. The default unvoiced source keeps its black-frame cutoff
+   (`maxDuration: 121.5`) and the voiced cutoff remains
+   `alternateMaxDuration: 120.2`. A documented guardian bond renders a small
+   dinosaur icon next to the Guardian name, never a separate dinosaur panel;
+   `leader: true` gilds Christoph Blecker's plate only.
 
 Typography (intro only, by owner direction): **Michroma** for theater text
 (the Microgramma/Eurostile Bold Extended stand-in from the Alien/Prometheus
