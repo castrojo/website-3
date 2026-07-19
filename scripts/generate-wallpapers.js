@@ -1,4 +1,5 @@
-import { readdir, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -168,7 +169,7 @@ const curatedTitles = {
   'flickr-54137658664': 'KC+CNC_NA_241111_BF_KCS_119',
   'flickr-54137664384': 'KC+CNC_NA_241111_BF_KCS_evening_229',
   'flickr-54137782045': 'KC+CNC_NA_241111_BF_KCS_012',
-  'flickr-54137782365': 'KC+CNC_NA_241111_BF_KCS_026',
+  'flickr-54137782365': 'Christoph Blecker - First Amongst Equals - Platinum Member',
   'flickr-54137788650': 'KC+CNC_NA_241111_BF_KCS_177',
   'flickr-54137791405': 'KC+CNC_NA_241111_BF_KCS_evening_227',
   'flickr-54434769392': 'KC+CNC_EU_2025_Top12_010',
@@ -183,6 +184,61 @@ const curatedTitles = {
   'flickr-55344186409': 'DSC04181',
   'brazil-homage': 'Brazil we see you! #diolinux #tulip',
   'sherman-m2': 'Sherman + M2',
+
+  // Captions for pinned slide ids whose curated duplicate copies were dropped by
+  // dedupeByContent (the pinned filename survives; the caption from the curated copy lives on).
+  'kyle': 'NOT John Bazzite',
+  'walters': 'bootc creator Colin Walters',
+  'kirkland': 'Bluefin Advisor Dustin Kirkland',
+  'ashleymcnamara35365': 'Bluefin Advisor Ashley McNamara',
+  'stormy.faces23764': 'Bluefin Advisor Stormy Peters',
+}
+
+// Some shots exist on disk twice: a stock CNCF feed filename (kubecon-*/flickr-*/camera
+// roll names) plus a curated captioned copy added later without removing the original.
+// The slideshow must show each shot exactly once, so duplicate file contents collapse to a
+// single manifest entry. When a duplicate group contains one of these stems, that file wins
+// (they are pinned by id in src/data/wolves-track-zero-slides.ts and the intro sequence);
+// otherwise the curated captioned filename wins over the stock name.
+const preferredDuplicateStems = new Set([
+  'kyle',
+  'walters',
+  'kirkland',
+  'flickr-54137782365',
+  'ashleymcnamara35365',
+  'stormy.faces23764.web_',
+  'nova4ever',
+])
+
+// Filenames that come straight from a photo feed or camera roll rather than a curated caption.
+const stockNamePattern = /^(?:kubecon-\d|flickr-\d|PXL_\d|MVIMG_\d|IMG_\d|Screenshot From |\d{6,})/
+
+function fileStem(filename) {
+  return filename.replace(/\.[^/.]+$/, '')
+}
+
+async function dedupeByContent(subfolder, files) {
+  const byHash = new Map()
+  for (const file of files) {
+    const contents = await readFile(join(BASE_WALLPAPERS_DIR, subfolder, file))
+    const hash = createHash('md5').update(contents).digest('hex')
+    const group = byHash.get(hash)
+    if (group) {
+      group.push(file)
+    }
+    else {
+      byHash.set(hash, [file])
+    }
+  }
+
+  const kept = new Set()
+  for (const group of byHash.values()) {
+    const preferred = group.find(file => preferredDuplicateStems.has(fileStem(file)))
+      ?? group.find(file => !stockNamePattern.test(file))
+      ?? group[0]
+    kept.add(preferred)
+  }
+  return files.filter(file => kept.has(file))
 }
 
 // Optional longer-form description shown in the fullscreen theater caption for a handful of
@@ -248,8 +304,8 @@ async function generate() {
   console.info('Generating wallpapers list...')
 
   const storyFiles = await scanDirectory('wolves')
-  const showcaseFiles = await scanDirectory('showcase')
-  const peopleFiles = await scanDirectory('people')
+  const showcaseFiles = await dedupeByContent('showcase', await scanDirectory('showcase'))
+  const peopleFiles = await dedupeByContent('people', await scanDirectory('people'))
 
   const wallpapers = []
 

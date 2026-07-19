@@ -1,4 +1,5 @@
 import type { SoundtrackTrack } from '../data/wolves-soundtrack'
+import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -821,6 +822,77 @@ describe('wolvesComicReader', () => {
     expect(generator).toContain('\'bluefin-chicken\': \'Bluefin created by Andy Frazer and Jacob Schnurr\'')
     expect(generator).toContain('\'bluefin-dusk\': \'Bluefin created by Andy Frazer and Jacob Schnurr\'')
     expect(generator).toContain('\'bluefin-huntress\': \'Bluefin created by Andy Frazer and Jacob Schnurr\'')
+  })
+
+  it('collapses byte-identical wallpaper files to a single manifest entry', () => {
+    // Several shots exist on disk under both a stock feed filename and a
+    // curated captioned filename; the generator must keep exactly one.
+    const seen = new Map<string, string>()
+    for (const wallpaper of wallpapers) {
+      const names = wallpaper.type === 'daynight'
+        ? [wallpaper.dayName, wallpaper.nightName]
+        : [wallpaper.name]
+      for (const name of names) {
+        if (!name) {
+          continue
+        }
+        const filePath = resolve(process.cwd(), 'public/img/wallpapers', name)
+        const hash = createHash('md5').update(readFileSync(filePath)).digest('hex')
+        const duplicateOf = seen.get(hash)
+        expect(duplicateOf, `${name} is the same image as ${duplicateOf}`).toBeUndefined()
+        seen.set(hash, name)
+      }
+    }
+  })
+
+  it('plays each Track 0 shot once and backfills the beat barrage from the CNCF feed', async () => {
+    const feed = Array.from({ length: 200 }, (_, index) => ({
+      id: `feed-${index}`,
+      server: 's',
+      secret: 'x',
+      title: `Feed ${index}`,
+    }))
+    mockGalleryData([coverTrack], new Response(JSON.stringify(feed)))
+    const wrapper = mount(WolvesComicReader, {
+      props: { trackIndex: 0, playlistCurrentTime: 0 },
+    })
+    await flushPromises()
+
+    const slides = (wrapper.vm as any).timelineSlides as Array<{
+      id: string
+      isLocal: boolean
+      startTime: number
+      endTime: number
+      duration: number
+    }>
+    const ids = slides.map(slide => slide.id)
+    expect(new Set(ids).size, 'every Track 0 slide id must appear exactly once').toBe(ids.length)
+
+    const remoteBackfill = slides.filter(slide => !slide.isLocal)
+    expect(remoteBackfill.length).toBeGreaterThan(0)
+    expect(remoteBackfill.length).toBeLessThanOrEqual(24)
+    for (const slide of remoteBackfill) {
+      expect(slide.startTime).toBeGreaterThanOrEqual(359)
+      expect(slide.endTime).toBeLessThanOrEqual(406)
+    }
+    // With the backfill in place the barrage stays a per-beat cut, never a
+    // slow uniform spread of a short pool.
+    const barrageSlides = slides.filter(slide => slide.startTime >= 359.2 && slide.endTime <= 405.8)
+    for (const slide of barrageSlides) {
+      expect(slide.duration).toBeLessThan(2)
+    }
+
+    // Reserved backfill photos are held out of the later-track rotations.
+    const laterWrapper = mount(WolvesComicReader, {
+      props: { trackIndex: 1, playlistCurrentTime: 0 },
+    })
+    await flushPromises()
+    const laterIds = new Set(
+      ((laterWrapper.vm as any).laterTrackPhotos as Array<{ id: string }>).map(photo => photo.id),
+    )
+    for (const slide of remoteBackfill) {
+      expect(laterIds.has(slide.id), `${slide.id} plays in Track 0 and must not repeat later`).toBe(false)
+    }
   })
 
   it('renders Clyde as a theater-scale title card', async () => {

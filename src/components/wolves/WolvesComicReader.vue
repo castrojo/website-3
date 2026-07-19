@@ -10,7 +10,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ghostsInTheMistOpeningSlide } from '@/data/wolves-gallery-featured'
 import { shuffleWolvesGalleryPhotos } from '@/data/wolves-gallery-shuffle'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
-import { TRACK_ZERO_SECTIONS, trackZeroBeatCuts } from '@/data/wolves-track-zero-beats'
+import { TRACK_ZERO_SECTIONS, trackZeroBeatCuts, trackZeroBeatSpan } from '@/data/wolves-track-zero-beats'
 import {
   bluefinGroupSlides,
   jonoBaconSlideId,
@@ -52,7 +52,42 @@ const trackZeroFlickrPhotoIds = new Set(
     return photoId ? [photoId] : []
   }),
 )
+// CNCF feed photos whose Track 0 copy lives under a curated caption filename
+// (no digits for the id match above to catch); they still play in Track 0, so
+// they stay excluded from the later-track remote rotations.
+const curatedTrackZeroFeedPhotoIds = [
+  '55164385253', // James Strong - This Man does not give applications root to his computers.
+  '55164226136', // We dine like Lords of Old!
+] as const
+for (const id of curatedTrackZeroFeedPhotoIds) {
+  trackZeroFlickrPhotoIds.add(id)
+}
 const flickrPhotos = ref<{ id: string, server: string, secret: string, title: string }[]>([])
+// Remote CNCF feed photos reserved to backfill the Track 0 finale beat
+// barrage (every shot plays exactly once, so the barrage tops up from the
+// feed instead of reusing local slides). Reserved ids are held out of the
+// later-track rotations below, so the reservation only engages when the
+// feed is comfortably larger than the reservation itself.
+const TRACK_ZERO_BARRAGE_BACKFILL_COUNT = 24
+const TRACK_ZERO_BARRAGE_BACKFILL_MIN_POOL = TRACK_ZERO_BARRAGE_BACKFILL_COUNT * 3
+const trackZeroBarrageBackfill = computed(() => {
+  const eligible = flickrPhotos.value.filter(photo => !trackZeroFlickrPhotoIds.has(photo.id))
+  if (eligible.length < TRACK_ZERO_BARRAGE_BACKFILL_MIN_POOL) {
+    return []
+  }
+  return deterministicShuffle(eligible, 505)
+    .slice(0, TRACK_ZERO_BARRAGE_BACKFILL_COUNT)
+    .map(photo => ({
+      id: photo.id,
+      isLocal: false,
+      path: `https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}_b.jpg`,
+      title: photo.title,
+      type: 'single' as const,
+      dayName: undefined,
+      nightName: undefined,
+      rawPhoto: photo,
+    }))
+})
 const laterTrackPhotos = ref<any[]>([])
 const shuffledLaterTrackPhotos = ref<any[]>([])
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
@@ -493,12 +528,23 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime = endTime
   }
 
-  const peoplePool4 = deterministicShuffle([
+  // Beat barrage: one cut per measured beat (a couple of 2-beat holds up
+  // front), running to the last measured accent at ~405.7s. The local pool
+  // covers each shot exactly once, so remaining beats top up with reserved
+  // remote CNCF feed photos rather than repeating a slide.
+  const barrageBase = [
     ...shuffledPeople.slice(73),
     ...finaleSlides,
+  ]
+  const barrageTarget = Math.max(
+    barrageBase.length,
+    trackZeroBeatSpan(currentTime, TRACK_ZERO_SECTIONS.finaleStart) - 2,
+  )
+  const barrageBackfill = trackZeroBarrageBackfill.value.slice(0, barrageTarget - barrageBase.length)
+  const peoplePool4 = deterministicShuffle([
+    ...barrageBase,
+    ...barrageBackfill,
   ], 404)
-  // Beat barrage: one cut per measured beat (a couple of 2-beat holds up
-  // front), running to the last measured accent at ~405.7s.
   const sec6Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.finaleStart, peoplePool4.length, [2, 1])
   peoplePool4.forEach((item, index) => {
     const endTime = sec6Cuts[index]
@@ -759,8 +805,9 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 function snapshotLaterTrackPhotos() {
+  const reservedTrackZeroIds = new Set(trackZeroBarrageBackfill.value.map(photo => photo.id))
   const remotePhotos = flickrPhotos.value
-    .filter(photo => !trackZeroFlickrPhotoIds.has(photo.id))
+    .filter(photo => !trackZeroFlickrPhotoIds.has(photo.id) && !reservedTrackZeroIds.has(photo.id))
     .map((photo) => {
       const isFeaturedOpening = photo.id === ghostsInTheMistOpeningSlide.photoId
       return {
