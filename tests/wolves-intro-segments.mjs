@@ -163,13 +163,8 @@ try {
       return
     }
     if (companionBox) {
-      expectTruthy(`${name} companion sits in the bottom-right corner beside the plate`, companionBox.x > box.x + box.width - 1)
-      expectTruthy(`${name} companion bottom aligns with the name plate`, Math.abs((companionBox.y + companionBox.height) - (box.y + box.height)) < 8)
-    }
-    const artworkBox = await page.locator('.wolves-companion-plate-art').boundingBox()
-    expectTruthy(`${name} companion artwork bounds`, artworkBox)
-    if (artworkBox && companionBox) {
-      expectTruthy(`${name} companion artwork reaches the card's right edge`, Math.abs((artworkBox.x + artworkBox.width) - (companionBox.x + companionBox.width)) < 8)
+      expectTruthy(`${name} companion card is independently right anchored`, Math.abs((companionBox.x + companionBox.width) - VIEWPORT.width * 0.95) < 8)
+      expectTruthy(`${name} companion card is independently bottom anchored`, Math.abs((companionBox.y + companionBox.height) - VIEWPORT.height * 0.9) < 8)
     }
 
     if (lowerThird) {
@@ -206,22 +201,20 @@ try {
   })
   await capture(page, '10-destiny-kaslin-torosaurus')
 
-  // Natali Vlatko's Alamo stacks underneath her plate instead of beside it.
-  // Her cue shares the shot with Christoph Blecker's, so scope to the stacked row.
   await seekActiveDestinyPlayer(90)
   await page.waitForFunction(() => {
-    const row = document.querySelector('.wolves-guardian-plate-row-companion-below')
-    const plate = row?.querySelector('.wolves-guardian-plate')
-    const art = row?.querySelector('.wolves-companion-plate-art')
+    const plate = [...document.querySelectorAll('.wolves-guardian-plate')]
+      .find(node => node.textContent?.includes('Natali Vlatko'))
+    const art = document.querySelector('.wolves-companion-plate-art')
     return (plate?.textContent ?? '').includes('Natali Vlatko')
       && (art?.getAttribute('src') ?? '').includes('alamosaurus')
   }, { timeout: 5_000 })
-  const natBox = await page.locator('.wolves-guardian-plate-row-companion-below .wolves-guardian-plate').boundingBox()
-  const alamoBox = await page.locator('.wolves-guardian-plate-row-companion-below .wolves-companion-plate').boundingBox()
+  const natBox = await page.locator('.wolves-guardian-plate').filter({ hasText: 'Natali Vlatko' }).boundingBox()
+  const alamoBox = await page.locator('.wolves-companion-plate').boundingBox()
   expectTruthy('Natali Vlatko guardian plate bounds', natBox)
   expectTruthy('Alamo companion plate bounds', alamoBox)
   if (natBox && alamoBox) {
-    expectTruthy('Alamo sits underneath Natali\'s plate', alamoBox.y > natBox.y + natBox.height - 1)
+    expectTruthy('Alamo is independently right anchored', Math.abs((alamoBox.x + alamoBox.width) - VIEWPORT.width * 0.95) < 8)
   }
   const christophBox = await page.locator('.wolves-guardian-plate').filter({ hasText: 'Christoph Blecker' }).boundingBox()
   expectTruthy('Christoph Blecker guardian plate bounds', christophBox)

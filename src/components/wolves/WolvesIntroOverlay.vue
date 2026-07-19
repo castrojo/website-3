@@ -189,8 +189,6 @@ interface GuardianDinosaurCompanion {
   name?: string
   scientificName: string
   artwork: string
-  placement?: 'below'
-  artworkPositionClass?: 'wolves-companion-plate-art-lower-right'
 }
 
 /**
@@ -208,10 +206,6 @@ function guardianDinosaurCompanion(guardianName: string): GuardianDinosaurCompan
     name: bond.dinosaurName,
     scientificName: species.scientificName,
     artwork: `${baseUrl}${species.artwork.slice(2)}`,
-    placement: bond.companionPlacement,
-    artworkPositionClass: ['bob-torosaurus', 'karl', 'kaslin-torosaurus'].includes(bond.dinosaurSpeciesId)
-      ? 'wolves-companion-plate-art-lower-right'
-      : undefined,
   }
 }
 
@@ -849,7 +843,6 @@ defineExpose({
             'wolves-guardian-plate-left': cue.position === 'left',
             'wolves-guardian-plate-right': cue.position === 'right',
             'wolves-guardian-plate-raised': cue.raised,
-            'wolves-guardian-plate-row-companion-below': parseGuardianCue(cue.text) && guardianDinosaurCompanion(parseGuardianCue(cue.text)!.name)?.placement === 'below',
           }"
         >
           <div
@@ -902,7 +895,6 @@ defineExpose({
               alt=""
               aria-hidden="true"
               class="wolves-companion-plate-art"
-              :class="guardianDinosaurCompanion(parseGuardianCue(cue.text)!.name)!.artworkPositionClass"
             >
             <div class="wolves-companion-plate-card">
               <p class="wolves-companion-plate-label">
@@ -1642,20 +1634,6 @@ defineExpose({
   pointer-events: none;
 }
 
-/* Stacks the companion plate underneath the guardian plate instead of beside
-   it (Natali Vlatko's right-anchored, raised cue: Alamo rides below her name). */
-.wolves-guardian-plate-row-companion-below {
-  flex-direction: column;
-  align-items: center;
-}
-
-.wolves-guardian-plate-row-companion-below .wolves-companion-plate {
-  order: 0;
-  position: fixed;
-  right: 5%;
-  bottom: 10%;
-}
-
 /* Guardian trailer callout, redesigned as a Destiny 2 "Guardian Rank Up" style HUD burst:
    a chamfered plate with a radial ignition flash, a crest badge flanked by horizon accent
    lines, and a slow letter-spacing text drift -- built from research into Bungie's diegetic
@@ -1712,7 +1690,9 @@ defineExpose({
    out of the chamfered box for dramatic effect (the card carries the
    clip-path, not the shared wrapper, so the art can overflow freely). */
 .wolves-companion-plate {
-  position: relative;
+  position: fixed;
+  right: 5%;
+  bottom: 10%;
   flex-shrink: 0;
   width: clamp(17rem, 14rem + 5vw, 24rem);
   text-align: center;
@@ -1728,11 +1708,6 @@ defineExpose({
   margin: 0 -4% -3.4rem;
   filter: drop-shadow(0 8px 16px rgb(0 0 0 / 65%)) drop-shadow(0 0 12px rgb(147 197 253 / 30%));
   animation: wolves-guardian-plate-text-drift 1.4s cubic-bezier(0.1, 0.9, 0.2, 1) 0.25s backwards;
-}
-
-.wolves-companion-plate-art-lower-right {
-  width: 100%;
-  margin: 0 0 -3.4rem auto;
 }
 
 .wolves-companion-plate-card {
