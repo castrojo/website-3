@@ -290,8 +290,9 @@ async function scanDirectory(subfolder) {
   try {
     const dirPath = join(BASE_WALLPAPERS_DIR, subfolder)
     const files = await readdir(dirPath)
-    // Filter out directories and non-image files
-    return files.filter(file => /\.(?:webp|png|jpg|jpeg)$/i.test(file)).sort()
+    // Filter out directories and non-image files (animated gifs play fine in
+    // the slideshow's plain <img> elements, so they are first-class slides).
+    return files.filter(file => /\.(?:webp|png|jpg|jpeg|gif)$/i.test(file)).sort()
   }
   catch (err) {
     console.warn(`Warning: Could not read directory ${subfolder}:`, err.message)

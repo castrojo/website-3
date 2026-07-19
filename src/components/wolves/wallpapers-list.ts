@@ -158,6 +158,11 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/showcase/claw.gif",
+    "title": "Claw"
+  },
+  {
+    "type": "single",
     "name": "wolves/showcase/deinonychus_wallpaper_option.jpg",
     "title": "Deinonychus Wallpaper Option"
   },
