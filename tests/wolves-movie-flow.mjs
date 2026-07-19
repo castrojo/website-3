@@ -24,7 +24,8 @@ const WOLVES_URL = `${BASE_URL}/wolves/`
 const [width, height] = (process.env.WOLVES_VIEWPORT ?? '1440x900').split('x').map(Number)
 const VIEWPORT = { width, height }
 const SCREENSHOT_DIR = process.env.WOLVES_SCREENSHOT_DIR
-const JORGE_GHOSTS_QUOTE = 'Our projects depend on good apps, support GNOME, KDE, and Flathub to bring app developers to Linux! Not a Universal Blue ecosystem or a bootc ecosystem. A cloud native ecosystem. In one short weekend you\'ve proven to the world that enthusiasts matter. Thank you to Chainguard, Microsoft, Red Hat, Edera, for sourcing talent from Universal Blue! Need talent? Cloud native projets like ours are focused on sustainability. Judge us by our metrics.'
+const JORGE_GHOSTS_QUOTE_PART_ONE = 'Our projects depend on good apps, support GNOME, KDE, and Flathub to bring app developers to Linux! Not a Universal Blue ecosystem or a bootc ecosystem. A cloud native ecosystem. In one short weekend you\'ve proven to the world that enthusiasts matter.'
+const JORGE_GHOSTS_QUOTE_PART_TWO = 'Thank you to Chainguard, Microsoft, Red Hat, Edera, for sourcing talent from Universal Blue! Need talent? Cloud native projets like ours are focused on sustainability. Judge us by our metrics.'
 
 let passed = 0
 let failed = 0
@@ -513,7 +514,7 @@ try {
   assert('Ghosts opener identifies Jorge Castro', await ghostsCaption.locator('.theater-guardian-name').textContent(), 'Jorge Castro')
   assert('Ghosts opener carries the Sentinel Titan class', await ghostsCaption.locator('.theater-guardian-class').textContent(), 'Sentinel Titan')
   assertTruthy('Ghosts opener carries the guardian titles', (await ghostsCaption.locator('.theater-guardian-title').textContent())?.includes('Upender of Antipatterns'))
-  assert('Ghosts opener preserves Jorge quote', ghostsCaptionText, JORGE_GHOSTS_QUOTE)
+  assert('Ghosts opener preserves Jorge quote part one', ghostsCaptionText, JORGE_GHOSTS_QUOTE_PART_ONE)
   const ghostsCaptionMetrics = await ghostsCaption.evaluate((caption) => {
     const viewer = document.querySelector('.flickr-gallery-wrapper')
     const captionRect = caption.getBoundingClientRect()
@@ -530,6 +531,13 @@ try {
   assert('Ghosts opener quote does not scroll', ghostsCaptionMetrics.scrolls, false)
   assert('Ghosts opener quote stays inside the viewer', ghostsCaptionMetrics.withinViewer, true)
   await captureStage(page, 'ghosts-mn047-jorge')
+
+  await seekStage(19.3)
+  const ghostsCaptionPartTwo = (await ghostsCaption.locator('.wallpaper-theater-caption-body').allTextContents())
+    .map(paragraph => paragraph.replace(/\s+/g, ' ').trim())
+    .join(' ')
+  assert('Ghosts opener advances to Jorge quote part two', ghostsCaptionPartTwo, JORGE_GHOSTS_QUOTE_PART_TWO)
+  await captureStage(page, 'ghosts-mn047-jorge-part-two')
 
   await seekStage(38.399)
   const ghostsBeforeHandoff = await page.locator('.flickr-photo-layer').evaluateAll((layers) => {

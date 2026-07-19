@@ -361,9 +361,11 @@ describe('wolvesComicReader', () => {
 
   it('opens Ghosts In The Mist with the held MN047 Jorge tribute', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const jorgeQuote = [
+    const jorgeQuotePartOne = [
       'Our projects depend on good apps, support GNOME, KDE, and Flathub to bring app developers to Linux!',
       'Not a Universal Blue ecosystem or a bootc ecosystem. A cloud native ecosystem. In one short weekend you\'ve proven to the world that enthusiasts matter.',
+    ]
+    const jorgeQuotePartTwo = [
       'Thank you to Chainguard, Microsoft, Red Hat, Edera, for sourcing talent from Universal Blue!',
       'Need talent? Cloud native projets like ours are focused on sustainability. Judge us by our metrics.',
     ]
@@ -398,7 +400,11 @@ describe('wolvesComicReader', () => {
     expect(wrapper.get('.theater-guardian-class').text()).toBe('Sentinel Titan')
     expect(wrapper.get('.theater-guardian-title').text()).toContain('Upender of Antipatterns')
     expect(wrapper.get('.theater-guardian-title').text()).toContain('The First Disciple')
-    expect(wrapper.findAll('.wallpaper-theater-caption-body').map(paragraph => paragraph.text())).toEqual(jorgeQuote)
+    expect(wrapper.findAll('.wallpaper-theater-caption-body').map(paragraph => paragraph.text())).toEqual(jorgeQuotePartOne)
+
+    await wrapper.setProps({ playlistCurrentTime: 19.3 })
+    expect(activeTimelineImage(wrapper)).toContain('55164222671_32d7ace307_c.jpg')
+    expect(wrapper.findAll('.wallpaper-theater-caption-body').map(paragraph => paragraph.text())).toEqual(jorgeQuotePartTwo)
 
     await wrapper.setProps({ playlistCurrentTime: 38.399 })
     expect(activeTimelineImage(wrapper)).toContain('55164222671_32d7ace307_c.jpg')

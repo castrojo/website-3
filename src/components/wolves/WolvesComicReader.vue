@@ -686,6 +686,15 @@ const activeDisplayIndex = computed(() => {
   return activeFlickrIndex.value
 })
 
+// The Jorge Castro tribute quote plays in two sequential halves over the
+// featured hold so the guardian plate stays compact.
+const featuredOpeningQuotePart = computed(() => {
+  const parts = ghostsInTheMistOpeningSlide.descriptionParts
+  const partWindow = ghostsInTheMistOpeningSlide.holdSeconds / parts.length
+  const elapsed = Math.max(0, props.playlistCurrentTime ?? 0)
+  return parts[Math.min(parts.length - 1, Math.floor(elapsed / partWindow))]
+})
+
 const mixedPhotosToUse = computed(() => {
   if (props.trackIndex === 0 && isExperimental.value) {
     return timelineSlides.value
@@ -815,7 +824,7 @@ function snapshotLaterTrackPhotos() {
         isLocal: false,
         path: `https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}_${isFeaturedOpening ? ghostsInTheMistOpeningSlide.imageSizeSuffix : 'b'}.jpg`,
         title: isFeaturedOpening ? ghostsInTheMistOpeningSlide.title : photo.title,
-        description: isFeaturedOpening ? ghostsInTheMistOpeningSlide.description : undefined,
+        description: isFeaturedOpening ? ghostsInTheMistOpeningSlide.descriptionParts.join('\n\n') : undefined,
         type: 'single' as const,
         dayName: undefined,
         nightName: undefined,
@@ -1067,7 +1076,9 @@ onBeforeUnmount(() => {
               </p>
               <template v-if="activePhoto.description">
                 <p
-                  v-for="(paragraph, pIdx) in activePhoto.description.split('\n\n')"
+                  v-for="(paragraph, pIdx) in (activePhoto.id === ghostsInTheMistOpeningSlide.photoId
+                    ? featuredOpeningQuotePart
+                    : activePhoto.description).split('\n\n')"
                   :key="pIdx"
                   class="wallpaper-theater-caption-body"
                 >
