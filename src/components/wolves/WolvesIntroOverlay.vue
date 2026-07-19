@@ -59,6 +59,28 @@ const segmentDurations = ref<number[]>(props.videos.map(video => (isTextSegment(
 const currentSegment = computed<IntroVideoSpec | undefined>(() => props.videos[sequenceState.value.index])
 const canGoToPrevious = computed(() => sequenceState.value.index > 0)
 
+/**
+ * Opaque cover over the player while YouTube boots a video segment. The embed
+ * paints its own centered play/pause state icon (and title chrome) inside the
+ * iframe for the first seconds of playback, and semi-transparent masks cannot
+ * hide the composited video layer. The cover lifts once playback has advanced
+ * past the boot window; the opening frames it hides are effectively black.
+ */
+const BOOT_COVER_LEAD_SECONDS = 4
+const bootCoverReleased = ref(false)
+watch(currentTime, (time) => {
+  if (bootCoverReleased.value) {
+    return
+  }
+  const segment = currentSegment.value
+  if (!segment || !isVideoSegment(segment)) {
+    return
+  }
+  if (time >= (segment.startOffset ?? 0) + BOOT_COVER_LEAD_SECONDS) {
+    bootCoverReleased.value = true
+  }
+})
+
 const activeCue = computed<IntroOverlayTextCue | undefined>(() => activeOverlayCue(currentSegment.value?.overlays, currentTime.value))
 const burnedInCaptionCues = computed<readonly IntroOverlayTextCue[] | undefined>(() => {
   if (!currentSegment.value || !isVideoSegment(currentSegment.value)) {
@@ -98,7 +120,9 @@ const activeMediaTitle = computed(() => activeBurnedInCaptions.value.find(cue =>
  * both callouts need to render side-by-side via their `position` anchor.
  */
 const activeCues = computed<readonly IntroOverlayTextCue[]>(() => activeOverlayCues(currentSegment.value?.overlays, currentTime.value))
-const activeGuardianCues = computed<readonly IntroOverlayTextCue[]>(() => activeComicTitleCardCue.value ? [] : activeCues.value)
+const activeGuardianCues = computed<readonly IntroOverlayTextCue[]>(() =>
+  activeComicTitleCardCue.value ? [] : activeCues.value.filter(cue => !cue.statusOnly),
+)
 
 /**
  * Splits a Guardian cue's authored "Class — Name — Title" string into its own dossier-style
@@ -161,10 +185,28 @@ function titleTokens(title: string, blingTitle: string | undefined): TitleToken[
   return tokens
 }
 
-function guardianDinosaurArtwork(guardianName: string): string | undefined {
+interface GuardianDinosaurCompanion {
+  name?: string
+  scientificName: string
+  artwork: string
+}
+
+/**
+ * Resolves a guardian's documented dinosaur bond into the companion plate's
+ * display data: the authored dinosaur name (when a character sheet names it),
+ * the species' scientific name, and the artwork URL.
+ */
+function guardianDinosaurCompanion(guardianName: string): GuardianDinosaurCompanion | undefined {
   const bond = wolvesGuardianDinosaurBonds.find(entry => entry.guardianName === guardianName)
   const species = bond && dinosaurSpecies.find(entry => entry.id === bond.dinosaurSpeciesId)
-  return species && `${baseUrl}${species.artwork.slice(2)}`
+  if (!bond || !species) {
+    return undefined
+  }
+  return {
+    name: bond.dinosaurName,
+    scientificName: species.scientificName,
+    artwork: `${baseUrl}${species.artwork.slice(2)}`,
+  }
 }
 
 /**
@@ -414,6 +456,7 @@ function startTextSegment(segment: Extract<IntroVideoSpec, { kind: 'text' }>) {
 async function loadVideoSegment(segment: Extract<IntroVideoSpec, { kind: 'video' }> | undefined) {
   const token = ++loadToken
   currentTime.value = 0
+  bootCoverReleased.value = false
   destroyPlayer()
 
   if (!segment) {
@@ -627,6 +670,8 @@ watchEffect(() => {
     segmentId: currentSegment.value?.id ?? '',
     canGoPrevious: canGoToPrevious.value,
     nameplateTitle: activeCue.value?.nameplateTitle,
+    nameplateGlitch: activeCue.value?.glitch,
+    nameplateDetail: activeCue.value?.nameplateDetail,
     mediaTitle: activeMediaTitle.value,
     showVoiceOverToggle: canToggleDestinyVoiceOver.value,
     voiceOverEnabled: canToggleDestinyVoiceOver.value ? destinyVoiceOverEnabled.value : false,
@@ -669,6 +714,13 @@ defineExpose({
     :class="{ 'wolves-intro-overlay--transparent-handoff': props.transparentHandoff }"
   >
     <div v-if="currentSegment.kind === 'video'" ref="mountHost" class="wolves-intro-overlay-player" />
+    <Transition name="wolves-intro-overlay-boot-cover-fade">
+      <div
+        v-if="currentSegment.kind === 'video' && !bootCoverReleased"
+        class="wolves-intro-overlay-boot-cover"
+        aria-hidden="true"
+      />
+    </Transition>
     <div
       v-if="currentSegment.kind === 'video'"
       class="wolves-intro-overlay-top-left-mask"
@@ -778,58 +830,89 @@ defineExpose({
         </div>
       </div>
 
-      <div
-        v-for="cue in activeGuardianCues"
-        :key="cue.text"
-        class="wolves-guardian-plate font-mono"
-        :class="{
-          'wolves-guardian-plate-left': cue.position === 'left',
-          'wolves-guardian-plate-right': cue.position === 'right',
-          'wolves-guardian-plate-raised': cue.raised,
-          'wolves-guardian-plate-leader': cue.leader,
-        }"
-      >
-        <template v-if="parseGuardianCue(cue.text)">
-          <div class="wolves-guardian-plate-burst" aria-hidden="true" />
-          <div class="wolves-guardian-plate-header">
-            <div class="wolves-guardian-plate-horizon wolves-guardian-plate-horizon-left" aria-hidden="true" />
-            <svg class="wolves-guardian-plate-crest" viewBox="0 0 100 100" aria-hidden="true">
-              <polygon points="50,5 85,20 95,55 50,95 5,55 15,20" class="wolves-guardian-plate-crest-outer" />
-              <polygon points="50,12 78,25 87,52 50,85 13,52 22,25" class="wolves-guardian-plate-crest-inner" />
-              <path d="M35,45 L50,60 L65,45" class="wolves-guardian-plate-crest-chevron" />
-            </svg>
-            <div class="wolves-guardian-plate-horizon wolves-guardian-plate-horizon-right" aria-hidden="true" />
+      <!-- Quick fade when one centered plate replaces another (e.g. Bob Killen -> Kat
+           Cosgrove at 14.5s); the entering plate keeps its authored impact animation.
+           Each row anchors the guardian plate plus, for documented dinosaur bonds, the
+           companion plate that shows the partnership beside the guardian's name. -->
+      <TransitionGroup name="wolves-guardian-plate-swap">
+        <div
+          v-for="cue in activeGuardianCues"
+          :key="cue.text"
+          class="wolves-guardian-plate-row"
+          :class="{
+            'wolves-guardian-plate-left': cue.position === 'left',
+            'wolves-guardian-plate-right': cue.position === 'right',
+            'wolves-guardian-plate-raised': cue.raised,
+          }"
+        >
+          <div
+            class="wolves-guardian-plate font-mono"
+            :class="{
+              'wolves-guardian-plate-leader': cue.leader,
+              'wolves-guardian-plate-trustee': cue.trustee,
+            }"
+          >
+            <template v-if="parseGuardianCue(cue.text)">
+              <div class="wolves-guardian-plate-burst" aria-hidden="true" />
+              <div class="wolves-guardian-plate-header">
+                <div class="wolves-guardian-plate-horizon wolves-guardian-plate-horizon-left" aria-hidden="true" />
+                <svg class="wolves-guardian-plate-crest" viewBox="0 0 100 100" aria-hidden="true">
+                  <polygon points="50,5 85,20 95,55 50,95 5,55 15,20" class="wolves-guardian-plate-crest-outer" />
+                  <polygon points="50,12 78,25 87,52 50,85 13,52 22,25" class="wolves-guardian-plate-crest-inner" />
+                  <path d="M35,45 L50,60 L65,45" class="wolves-guardian-plate-crest-chevron" />
+                </svg>
+                <div class="wolves-guardian-plate-horizon wolves-guardian-plate-horizon-right" aria-hidden="true" />
+              </div>
+              <p class="wolves-guardian-plate-label">
+                {{ cue.trustee ? 'TRUSTEE // GUARDIAN' : 'MAINTAINER // GUARDIAN' }}
+              </p>
+              <p class="wolves-guardian-plate-class">
+                {{ parseGuardianCue(cue.text)!.guardianClass }}
+              </p>
+              <p class="wolves-guardian-plate-name">
+                {{ parseGuardianCue(cue.text)!.name }}
+              </p>
+              <p class="wolves-guardian-plate-title">
+                <template v-for="(token, index) in titleTokens(parseGuardianCue(cue.text)!.title, cue.blingTitle)" :key="index">
+                  <span v-if="token.kind === 'sep'" class="wolves-guardian-plate-title-sep" aria-hidden="true">|</span>
+                  <span v-else-if="token.bling" class="wolves-guardian-plate-bling">{{ token.text }}</span>
+                  <template v-else>
+                    {{ token.text }}
+                  </template>
+                </template>
+              </p>
+            </template>
+            <p v-else class="wolves-guardian-plate-name">
+              {{ cue.text }}
+            </p>
           </div>
-          <p class="wolves-guardian-plate-label">
-            MAINTAINER // GUARDIAN
-          </p>
-          <p class="wolves-guardian-plate-class">
-            {{ parseGuardianCue(cue.text)!.guardianClass }}
-          </p>
-          <p class="wolves-guardian-plate-name">
-            {{ parseGuardianCue(cue.text)!.name }}
+          <div
+            v-if="parseGuardianCue(cue.text) && guardianDinosaurCompanion(parseGuardianCue(cue.text)!.name)"
+            class="wolves-companion-plate font-mono"
+          >
             <img
-              v-if="guardianDinosaurArtwork(parseGuardianCue(cue.text)!.name)"
-              :src="guardianDinosaurArtwork(parseGuardianCue(cue.text)!.name)"
+              :src="guardianDinosaurCompanion(parseGuardianCue(cue.text)!.name)!.artwork"
               alt=""
               aria-hidden="true"
-              class="wolves-guardian-plate-dinosaur-icon"
+              class="wolves-companion-plate-art"
             >
-          </p>
-          <p class="wolves-guardian-plate-title">
-            <template v-for="(token, index) in titleTokens(parseGuardianCue(cue.text)!.title, cue.blingTitle)" :key="index">
-              <span v-if="token.kind === 'sep'" class="wolves-guardian-plate-title-sep" aria-hidden="true">|</span>
-              <span v-else-if="token.bling" class="wolves-guardian-plate-bling">{{ token.text }}</span>
-              <template v-else>
-                {{ token.text }}
-              </template>
-            </template>
-          </p>
-        </template>
-        <p v-else class="wolves-guardian-plate-name">
-          {{ cue.text }}
-        </p>
-      </div>
+            <div class="wolves-companion-plate-card">
+              <p class="wolves-companion-plate-label">
+                GUARDIAN BOND
+              </p>
+              <p
+                v-if="guardianDinosaurCompanion(parseGuardianCue(cue.text)!.name)!.name"
+                class="wolves-companion-plate-name"
+              >
+                {{ guardianDinosaurCompanion(parseGuardianCue(cue.text)!.name)!.name }}
+              </p>
+              <p class="wolves-companion-plate-species">
+                {{ guardianDinosaurCompanion(parseGuardianCue(cue.text)!.name)!.scientificName }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </TransitionGroup>
     </template>
 
     <p
@@ -872,18 +955,22 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000;
+  background-color: #000;
   overflow: hidden;
+  /* Handoff dissolve duration; must match INTRO_HANDOFF_FADE_MS in WolvesApp.vue. */
+  transition: background-color 1.4s ease;
 }
 
 .wolves-intro-overlay--transparent-handoff {
-  background: transparent;
+  background-color: transparent;
 }
 
 .wolves-intro-overlay--transparent-handoff .wolves-intro-overlay-player,
+.wolves-intro-overlay--transparent-handoff .wolves-intro-overlay-boot-cover,
 .wolves-intro-overlay--transparent-handoff .wolves-intro-overlay-top-left-mask,
 .wolves-intro-overlay--transparent-handoff .wolves-intro-overlay-pause-veil {
   opacity: 0;
+  transition: opacity 1.4s ease;
 }
 
 .wolves-intro-overlay-player {
@@ -892,14 +979,38 @@ defineExpose({
   pointer-events: none;
 }
 
+/* Opaque boot cover over the whole player while YouTube's centered state icon
+   and title chrome paint during a video segment's first seconds. Must stay
+   fully opaque for the same compositing reason as the band above. */
+.wolves-intro-overlay-boot-cover {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.wolves-intro-overlay-boot-cover-fade-leave-active {
+  transition: opacity 0.6s ease-out;
+}
+
+.wolves-intro-overlay-boot-cover-fade-leave-to {
+  opacity: 0;
+}
+
+/* Full-width band over YouTube's top chrome: the embed paints its own video
+   title (plus channel avatar) across the top of the frame at playback start
+   and after every resume, and no player parameter can remove it. The band must
+   be fully opaque where the title paints: semi-transparent black does not
+   darken the iframe's composited video layer reliably, so alpha-only masks
+   leak the title. The fade may only begin below the chrome row (~60px). */
 .wolves-intro-overlay-top-left-mask {
   position: absolute;
-  top: max(1rem, env(safe-area-inset-top));
-  left: max(1rem, env(safe-area-inset-left));
-  width: min(32rem, 48vw);
-  height: clamp(5.6rem, 11vh, 8.4rem);
-  border-radius: 0 0 1.6rem;
-  background: linear-gradient(135deg, rgb(0 0 0 / 96%) 0%, rgb(0 0 0 / 82%) 72%, transparent 100%);
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(7.2rem, 13vh, 10rem);
+  background: linear-gradient(180deg, #000 0%, #000 68%, transparent 100%);
   pointer-events: none;
   z-index: 2;
 }
@@ -1123,13 +1234,21 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  /* Extra distance between the words and the art box so the cycling dinosaurs
+     never read as crowding the text. */
+  gap: clamp(1.4rem, 3vh, 2.4rem);
   min-width: 0;
 }
 
 .wolves-intro-overlay-title-card-art {
-  width: min(68vw, 30rem);
-  max-height: 34vh;
+  /* Fixed box, bigger art: every hero shot renders inside the same reserved
+     width and height (object-fit: contain), so the fast cycle through
+     different aspect ratios can never shift the title or the pill. */
+  width: min(68vw, 46rem);
+  /* Viewport-aware height: grows on tall screens (40rem cap) but shrinks on
+     short ones so the "Made by Paid Artists" pill never collides with the
+     fixed footer widget dock. */
+  height: clamp(15rem, calc(90vh - 41rem), 40rem);
   object-fit: contain;
   filter: drop-shadow(0 0 24px rgb(0 0 0 / 70%));
 }
@@ -1261,8 +1380,9 @@ defineExpose({
   .wolves-intro-overlay-title-card-art {
     grid-column: 1;
     grid-row: 2;
-    width: min(42vw, 16rem);
-    max-height: 24vh;
+    /* Same fixed-box treatment as desktop, scaled for the phone grid. */
+    width: min(46vw, 22rem);
+    height: 28vh;
   }
 
   .wolves-intro-overlay-title-card-line-small {
@@ -1294,6 +1414,31 @@ defineExpose({
 
   .wolves-intro-overlay-title-card-qr-dialogue {
     font-size: clamp(0.9rem, 2.8vw, 1.15rem);
+  }
+
+  /* Narrow screens: tighten the guardian + companion pair so both cards fit
+     side by side without overflowing the frame. */
+  .wolves-guardian-plate-row {
+    gap: 0.8rem;
+    max-width: 92%;
+  }
+
+  .wolves-guardian-plate {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding: 1.4rem 1rem 1.2rem;
+  }
+
+  .wolves-companion-plate {
+    width: 11rem;
+  }
+
+  .wolves-companion-plate-art {
+    margin-bottom: -2.2rem;
+  }
+
+  .wolves-companion-plate-card {
+    padding: 2.8rem 1rem 1rem;
   }
 }
 
@@ -1462,15 +1607,25 @@ defineExpose({
   text-align: center;
 }
 
+/* Positioned anchor for a guardian plate plus its optional dinosaur companion
+   plate; the pair sit side by side, bottoms aligned, to show the partnership. */
+.wolves-guardian-plate-row {
+  position: absolute;
+  bottom: 10%;
+  left: 5%;
+  display: flex;
+  align-items: flex-end;
+  gap: 1.8rem;
+  pointer-events: none;
+}
+
 /* Guardian trailer callout, redesigned as a Destiny 2 "Guardian Rank Up" style HUD burst:
    a chamfered plate with a radial ignition flash, a crest badge flanked by horizon accent
    lines, and a slow letter-spacing text drift -- built from research into Bungie's diegetic
    HUD notification style (geometry, glow/bloom, and animation choreography). Replaces the
    earlier plain "nerd plate" card. */
 .wolves-guardian-plate {
-  position: absolute;
-  bottom: 10%;
-  left: 5%;
+  position: relative;
   max-width: 44rem;
   padding: 1.75rem 2rem 1.5rem;
   overflow: visible;
@@ -1484,9 +1639,18 @@ defineExpose({
   animation: wolves-guardian-plate-impact 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Anchors this callout to the left/right side of the frame instead of the default lower-left
-   placement, reserved for cues whose window overlaps another Guardian's (they share the shot,
-   so both plates need to sit side-by-side rather than stacking on top of each other). */
+/* Quick fade-out when one plate is replaced by the next (Bob Killen -> Kat Cosgrove). */
+.wolves-guardian-plate-swap-leave-active {
+  transition: opacity 0.25s ease-out;
+}
+
+.wolves-guardian-plate-swap-leave-to {
+  opacity: 0;
+}
+
+/* Anchors this callout row to the left/right side of the frame instead of the default
+   lower-left placement, reserved for cues whose window overlaps another Guardian's (they
+   share the shot, so both plates need to sit side-by-side rather than stacking). */
 .wolves-guardian-plate-left {
   left: 5%;
   right: auto;
@@ -1497,12 +1661,74 @@ defineExpose({
   right: 5%;
 }
 
-/* Raises the callout from the default lower-third anchor to sit closer to a Guardian's
+/* Raises the callout row from the default lower-third anchor to sit closer to a Guardian's
    actual on-screen position when it towers above the frame's lower third (see the `raised`
    field doc comment in wolves-intro-sequence.ts). */
 .wolves-guardian-plate-raised {
   bottom: auto;
   top: 28%;
+}
+
+/* Dinosaur companion plate: the guardian's documented bonded dinosaur split out
+   into its own card beside the guardian plate. The artwork is the hero -- it
+   rides above the card and breaks out of the chamfered box for dramatic effect
+   (the card carries the clip-path, not the shared wrapper, so the art can
+   overflow freely). */
+.wolves-companion-plate {
+  position: relative;
+  flex-shrink: 0;
+  width: clamp(17rem, 14rem + 5vw, 24rem);
+  text-align: center;
+  animation: wolves-guardian-plate-impact 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
+}
+
+.wolves-companion-plate-art {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 108%;
+  max-width: none;
+  margin: 0 -4% -3.4rem;
+  filter: drop-shadow(0 8px 16px rgb(0 0 0 / 65%)) drop-shadow(0 0 12px rgb(147 197 253 / 30%));
+  animation: wolves-guardian-plate-text-drift 1.4s cubic-bezier(0.1, 0.9, 0.2, 1) 0.25s backwards;
+}
+
+.wolves-companion-plate-card {
+  position: relative;
+  padding: 4.2rem 1.6rem 1.4rem;
+  border: 1px solid rgb(147 197 253 / 45%);
+  border-radius: 0.75rem;
+  clip-path: polygon(16px 0%, 100% 0%, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0% 100%, 0% 16px);
+  background: rgb(8 12 20 / 82%);
+  color: #e2e8f0;
+  text-shadow: 0 2px 10px rgb(0 0 0 / 80%);
+}
+
+.wolves-companion-plate-label {
+  margin: 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.5rem);
+  letter-spacing: 0.35em;
+  color: #93c5fd;
+}
+
+.wolves-companion-plate-name {
+  margin: 0.3rem 0 0;
+  font-size: clamp(2rem, 1.6rem + 1vw, 2.8rem);
+  font-weight: 700;
+  color: #f5f5f5;
+  background: linear-gradient(to bottom, #fff 0%, #e2e8f0 60%, #a0aec0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgb(255 255 255 / 25%));
+}
+
+.wolves-companion-plate-species {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.3rem, 1.1rem + 0.5vw, 1.6rem);
+  font-style: italic;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
 }
 
 /* Gilds the plate gold instead of the default silver/blue treatment to signify leadership.
@@ -1543,6 +1769,44 @@ defineExpose({
 .wolves-guardian-plate-leader .wolves-guardian-plate-title {
   color: #fde68a;
   font-weight: 600;
+}
+
+/* Burnished silver treatment for Universal Blue trustees (Bob Killen's cue; Jorge
+   Castro's Ghosts In The Mist plate mirrors it in WolvesComicReader.vue). Distinct
+   from the default blue plate and from the singular gold leader plate. */
+.wolves-guardian-plate-trustee {
+  border-color: rgb(203 213 225 / 55%);
+  box-shadow: 0 0 24px rgb(226 232 240 / 20%);
+}
+
+.wolves-guardian-plate-trustee .wolves-guardian-plate-burst {
+  background: radial-gradient(circle, #fff 0%, #d1d5db 45%, transparent 70%);
+}
+
+.wolves-guardian-plate-trustee .wolves-guardian-plate-horizon {
+  background: linear-gradient(to right, transparent, #d1d5db 60%, #fff 100%);
+  box-shadow: 0 0 8px rgb(226 232 240 / 55%);
+}
+
+.wolves-guardian-plate-trustee .wolves-guardian-plate-horizon-right {
+  background: linear-gradient(to left, transparent, #d1d5db 60%, #fff 100%);
+}
+
+.wolves-guardian-plate-trustee .wolves-guardian-plate-crest {
+  filter: drop-shadow(0 0 8px rgb(226 232 240 / 70%));
+}
+
+.wolves-guardian-plate-trustee .wolves-guardian-plate-crest-outer,
+.wolves-guardian-plate-trustee .wolves-guardian-plate-crest-chevron {
+  stroke: #d1d5db;
+}
+
+.wolves-guardian-plate-trustee .wolves-guardian-plate-label {
+  color: #e5e7eb;
+}
+
+.wolves-guardian-plate-trustee .wolves-guardian-plate-title {
+  color: #cbd5e1;
 }
 
 /* Radial ignition flash behind the crest at the moment the plate appears. */
@@ -1681,16 +1945,6 @@ defineExpose({
   animation:
     wolves-guardian-plate-bling-shimmer 2.6s linear infinite,
     wolves-guardian-plate-bling-pulse 1.8s ease-in-out infinite;
-}
-
-.wolves-guardian-plate-dinosaur-icon {
-  display: inline-block;
-  height: clamp(2.2rem, 1.6rem + 1.4vw, 3rem);
-  width: auto;
-  margin-left: 0.6rem;
-  vertical-align: middle;
-  filter: drop-shadow(0 0 6px rgb(255 255 255 / 35%));
-  animation: wolves-guardian-plate-text-drift 1.4s cubic-bezier(0.1, 0.9, 0.2, 1) 0.25s backwards;
 }
 
 @keyframes wolves-guardian-plate-ignite {

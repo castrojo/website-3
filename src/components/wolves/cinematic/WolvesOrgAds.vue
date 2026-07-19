@@ -101,8 +101,23 @@ const opacities = computed(() => {
   object-fit: contain;
 }
 
+// Reserve each logo's intrinsic box before the asset decodes so the column
+// does not shift during the Part I -> II handoff. All logos are square
+// except the 600x500 KubeCon plate.
+.wc-org-ad-image {
+  aspect-ratio: 1 / 1;
+}
+
+.wc-org-ad[data-org='kubecon'] .wc-org-ad-image {
+  aspect-ratio: 600 / 500;
+}
+
 .wc-org-ad-qr {
   width: min(85%, 16rem);
+
+  // Square QR SVGs; reserving the box up front removes the layout shift
+  // that fired when the asset decoded during the Part I -> II handoff.
+  aspect-ratio: 1 / 1;
 }
 
 @media (max-width: 1023px) {

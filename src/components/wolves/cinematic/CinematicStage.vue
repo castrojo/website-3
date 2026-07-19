@@ -19,8 +19,8 @@ const player = useDualBufferPlayer({ hostA, hostB })
 const isTrackZero = computed(() => store.segment.trackZeroExperience === true)
 
 // The plate is the single title placard on every segment. During the seven-days
-// segment it retains the static kubectl command as the large label and places the
-// time-varying incoming signal in the detail line; elsewhere it shows chapter + title.
+// segment the time-varying incoming signal is the large label and the track title
+// sits in the detail line; elsewhere it shows chapter + title.
 const plateLabel = computed(() =>
   isTrackZero.value ? getWolvesHudLabel(store.nativeTime) : store.segment.title,
 )
@@ -174,7 +174,9 @@ defineExpose({
   top: 3rem;
   left: 3rem;
   z-index: 20;
-  max-width: min(72rem, calc(100vw - 6rem));
+  /* Long signal lines must render on one line; the plate may use the full
+     viewport width minus its own margins before wrapping as a last resort. */
+  max-width: calc(100vw - 6rem);
   pointer-events: none;
 }
 </style>

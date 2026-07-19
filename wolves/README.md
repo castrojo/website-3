@@ -6,20 +6,17 @@ experience. It requires no account, login, OAuth application, or API key.
 
 ## Runtime
 
-One Pinia field in `src/stores/cinematic.ts` owns the four-phase flow:
+One Pinia field in `src/stores/cinematic.ts` owns the three-phase flow:
 
 ```text
-lobby -> intro -> cinematic Part I -> creator-shorts -> cinematic Parts II-VI
+lobby -> intro -> cinematic Parts I-VI
 ```
 
 - `CinematicLobby.vue` provides the autoplay gesture.
-- `WolvesIntroOverlay.vue` runs the authored 94-second prologue and guardian
-  trailer from `src/data/wolves-intro-sequence.ts`.
+- `WolvesIntroOverlay.vue` runs the Destiny guardian trailer from
+  `src/data/wolves-intro-sequence.ts`.
 - `CinematicStage.vue` and `useDualBufferPlayer.ts` double-buffer the six
   musical parts.
-- `WolvesCreatorShortsInterstitial.vue` runs once between Part I and Part II.
-  The cinematic players are destroyed during the interstitial and remounted at
-  Part II.
 - `TheaterExperience.vue` renders the Track 0 slideshow, lore, thesis, later
   galleries, and wallpapers above the YouTube audio source.
 - `MediaWidget.vue` is the shared transport for the intro and cinematic.

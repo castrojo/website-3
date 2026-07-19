@@ -27,10 +27,6 @@ describe('wolves hero typography timeline', () => {
   }
 
   it.each([
-    [345, 'welcome', 'We\'ve got your back.'],
-    [347.75, 'welcome', 'You\'ll never walk alone ...'],
-    [350.5, 'universal-blue', 'We are Universal Blue.'],
-    [359, 'evolve', 'Evolve or die ...'],
     [405, 'legend', 'You have ascended ...'],
     [408, 'legend', 'Become Legend'],
     [425, 'legend', 'Become Legend'],
@@ -39,15 +35,12 @@ describe('wolves hero typography timeline', () => {
     expect(wrapper.get(`.wc-thesis--${mode}`).text()).toContain(text)
   })
 
-  it('applies the scoped back-treatment only to the welcome cues', async () => {
-    const welcome = await renderAt(345)
-    expect(welcome.get('.wc-thesis').classes()).toContain('wc-thesis--welcome-back')
-
+  it('does not apply the back-treatment to the legend cues', async () => {
     const legend = await renderAt(408)
     expect(legend.get('.wc-thesis').classes()).not.toContain('wc-thesis--welcome-back')
   })
 
-  it.each([344.999, 365, 404.999, 425.001])(
+  it.each([344.999, 345, 347.75, 350.5, 359, 365, 404.999, 425.001])(
     'does not render readable hero text outside authored cue windows at %s',
     async (time) => {
       const wrapper = await renderAt(time)

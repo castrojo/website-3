@@ -1,8 +1,8 @@
 /**
  * Single source of truth for the Wolves cinematic experience.
  *
- * The authored intro (species prelude, locked 94s Gayane prologue, then the guardian trailer) is NOT part of
- * this list — it plays first through WolvesIntroOverlay, driven by
+ * The authored Destiny guardian trailer intro is NOT part of this list — it plays first through
+ * WolvesIntroOverlay, driven by
  * buildIntroVideoSequence() in src/data/wolves-intro-sequence.ts. The segments
  * below are the six musical parts, derived from the authored Wolves soundtrack
  * manifest (public/wolves-playlist.json, tracks 1-6). Adding, removing, or

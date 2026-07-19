@@ -12,6 +12,13 @@ interface FakeEvents {
   onError?: (event: unknown) => void
 }
 
+interface FakePlayerOptions {
+  events?: FakeEvents
+  playerVars?: {
+    origin?: string
+  }
+}
+
 class FakePlayer {
   static instances: FakePlayer[] = []
   static emitPlayingOnPlay = true
@@ -24,8 +31,10 @@ class FakePlayer {
   loadedId = ''
   cuedId = ''
   destroyed = false
+  options: FakePlayerOptions
 
-  constructor(_element: Element, options: { events?: FakeEvents }) {
+  constructor(_element: Element, options: FakePlayerOptions) {
+    this.options = options
     this.events = options.events ?? {}
     FakePlayer.instances.push(this)
     // The real API fires onReady asynchronously after construction.
@@ -132,6 +141,13 @@ describe('useDualBufferPlayer', () => {
     expect(playerB.volume).toBe(0)
   })
 
+  it('identifies the current origin to YouTube for both buffers', async () => {
+    await startPlayer()
+
+    expect(FakePlayer.instances).toHaveLength(2)
+    expect(FakePlayer.instances.every(player => player.options.playerVars?.origin === window.location.origin)).toBe(true)
+  })
+
   it('waits for the preloaded first side to play before completing startup', async () => {
     FakePlayer.emitPlayingOnPlay = false
     const hostA = ref<HTMLElement | null>(document.createElement('div'))
@@ -222,7 +238,6 @@ describe('useDualBufferPlayer', () => {
   it('resets to side A before the fresh intro-to-cinematic prewarm starts Part I', async () => {
     const player = await startPlayer()
     const store = useCinematicStore()
-    store.shortsConsumed = true
     FakePlayer.instances[0].events.onStateChange?.({ data: 0 })
     vi.advanceTimersByTime(2000)
     expect(player.activeSide.value).toBe('b')
@@ -266,8 +281,8 @@ describe('useDualBufferPlayer', () => {
     expect(store.segmentDuration).toBe(300)
   })
 
-  it('stops at Creator Shorts instead of playing Part II beneath it', async () => {
-    await startPlayer()
+  it('crossfades directly from Part I to Part II', async () => {
+    const player = await startPlayer()
     const store = useCinematicStore()
     store.enterCinematic()
     const [playerA, playerB] = FakePlayer.instances
@@ -276,13 +291,12 @@ describe('useDualBufferPlayer', () => {
     playerA.currentTime = 200 - PRE_END_THRESHOLD_S
     vi.advanceTimersByTime(TIME_POLL_MS)
 
-    expect(store.phase).toBe('creator-shorts')
-    expect(store.segmentIndex).toBe(1)
-    expect(playerA.playing).toBe(false)
-    expect(playerB.playing).toBe(false)
+    expect(store.phase).toBe('cinematic')
+    expect(player.activeSide.value).toBe('b')
+    expect(playerB.playing).toBe(true)
   })
 
-  it('starts directly from the store segment after Creator Shorts', async () => {
+  it('starts directly from a selected cinematic segment', async () => {
     const store = useCinematicStore()
     store.enterCinematic()
     store.segmentIndex = 1
@@ -294,16 +308,17 @@ describe('useDualBufferPlayer', () => {
     expect(playerB.cuedId).toBe(CINEMATIC_SEGMENTS[2].youtubeId)
   })
 
-  it('manual Next from Part I opens Creator Shorts once', async () => {
+  it('manual Next from Part I goes directly to Part II', async () => {
     const player = await startPlayer()
     const store = useCinematicStore()
     store.enterCinematic()
 
     player.skip(1)
 
-    expect(store.phase).toBe('creator-shorts')
+    expect(store.phase).toBe('cinematic')
+    expect(player.activeSide.value).toBe('b')
+    vi.advanceTimersByTime(2000)
     expect(store.segmentIndex).toBe(1)
-    expect(FakePlayer.instances.every(instance => !instance.playing)).toBe(true)
   })
 
   it('skips forward and backward on manual command', async () => {
@@ -311,7 +326,6 @@ describe('useDualBufferPlayer', () => {
     const store = useCinematicStore()
     const [playerA, playerB] = FakePlayer.instances
 
-    store.shortsConsumed = true
     store.updateTime(10, 300)
     player.skip(1)
     expect(player.activeSide.value).toBe('b')
@@ -332,7 +346,6 @@ describe('useDualBufferPlayer', () => {
     const player = await startPlayer()
     const store = useCinematicStore()
 
-    store.shortsConsumed = true
     player.skip(-1)
     expect(store.segmentIndex).toBe(0)
     expect(player.activeSide.value).toBe('a')
@@ -346,7 +359,6 @@ describe('useDualBufferPlayer', () => {
 
   it('falls back to swapping on the ENDED event', async () => {
     const player = await startPlayer()
-    useCinematicStore().shortsConsumed = true
     const [playerA] = FakePlayer.instances
 
     playerA.events.onStateChange?.({ data: 0 })
@@ -364,7 +376,6 @@ describe('useDualBufferPlayer', () => {
       const store = useCinematicStore()
       const [playerA, playerB] = FakePlayer.instances
 
-      store.shortsConsumed = true
       playerA.duration = 100
       playerA.currentTime = 100
       vi.advanceTimersByTime(TIME_POLL_MS)
@@ -393,8 +404,6 @@ describe('useDualBufferPlayer', () => {
   it('finishes the cinematic when the last segment ends', async () => {
     const player = await startPlayer()
     const store = useCinematicStore()
-    store.shortsConsumed = true
-
     // Walk every boundary to the end of the seven-segment show.
     for (let i = 0; i < CINEMATIC_SEGMENTS.length - 1; i++) {
       const active = player.activeSide.value === 'a' ? FakePlayer.instances[0] : FakePlayer.instances[1]

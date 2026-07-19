@@ -5,7 +5,6 @@ import CinematicLobby from '@/components/wolves/cinematic/CinematicLobby.vue'
 import CinematicStage from '@/components/wolves/cinematic/CinematicStage.vue'
 import MediaWidget from '@/components/wolves/cinematic/MediaWidget.vue'
 import Nameplate from '@/components/wolves/cinematic/Nameplate.vue'
-import WolvesCreatorShortsInterstitial from '@/components/wolves/WolvesCreatorShortsInterstitial.vue'
 import WolvesIntroOverlay from '@/components/wolves/WolvesIntroOverlay.vue'
 import { buildIntroVideoSequence, isTextSegment } from '@/data/wolves-intro-sequence'
 import { resolveOverallRatioTarget, useCinematicStore } from '@/stores/cinematic'
@@ -37,42 +36,34 @@ async function enterCinematic() {
 }
 
 const introVideos = buildIntroVideoSequence()
+const INTRO_HANDOFF_FADE_MS = 1400
 const intro = ref<InstanceType<typeof WolvesIntroOverlay> | null>(null)
 const introShowVoiceOverToggle = ref(false)
 const introVoiceOverEnabled = ref(false)
 const introShowCaptionToggle = ref(false)
 const introCaptionsEnabled = ref(false)
-// Ordinary wolves-prologue status has no cue-level nameplateTitle: hide the top-left
-// nameplate entirely rather than showing a default plate. The authored 50s cue still
-// publishes its title via nameplateTitle, which shows the existing PROLOGUE plate.
 const introNameplateVisible = ref(true)
+const introNameplateGlitch = ref(false)
 const introSegmentIndexById = new Map(introVideos.map((segment, index) => [segment.id, index]))
 
 // Factual display metadata for the authored intro segments (see wolves-intro-sequence.ts).
 const INTRO_DISPLAY: Record<string, { chapter: string, title: string, mediaTitle: string, artist: string, artwork: string }> = {
-  'wolves-prologue': {
-    chapter: 'PROLOGUE',
-    title: 'Gayane Ballet Suite (Adagio)',
-    mediaTitle: 'Gayane Ballet Suite (Adagio)',
-    artist: 'Aram Khachaturian',
-    artwork: 'https://i.ytimg.com/vi/EB3IokHelRk/hqdefault.jpg',
-  },
   'wolves-intro': {
     chapter: 'Meet your Fireteam',
-    title: 'Fighting for something greater than ourselves.',
-    mediaTitle: 'Destiny 2: Into the Light Cinematic',
+    title: 'Fighting for something greater',
+    mediaTitle: 'The Wolves are Coming',
     artist: 'Bungie',
     artwork: 'https://i.ytimg.com/vi/BV3BZKbpBns/hqdefault.jpg',
   },
 }
-const introMediaTitle = ref(INTRO_DISPLAY['wolves-prologue'].mediaTitle)
+const introMediaTitle = ref(INTRO_DISPLAY['wolves-intro'].mediaTitle)
 
 async function enterIntro() {
   const token = ++handoffToken
   introHandoff.value = false
   introTransparent.value = false
   store.enterIntro()
-  introMediaTitle.value = INTRO_DISPLAY['wolves-prologue'].mediaTitle
+  introMediaTitle.value = INTRO_DISPLAY['wolves-intro'].mediaTitle
   introShowCaptionToggle.value = false
   introCaptionsEnabled.value = false
   await nextTick()
@@ -124,11 +115,13 @@ function handleIntroStatus(payload: IntroStatusPayload) {
     introMediaTitle.value = payload.mediaTitle ?? meta.mediaTitle
     store.setDisplayOverride({
       ...meta,
+      chapter: payload.nameplateDetail ?? meta.chapter,
       title: payload.nameplateTitle ?? meta.title,
       canPrevious: payload.canGoPrevious,
     })
   }
-  introNameplateVisible.value = payload.segmentId !== 'wolves-prologue' || Boolean(payload.nameplateTitle)
+  introNameplateVisible.value = true
+  introNameplateGlitch.value = payload.nameplateGlitch ?? false
   introShowVoiceOverToggle.value = payload.showVoiceOverToggle ?? false
   introVoiceOverEnabled.value = payload.voiceOverEnabled ?? false
   introShowCaptionToggle.value = payload.showCaptionToggle ?? false
@@ -144,6 +137,7 @@ function clearIntroUi() {
   introShowCaptionToggle.value = false
   introCaptionsEnabled.value = false
   introNameplateVisible.value = true
+  introNameplateGlitch.value = false
 }
 
 async function handleIntroComplete() {
@@ -156,28 +150,14 @@ async function handleIntroComplete() {
   if (unmounted || token !== handoffToken) {
     return
   }
-  const releaseIntroOwnership = async () => {
-    introTransparent.value = true
-    await nextTick()
-    if (!unmounted && token === handoffToken) {
-      introHandoff.value = false
-    }
+  // Dissolve handoff: the overlay's black background and remaining chrome fade
+  // out over the already-playing Track 0 stage, then the overlay unmounts.
+  // Duration must match the transition in .wolves-intro-overlay--transparent-handoff.
+  introTransparent.value = true
+  await new Promise(resolve => window.setTimeout(resolve, INTRO_HANDOFF_FADE_MS))
+  if (!unmounted && token === handoffToken) {
+    introHandoff.value = false
   }
-  const viewTransitionDocument = document as Document & {
-    startViewTransition?: (callback: () => Promise<void>) => { updateCallbackDone: Promise<void> }
-  }
-  if (typeof viewTransitionDocument.startViewTransition === 'function') {
-    const transition = viewTransitionDocument.startViewTransition(releaseIntroOwnership)
-    await transition.updateCallbackDone.catch(() => {})
-    return
-  }
-  await releaseIntroOwnership()
-}
-
-/** Creator Shorts finishes -> resume the preloaded next cinematic segment. */
-async function handleCreatorShortsComplete() {
-  store.completeCreatorShorts()
-  await startCinematicStage()
 }
 
 async function restoreIntroForNavigation(): Promise<number | null> {
@@ -193,7 +173,7 @@ async function restoreIntroForNavigation(): Promise<number | null> {
   if (unmounted || token !== handoffToken) {
     return null
   }
-  const meta = INTRO_DISPLAY['wolves-prologue']
+  const meta = INTRO_DISPLAY['wolves-intro']
   store.setDisplayOverride({
     ...meta,
     canPrevious: false,
@@ -361,11 +341,7 @@ onBeforeUnmount(() => {
   <div class="wolves-cinematic">
     <CinematicLobby v-if="store.phase === 'lobby'" @enter="enterIntro" />
 
-    <!--
-      The authored intro: locked 94s Gayane prologue, then the guardian trailer. Transport
-      lives in the same hero widget as the cinematic; the top plate is the universal
-      title placard.
-    -->
+    <!-- The Destiny intro shares the cinematic transport and universal top title placard. -->
     <div v-else-if="store.phase === 'intro' || store.phase === 'cinematic'" class="wc-runtime">
       <CinematicStage ref="stage" />
 
@@ -379,7 +355,7 @@ onBeforeUnmount(() => {
           @complete="handleIntroComplete"
         />
         <div v-if="introNameplateVisible" class="wc-intro-nameplate">
-          <Nameplate :detail="store.display.chapter" :label="store.display.title" />
+          <Nameplate :detail="store.display.chapter" :label="store.display.title" :glitch="introNameplateGlitch" />
         </div>
         <MediaWidget
           :title="introMediaTitle"
@@ -403,10 +379,6 @@ onBeforeUnmount(() => {
         @skip="(delta: number) => stage?.skip(delta)"
         @seek="handleOverallSeek"
       />
-    </div>
-
-    <div v-else-if="store.phase === 'creator-shorts'" class="wc-runtime">
-      <WolvesCreatorShortsInterstitial @complete="handleCreatorShortsComplete" />
     </div>
   </div>
 </template>

@@ -166,13 +166,10 @@ describe('wolves intro overlay sequence', () => {
     ])
   })
 
-  it('hands directly from the prologue to the Destiny trailer', () => {
+  it('starts directly with the Destiny trailer', () => {
     const sequence = buildIntroVideoSequence()
-    expect(sequence).toHaveLength(2)
-    expect(sequence.map(segment => segment.id)).toEqual([
-      'wolves-prologue',
-      'wolves-intro',
-    ])
+    expect(sequence).toHaveLength(1)
+    expect(sequence.map(segment => segment.id)).toEqual(['wolves-intro'])
     expect(JSON.stringify(sequence)).not.toContain('But who will answer the call')
     expect(JSON.stringify(sequence)).not.toContain('Bluefin Cinematic Universe')
   })
@@ -195,8 +192,8 @@ describe('wolves intro overlay sequence', () => {
     }
 
     expect(destiny.overlays).toEqual(expect.arrayContaining([
-      expect.objectContaining({ text: 'Void Warlock — Bob Killen — Reconciler of the Plane', start: 5, end: 16.5 }),
-      expect.objectContaining({ text: 'Arc Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 }),
+      expect.objectContaining({ text: 'Voidwalker Warlock — Bob Killen — Reconciler of the Plane', start: 5, end: 14.5 }),
+      expect.objectContaining({ text: 'Stormcaller Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 }),
     ]))
     expect(JSON.stringify(destiny.overlays)).not.toContain('Robert Killen')
   })
@@ -208,37 +205,52 @@ describe('wolves intro overlay sequence', () => {
     }
 
     expect(destiny.overlays).toEqual(expect.arrayContaining([
-      expect.objectContaining({ text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 14.5, end: 24.5 }),
-      expect.objectContaining({ text: 'Solar Hunter — Laura Santamaria — Paragon to the Order of 7', start: 70.5, end: 77 }),
-      expect.objectContaining({ text: 'Strand Warlock — Christoph Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left' }),
-      expect.objectContaining({ text: 'Behemoth Titan — Natali Vlatko — Punch first, document later.', start: 87.5, end: 96, position: 'right' }),
+      expect.objectContaining({ text: 'Sentinel Titan — Kat Cosgrove — Defender Queen of the Lost', start: 14.5, end: 24.5 }),
+      expect.objectContaining({ text: 'Gunslinger Hunter — Laura Santamaria — The Order of Seven', start: 70.5, end: 77 }),
+      expect.objectContaining({ text: 'Broodweaver Warlock — Christoph Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left' }),
+      expect.objectContaining({ text: 'Behemoth Titan — Natali Vlatko — Shipwright of Kubernetes', start: 87.5, end: 96, position: 'right' }),
     ]))
   })
 
-  it('keeps only the authored post-Kaslin status and the Nova nameplate', () => {
+  it('keeps the Nova easter egg as split-second glitch bursts outside the caption paths', () => {
     const destiny = buildIntroVideoSequence().find(segment => segment.id === 'wolves-intro')
     if (!destiny || !isVideoSegment(destiny)) {
       throw new Error('Expected the Destiny segment to exist')
     }
 
-    expect(activeOverlayCue(destiny.overlays, 48)).toEqual(expect.objectContaining({
-      nameplateTitle: '#nova4ever',
-      text: 'Fighting for Something Greater',
-      start: 48,
-      end: 70.5,
-    }))
+    // No held #nova4ever status: outside a burst the default title stands.
+    expect(activeOverlayCue(destiny.overlays, 48)).toBeUndefined()
+
+    const bursts = destiny.overlays?.filter(cue => cue.nameplateTitle === '#nova4ever') ?? []
+    expect(bursts.length).toBeGreaterThanOrEqual(2)
+    for (const burst of bursts) {
+      expect(burst.statusOnly).toBe(true)
+      expect(burst.glitch).toBe(true)
+      // Split-second only, inside the 48-70.5 montage.
+      expect(burst.end - burst.start).toBeLessThan(1)
+      expect(burst.start).toBeGreaterThanOrEqual(48)
+      expect(burst.end).toBeLessThanOrEqual(70.5)
+      expect(activeOverlayCue(destiny.overlays, burst.start)).toBe(burst)
+    }
+
     const cues = buildDestinyCaptionCues().filter(cue => !cue.comicHeroTitleCard)
 
-    expect(cues).toEqual([
-      {
-        text: 'Fighting for Something Greater',
-        start: 48,
-        end: 70.5,
-        preservePunctuation: true,
-        mediaTitle: '#novaforever',
-        requiresCaptionToggle: true,
-      },
-    ])
+    expect(cues).toEqual([])
+  })
+
+  it('reserves the final fifteen Destiny seconds for the Legends Sought top status', () => {
+    const destiny = buildIntroVideoSequence().find(segment => segment.id === 'wolves-intro')
+    if (!destiny || !isVideoSegment(destiny)) {
+      throw new Error('Expected the Destiny segment to exist')
+    }
+
+    expect(activeOverlayCue(destiny.overlays, 106.5)).toEqual(expect.objectContaining({
+      start: 106.5,
+      end: 121.5,
+      nameplateDetail: 'Legends Sought',
+      nameplateTitle: 'Follow the path, we\'ve got your back',
+      statusOnly: true,
+    }))
   })
 
   it('does not surface any legacy Destiny caption lines', () => {
@@ -252,7 +264,7 @@ describe('wolves intro overlay sequence', () => {
     expect(texts).not.toContain('Define us in this moment for all time.')
   })
 
-  it('wires the Comic Hero card and post-Kaslin status into the Destiny segment', () => {
+  it('wires the Comic Hero card and status-only Nova cue into the Destiny segment', () => {
     const destiny = buildIntroVideoSequence().find(segment => segment.id === 'wolves-intro')
     if (!destiny || !isVideoSegment(destiny)) {
       throw new Error('Expected the Destiny segment to exist')
@@ -260,136 +272,6 @@ describe('wolves intro overlay sequence', () => {
 
     expect(destiny.burnedInCaptions).toEqual([
       { text: 'Comic Hero Shots of YOU', start: 24, end: 38, comicHeroTitleCard: true },
-      {
-        text: 'Fighting for Something Greater',
-        start: 48,
-        end: 70.5,
-        preservePunctuation: true,
-        mediaTitle: '#novaforever',
-        requiresCaptionToggle: true,
-      },
     ])
-  })
-
-  it('gives the revised prologue copy readable holds within its 94-second runtime', () => {
-    const [prologue] = buildIntroVideoSequence()
-    if (!isTextSegment(prologue)) {
-      throw new Error('Expected the first intro segment to be text-only')
-    }
-
-    expect(prologue.duration).toBe(94)
-    // Loudness analysis: the final swell crests at 92-94s and decays after; the
-    // cutoff rides that decay with an authored audio fade.
-    expect(prologue.audioFadeOutSeconds).toBe(2.5)
-    expect(prologue.overlays?.map(cue => cue.text)).toEqual([
-      'A Gardener and a Winnower walked among the stars.',
-      `One to spread life,
-and one to cull the dross
-to shape the Garden of Earth.`,
-      'One day changed the Garden forever.',
-      'New Children arose and filled the pattern.',
-      'For eons, Maintainer-Guardians cultivated the Garden...',
-      `Until an AI-fueled Society deemed Guardians unnecessary.
-And then, a threat.`,
-      'Others came to claim a bountiful and unprotected Garden.',
-      `In the space of a few days,
-humanity had lost its future`,
-      `For the heart of any race is destroyed
-And its will to survive is utterly Broken`,
-      'When its children are taken from it',
-      `Now, what's left of a proud order fights for survival,
-surrounded by predators.`,
-      'PROJECT BLUEFIN\nseven days to the wolves',
-    ])
-    expect(prologue.overlays).toEqual(expect.arrayContaining([
-      expect.objectContaining({ text: 'A Gardener and a Winnower walked among the stars.', start: 0, end: 5 }),
-      expect.objectContaining({
-        text: `One to spread life,
-and one to cull the dross
-to shape the Garden of Earth.`,
-        start: 5,
-        end: 13.75,
-        textPosition: 'bottom-right',
-        highlightSubstrings: ['life', 'dross', 'Garden'],
-      }),
-      expect.objectContaining({ text: 'One day changed the Garden forever.', start: 13.75, end: 21.5 }),
-      expect.objectContaining({
-        text: 'New Children arose and filled the pattern.',
-        start: 21.5,
-        end: 29.5,
-        emphasis: 'dominant',
-        textPosition: 'bottom',
-        backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
-      }),
-      expect.objectContaining({
-        text: 'Until an AI-fueled Society deemed Guardians unnecessary.\nAnd then, a threat.',
-        start: 36.25,
-        end: 45,
-      }),
-      expect.objectContaining({
-        text: `In the space of a few days,
-humanity had lost its future`,
-        start: 50,
-        end: 59.375,
-        textPosition: 'bottom',
-        nameplateTitle: 'From the Age of Dinosaurs to the Pinnacle of Humanity',
-      }),
-      expect.objectContaining({
-        text: `For the heart of any race is destroyed
-And its will to survive is utterly Broken`,
-        start: 59.375,
-        end: 65,
-        textPosition: 'bottom',
-      }),
-      expect.objectContaining({
-        text: 'When its children are taken from it',
-        start: 65,
-        end: 72.5,
-        textPosition: 'bottom',
-      }),
-      expect.objectContaining({
-        text: 'Now, what\'s left of a proud order fights for survival,\nsurrounded by predators.',
-        start: 72.5,
-        end: 78.5,
-        textPosition: 'bottom',
-      }),
-      expect.objectContaining({ text: 'PROJECT BLUEFIN\nseven days to the wolves', start: 78.5, end: 94 }),
-    ]))
-    expect(prologue.overlays?.every(cue => !cue.text.includes('<br>'))).toBe(true)
-    expect(prologue.overlays?.every(cue => !cue.text.includes('(hold this'))).toBe(true)
-    expect(prologue.overlays?.every((cue, index, cues) =>
-      index === 0 ? cue.start === 0 : cue.start === cues[index - 1].end,
-    )).toBe(true)
-  })
-
-  it('holds the Collapse image, then makes one dramatic fade to black', () => {
-    const [prologue] = buildIntroVideoSequence()
-    if (!isTextSegment(prologue)) {
-      throw new Error('Expected the first intro segment to be text-only')
-    }
-
-    const collapseCues = prologue.overlays?.filter(cue => cue.start >= 13.75 && cue.start < 45) ?? []
-    const blackCues = prologue.overlays?.filter(cue => cue.start >= 45) ?? []
-
-    expect(collapseCues).toHaveLength(4)
-    expect(collapseCues.every(cue =>
-      cue.backgroundImage === 'wolves-intro/bluefin-collapse-night.webp'
-      && cue.backgroundCrossfade === undefined,
-    )).toBe(true)
-    expect(blackCues.every(cue =>
-      cue.backgroundImage === undefined
-      && cue.backgroundCrossfade === undefined,
-    )).toBe(true)
-  })
-  it('does not retain a text slate after the prologue', () => {
-    const sequence = buildIntroVideoSequence()
-    const trailer = sequence[1]
-
-    if (!trailer || !isVideoSegment(trailer)) {
-      throw new Error('Expected the Destiny trailer after the prologue')
-    }
-
-    expect(trailer.id).toBe('wolves-intro')
-    expect(sequence.every(segment => segment.id !== 'bluefin-cinematic-universe')).toBe(true)
   })
 })

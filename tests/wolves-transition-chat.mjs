@@ -49,64 +49,24 @@ async function capture(page, name) {
   }
 }
 
-const transitions = [
-  {
-    name: 'transition-1',
-    chapter: 'PART II',
-    title: 'Ghosts In The Mist',
-    texts: [
-      'krook:',
-      'Ok let\'s do this one by the books, intel in your feeds. Remember, prioritize all Maintainer-Guardian workflows, they\'re depending on us.',
-      'sabot-6:',
-      'Practioner-Guardian efficiency is — what? Seven percent? That\'s —',
-    ],
-    selectors: [],
-  },
-  {
-    name: 'transition-2',
-    chapter: 'PART III',
-    title: 'Tonight We Must Be Warriors',
-    texts: [
-      'krook:',
-      'ok tighten it up folks, ihor bring her in low —',
-      'ihord:',
-      'locked in the pipe, five by five — good hunting —',
-    ],
-    selectors: [],
-  },
-  {
-    name: 'transition-3',
-    chapter: 'PART IV',
-    title: 'Not Your Monster',
-    texts: [
-      '-- static --',
-      'K:',
-      'Keep up kids you\'re down three minutes, you\'re not going to keep up with basic maturity guidelines, and you know what they say, trust but verify.',
-    ],
-    selectors: ['[data-transition-kind="static"]'],
-  },
-  {
-    name: 'transition-4',
-    chapter: 'PART V',
-    title: 'Soulbound',
-    texts: [
-      'angie:',
-      'AAIF-7 on the net, someone need guidance?',
-      '*** explosion sound',
-    ],
-    selectors: ['[data-transition-effect="explosion"]'],
-  },
-  {
-    name: 'transition-5',
-    chapter: 'PART VI',
-    title: 'Last Ride of the Day',
-    texts: [
-      '// CLOUD NATIVE TRANSFORMATION DETECTED',
-      '// Deploy CNCF Projects Team, scramble all Guardians.',
-    ],
-    selectors: ['[data-transition-kind="terminal"]'],
-  },
+const TERMINAL_TEXTS = [
+  '// CLOUD NATIVE TRANSFORMATION DETECTED',
+  '// Deploy CNCF Projects Team, scramble all Guardians.',
 ]
+
+// The authored lore conversations are hidden from the overlay; every
+// transition renders the terminal block instead.
+const transitions = [
+  { name: 'transition-1', chapter: 'PART II', title: 'Ghosts In The Mist' },
+  { name: 'transition-2', chapter: 'PART III', title: 'Tonight We Must Be Warriors' },
+  { name: 'transition-3', chapter: 'PART IV', title: 'Not Your Monster' },
+  { name: 'transition-4', chapter: 'PART V', title: 'Soulbound' },
+  { name: 'transition-5', chapter: 'PART VI', title: 'Last Ride of the Day' },
+].map(transition => ({
+  ...transition,
+  texts: TERMINAL_TEXTS,
+  selectors: ['[data-transition-kind="terminal"]'],
+}))
 
 const browser = await chromium.launch({ headless: true })
 let exitCode = 0
@@ -221,13 +181,12 @@ try {
     await page.goto(WOLVES_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 })
   }
 
-  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION/i }).click()
+  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION|MEET YOUR TEAMMATES/i }).click()
   await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 10_000 })
+  await page.waitForSelector('.wolves-intro-overlay-player', { state: 'visible', timeout: 10_000 })
 
-  for (let click = 0; click < 5; click++) {
-    await page.getByLabel('Next').click()
-    await page.waitForTimeout(120)
-  }
+  await page.getByLabel('Next').click()
+  await page.waitForSelector('.wolves-intro-overlay', { state: 'hidden', timeout: 10_000 })
 
   await page.waitForSelector('.wc-stage', { state: 'visible', timeout: 10_000 })
 
@@ -247,6 +206,7 @@ try {
       const count = await locator.count()
       assertTruthy(`${transition.name} selector ${selector}`, count > 0 && await locator.first().isVisible().catch(() => false))
     }
+    assert(`${transition.name} hides the lore conversation`, await page.locator('.wc-transition-overlay [data-transition-kind="speaker"]').count(), 0)
 
     await capture(page, transition.name)
     await page.waitForSelector('.wc-transition-overlay', { state: 'hidden', timeout: 10_000 })

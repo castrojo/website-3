@@ -736,7 +736,7 @@ describe('wolvesIntroOverlay guardian plate', () => {
     expect(wrapper.text()).not.toContain('GUARDIAN // MAINTAINER')
   })
 
-  it('renders Bob Killen with the documented bonded-dinosaur icon', async () => {
+  it('renders Bob Killen with the documented dinosaur companion plate', async () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: guardianPlateSequence } })
     await flushPromises()
     resolveIframeApi()
@@ -747,11 +747,18 @@ describe('wolvesIntroOverlay guardian plate', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Bob Killen')
-    expect(wrapper.find('.wolves-guardian-plate-dinosaur-icon').exists()).toBe(true)
-    expect(wrapper.find('.wolves-guardian-plate-dinosaur-icon').attributes('src')).toContain('bob-torosaurus.webp')
+    expect(wrapper.find('.wolves-companion-plate').exists()).toBe(true)
+    expect(wrapper.find('.wolves-companion-plate-art').attributes('src')).toContain('bob-torosaurus.webp')
+    expect(wrapper.find('.wolves-companion-plate-label').text()).toBe('GUARDIAN BOND')
+    expect(wrapper.find('.wolves-companion-plate-species').text()).toBe('Torosaurus latus')
+    // No character sheet names Bob's torosaurus, so the plate carries no name line.
+    expect(wrapper.find('.wolves-companion-plate-name').exists()).toBe(false)
+    // The pair share one anchored row so the plates sit side by side.
+    expect(wrapper.find('.wolves-guardian-plate-row .wolves-guardian-plate').exists()).toBe(true)
+    expect(wrapper.find('.wolves-guardian-plate-row .wolves-companion-plate').exists()).toBe(true)
   })
 
-  it('keeps the original compact dinosaur icon treatment', () => {
+  it('splits the dinosaur out of the guardian plate into its own companion card', () => {
     const overlay = readFileSync(resolve(process.cwd(), 'src/components/wolves/WolvesIntroOverlay.vue'), 'utf8')
     const nameRule = overlay.match(/\.wolves-guardian-plate-name \{([\s\S]*?)\n\}/)?.[1]
 
@@ -761,11 +768,35 @@ describe('wolvesIntroOverlay guardian plate', () => {
 
     expect(nameRule).toContain('font-size: clamp(2.6rem, 1.9rem + 1.6vw, 3.6rem)')
     expect(nameRule).not.toContain('font-family:')
-    expect(overlay).toContain('wolves-guardian-plate-dinosaur-icon')
-    expect(overlay).not.toContain('class="wolves-guardian-plate-dinosaur"')
+    // The compact in-name icon is fully replaced by the companion plate.
+    expect(overlay).not.toContain('wolves-guardian-plate-dinosaur-icon')
+    expect(overlay).toContain('wolves-companion-plate-art')
+    // The artwork breaks out of the chamfered card: the card carries the
+    // clip-path while the art rides above it with a negative overlap.
+    const artRules = [...overlay.matchAll(/\.wolves-companion-plate-art \{([\s\S]*?)\n\s*\}/g)].map(m => m[1])
+    const cardRules = [...overlay.matchAll(/\.wolves-companion-plate-card \{([\s\S]*?)\n\s*\}/g)].map(m => m[1])
+    expect(artRules.some(rule => rule.includes('z-index: 1'))).toBe(true)
+    expect(artRules.some(rule => rule.includes('-3.4rem'))).toBe(true)
+    expect(cardRules.some(rule => rule.includes('clip-path'))).toBe(true)
   })
 
-  it('switches to Kaslin\'s bonded-dinosaur icon during her authored window', async () => {
+  it('names Kat Cosgrove\'s companion Karl with its authored species', async () => {
+    const wrapper = mount(WolvesIntroOverlay, { props: { videos: guardianPlateSequence } })
+    await flushPromises()
+    resolveIframeApi()
+    await flushPromises()
+    players[0].triggerReady()
+    players[0].getCurrentTime = vi.fn(() => 2)
+    await vi.advanceTimersByTimeAsync(200)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Kat Cosgrove')
+    expect(wrapper.find('.wolves-companion-plate-name').text()).toBe('Karl')
+    expect(wrapper.find('.wolves-companion-plate-species').text()).toBe('Amargasaurus cazaui')
+    expect(wrapper.find('.wolves-companion-plate-art').attributes('src')).toContain('karl.webp')
+  })
+
+  it('switches to Kaslin\'s bonded companion during her authored window', async () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: guardianPlateSequence } })
     await flushPromises()
     resolveIframeApi()
@@ -776,10 +807,10 @@ describe('wolvesIntroOverlay guardian plate', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Kaslin Fields')
-    expect(wrapper.find('.wolves-guardian-plate-dinosaur-icon').attributes('src')).toContain('kaslin-torosaurus.webp')
+    expect(wrapper.find('.wolves-companion-plate-art').attributes('src')).toContain('kaslin-torosaurus.webp')
   })
 
-  it('renders no dinosaur icon for a guardian with no documented dinosaur bond', async () => {
+  it('renders no companion plate for a guardian with no documented dinosaur bond', async () => {
     const wrapper = mount(WolvesIntroOverlay, { props: { videos: guardianPlateSequence } })
     await flushPromises()
     resolveIframeApi()
@@ -790,6 +821,6 @@ describe('wolvesIntroOverlay guardian plate', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Laura Santamaria')
-    expect(wrapper.find('.wolves-guardian-plate-dinosaur-icon').exists()).toBe(false)
+    expect(wrapper.find('.wolves-companion-plate').exists()).toBe(false)
   })
 })

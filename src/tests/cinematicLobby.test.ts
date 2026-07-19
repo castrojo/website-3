@@ -14,7 +14,8 @@ describe('cinematicLobby.vue', () => {
 
       expect(storeQr.attributes('src')).toBe(qrStore)
       expect(storeLink.attributes('target')).toBe('_blank')
-      expect(storeLink.element.compareDocumentPosition(enterButton.element)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+      // The QR block now closes the lobby frame, after the enter CTA and the quote.
+      expect(storeLink.element.compareDocumentPosition(enterButton.element)).toBe(Node.DOCUMENT_POSITION_PRECEDING)
 
       ;(storeLink.element as HTMLAnchorElement).focus()
       expect(document.activeElement).toBe(storeLink.element)
@@ -39,7 +40,7 @@ describe('cinematicLobby.vue', () => {
         .filter((element): element is HTMLElement => element instanceof HTMLElement && element.tabIndex >= 0)
 
       expect(tabStops).toContain(storeLinkElement)
-      expect(tabStops.indexOf(storeLinkElement)).toBeLessThan(tabStops.indexOf(enterButtonElement))
+      expect(tabStops.indexOf(storeLinkElement)).toBeGreaterThan(tabStops.indexOf(enterButtonElement))
       expect(storeLinkElement.tabIndex).toBe(0)
       expect(enterButtonElement.tagName).toBe('BUTTON')
 

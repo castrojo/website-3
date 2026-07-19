@@ -213,7 +213,7 @@ const browser = await chromium.launch({ headless: true })
 try {
   const page = await browser.newPage({ viewport: VIEWPORT })
   await page.goto(WOLVES_URL, { waitUntil: 'networkidle', timeout: 120_000 })
-  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION/i }).click()
+  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION|MEET YOUR TEAMMATES/i }).click()
   await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 30_000 })
 
   expectEqual('Voice toggle hidden before Destiny', await page.locator('.wc-widget-toggle').count(), 0)

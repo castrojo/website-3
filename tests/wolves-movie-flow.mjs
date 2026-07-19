@@ -200,7 +200,7 @@ try {
   await page.waitForTimeout(1000)
 
   // The same forward/play-pause controls must cover the Destiny intro and cinematic.
-  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION/i }).click()
+  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION|MEET YOUR TEAMMATES/i }).click()
   await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 10_000 })
   await hasVisibleControl(page, 'Pause')
   await hasVisibleControl(page, 'Next')
@@ -227,6 +227,34 @@ try {
     window.__mockWolvesPlayers.findIndex(player => player.videoId === 'BV3BZKbpBns'),
   )
   await page.evaluate((index) => {
+    window.__mockWolvesPlayers[index].seekTo(10, true)
+  }, introPlayerIndex)
+  await page.waitForSelector('.wolves-guardian-plate-trustee', { state: 'visible', timeout: 5_000 })
+  assert(
+    'Bob Killen plate carries the trustee label',
+    await page.locator('.wolves-guardian-plate-trustee .wolves-guardian-plate-label').textContent(),
+    'TRUSTEE // GUARDIAN',
+  )
+  assert(
+    'Bob Killen plate carries the Voidwalker class',
+    await page.locator('.wolves-guardian-plate-trustee .wolves-guardian-plate-class').textContent(),
+    'Voidwalker Warlock',
+  )
+  await captureStage(page, 'destiny-bob-trustee')
+  await page.evaluate((index) => {
+    window.__mockWolvesPlayers[index].seekTo(15, true)
+  }, introPlayerIndex)
+  await page.waitForTimeout(600)
+  assert('Kat Cosgrove plate replaces Bob Killen at 14.5', await page.locator('.wolves-guardian-plate-row:not(.wolves-guardian-plate-swap-leave-active) .wolves-guardian-plate').count(), 1)
+  assertTruthy(
+    'Kat Cosgrove plate is the one on screen after the swap',
+    (await page.locator('.wolves-guardian-plate-row:not(.wolves-guardian-plate-swap-leave-active) .wolves-guardian-plate-name').textContent())?.includes('Kat Cosgrove'),
+  )
+  assertTruthy(
+    'Kat Cosgrove companion plate names Karl',
+    (await page.locator('.wolves-guardian-plate-row:not(.wolves-guardian-plate-swap-leave-active) .wolves-companion-plate-name').textContent())?.includes('Karl'),
+  )
+  await page.evaluate((index) => {
     window.__mockWolvesPlayers[index].seekTo(24.01, true)
   }, introPlayerIndex)
   await page.waitForTimeout(250)
@@ -246,6 +274,37 @@ try {
     await page.locator('.wc-widget-title').textContent(),
     'The Wolves are Coming',
   )
+  assert(
+    'Top status holds the default title at 48 (no standing #nova4ever)',
+    await page.locator('.wc-intro-nameplate .wc-nameplate-label').textContent(),
+    'Fighting for something greater',
+  )
+  await page.evaluate((index) => {
+    window.__mockWolvesPlayers[index].seekTo(52.2, true)
+  }, introPlayerIndex)
+  await page.waitForFunction(
+    () => document.querySelector('.wc-intro-nameplate .wc-nameplate-label')?.textContent === '#nova4ever',
+    null,
+    { timeout: 5_000 },
+  )
+  assert(
+    'Nameplate glitches out to #nova4ever during the burst window',
+    await page.locator('.wc-intro-nameplate .wc-nameplate').evaluate(node => node.classList.contains('wc-nameplate--glitch')),
+    true,
+  )
+  await page.evaluate((index) => {
+    window.__mockWolvesPlayers[index].seekTo(55, true)
+  }, introPlayerIndex)
+  await page.waitForFunction(
+    () => document.querySelector('.wc-intro-nameplate .wc-nameplate-label')?.textContent === 'Fighting for something greater',
+    null,
+    { timeout: 5_000 },
+  )
+  assert(
+    'Nameplate snaps back after the glitch burst',
+    await page.locator('.wc-intro-nameplate .wc-nameplate').evaluate(node => node.classList.contains('wc-nameplate--glitch')),
+    false,
+  )
   await page.evaluate((index) => {
     window.__mockWolvesPlayers[index].seekTo(87.5, true)
   }, introPlayerIndex)
@@ -253,7 +312,7 @@ try {
   assert(
     'Natali guardian plate has the authored title',
     await page.locator('.wolves-guardian-plate-right .wolves-guardian-plate-title').textContent(),
-    'Punch first, document later.',
+    'Shipwright of Kubernetes',
   )
   await captureStage(page, 'destiny')
 
@@ -331,8 +390,11 @@ try {
     assert(label, ok ? expected : await trackZeroNameplateLabel.textContent(), expected)
   }
   assert('Track 0 nameplate enables slow signal fades', await page.locator('.wc-stage-nameplate .wc-nameplate').evaluate(node => node.classList.contains('wc-nameplate--slow-fade')), true)
-  await assertSignal('Track 0 publishes the authored signal cycle in the plate label', 'Field Medical Exoskeleton: [ Missing ]')
+  await assertSignal('Track 0 holds the bare signal teaser before the hero run', 'INCOMING SIGNAL:')
   assert('Track 0 keeps the authored track title in the detail line', await trackZeroSignal.textContent(), '7 Days to the Wolves')
+  await seekStage(44.211)
+  await assertSignal('Teaser holds through the early stretch without spoilers', 'INCOMING SIGNAL:')
+  await seekStage(167.8)
   const jonoAtStart = await page.locator('.flickr-photo-layer').evaluateAll((layers) => {
     const activeLayer = layers.find(layer => getComputedStyle(layer).zIndex === '2')
     return activeLayer?.querySelector('img')?.getAttribute('src')
@@ -380,7 +442,7 @@ try {
   assert('Track 0 lower thesis overlay remains inactive during Marina Moore', await page.locator('.wc-thesis').count(), 0)
 
   await seekStage(175.958)
-  await assertSignal('Signal cycle holds until the Bluefin group', 'TARGET ACQUIRED: GOSPO, KYLE. Earth')
+  await assertSignal('Teaser holds until the Bluefin group', 'INCOMING SIGNAL:')
   const marinaBeforeComposite = await page.locator('.flickr-photo-layer').evaluateAll((layers) => {
     const activeLayer = layers.find(layer => getComputedStyle(layer).zIndex === '2')
     return activeLayer?.querySelector('img')?.getAttribute('src')
@@ -457,8 +519,11 @@ try {
   assert('Second Hikari slide hands off at 3:12.279', hikariAtHandoff?.includes('hikari2.JPG'), false)
 
   await seekStage(196.36)
-  await assertSignal('Post-Bluefin signal reports the thriving-community pod', 'pod/thriving-community created')
+  await assertSignal('Ambient signals begin after the Jorge hero window', 'Welcome to indie cloud native')
   assert('Lower thesis remains separate after the Bluefin group', await page.locator('.wc-thesis').count(), 0)
+
+  await seekStage(228.9)
+  await assertSignal('Post-hero signal run closes on the thriving-community pod', 'pod/thriving-community created')
 
   await seekStage(229)
   await assertSignal(
@@ -481,15 +546,33 @@ try {
   await seekStage(277)
   await assertSignal(
     'Heavy build-up reports the human fallback',
-    'Falling back to "humans/trying-their-best:v1" slowly',
+    // The quoted token renders in monospace with the quotes stripped.
+    'Falling back to humans/trying-their-best:v1 slowly',
+  )
+  assertTruthy(
+    'Fallback image token renders in the terminal monospace',
+    await page.locator('.wc-stage-nameplate .wc-nameplate-label-mono').evaluate(node => node.textContent === 'humans/trying-their-best:v1' && getComputedStyle(node).fontFamily.toLowerCase().includes('mono')),
   )
   assert('Lower thesis remains separate during the fallback', await page.locator('.wc-thesis').count(), 0)
   await captureStage(page, 'track-zero-community-fallback')
 
   await seekStage(345)
   await page.waitForTimeout(250)
-  await assertSignal('Thesis opening restarts the authored signal cycle', 'INCOMING SIGNAL:')
-  assertTruthy('Lower thesis keeps its authored opening text', (await page.locator('.wc-thesis').textContent())?.includes('We\'ve got your back.'))
+  await assertSignal('Thesis opening leads the top statuses', 'We\'ve got your back.')
+  assert('Center overlay stays clear while the thesis lines run in the statuses', await page.locator('.wc-thesis').count(), 0)
+
+  await seekStage(350.5)
+  await page.waitForTimeout(250)
+  await assertSignal('Universal Blue line follows in the top statuses', 'We are Universal Blue.')
+  await captureStage(page, 'track-zero-thesis-status')
+
+  await seekStage(365)
+  await page.waitForTimeout(250)
+  await assertSignal('Signal messages restart after the thesis lines', 'INCOMING SIGNAL:')
+
+  await seekStage(403.7)
+  await page.waitForTimeout(250)
+  await assertSignal('Compressed signal cycle reaches its final message before Titanfall', 'Projected Joining: Salt Lake City, Utah, Circa 2026')
 
   await seekStage(408)
   await assertSignal('Titanfall signal remains the locked finale handoff', 'Bazzite Mk6 Units: Prepare for Titanfall')

@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   getWolvesHudLabel,
   getWolvesThesisState,
+  parseEarlySignalMessages,
   parseIncomingSignalMessages,
+  wolvesEarlySignalMessages,
   wolvesIncomingSignalMessages,
 } from '../data/wolves-thesis-sequence'
 
@@ -22,6 +24,20 @@ describe('wolves thesis sequence', () => {
       'Kube of Destiny location: Earth',
       'Projected Joining: Salt Lake City, Utah, Circa 2026',
     ])
+  })
+
+  it('splits the early ambient signals from the climax reports at the delimiter', () => {
+    expect(wolvesEarlySignalMessages).toEqual([
+      'INCOMING SIGNAL:',
+      'Welcome to indie cloud native',
+      'Hikari Protocol: Initialized',
+      'KDE Plasma Couplings: ENGAGED',
+      'Mechaphippy Deployment: [UNAUTHORIZED]',
+      'M2 Status: [ Unknown ]',
+      'Field Medical Exoskeleton: [ Missing ]',
+    ])
+    expect(parseEarlySignalMessages('a\nb\nc')).toEqual(['a', 'b', 'c'])
+    expect(parseEarlySignalMessages('a\n---\nb')).toEqual(['a'])
   })
 
   it('returns an immutable empty list for whitespace-only incoming signal sources', () => {
@@ -47,10 +63,10 @@ describe('wolves thesis sequence', () => {
       expect(reloadedSequence.wolvesIncomingSignalMessages).toEqual([])
       expect(reloadedSequence.getWolvesThesisState(THESIS_START_SECONDS)).toMatchObject({
         active: true,
-        text: 'We\'ve got your back.',
-        hudLabel: 'Incoming Signal: Universal Blue',
+        text: '',
+        hudLabel: 'We\'ve got your back.',
       })
-      expect(reloadedSequence.getWolvesThesisState(350.5).hudLabel).toBe('Incoming Signal: Universal Blue')
+      expect(reloadedSequence.getWolvesHudLabel(365)).toBe('Incoming Signal: Universal Blue')
     }
     finally {
       vi.doUnmock(sourceModule)
@@ -58,32 +74,67 @@ describe('wolves thesis sequence', () => {
     }
   })
 
-  it('restores the complete approved thesis sequence through the finale', () => {
-    expect(getWolvesThesisState(THESIS_START_SECONDS).text).toBe('We\'ve got your back.')
-    expect(getWolvesThesisState(347.749).text).toBe('We\'ve got your back.')
-    expect(getWolvesThesisState(347.75).text).toBe('You\'ll never walk alone ...')
-    expect(getWolvesThesisState(350.5).text).toBe('We are Universal Blue.')
-    expect(getWolvesThesisState(359).text).toBe('Evolve or die ...')
+  it('keeps the finale center overlay to the legend cues only', () => {
+    expect(getWolvesThesisState(THESIS_START_SECONDS).text).toBe('')
+    expect(getWolvesThesisState(347.75).text).toBe('')
+    expect(getWolvesThesisState(350.5).text).toBe('')
+    expect(getWolvesThesisState(359).text).toBe('')
     expect(getWolvesThesisState(365).active).toBe(false)
     expect(getWolvesThesisState(405).text).toBe('You have ascended ...')
     expect(getWolvesThesisState(408).text).toBe('Become Legend')
     expect(getWolvesThesisState(425).text).toBe('Become Legend')
   })
 
-  it('keeps authored HUD notifications active through thesis-overlay gaps', () => {
-    expect(getWolvesHudLabel(12.632)).toBe('Hikari Protocol: Initialized')
-    expect(getWolvesHudLabel(175.96)).toBe('The Blue Delivers')
-    expect(getWolvesHudLabel(196.359)).toBe('The Blue Delivers')
-    expect(getWolvesHudLabel(196.36)).toBe('pod/thriving-community created')
-    expect(getWolvesHudLabel(228.999)).toBe('pod/thriving-community created')
-    expect(getWolvesHudLabel(229)).toBe('Warning: ImagePullBackOff')
-    expect(getWolvesHudLabel(276.999)).toBe('"humans/collaboration:latest" is currently experimental.')
-    expect(getWolvesHudLabel(277)).toBe('Falling back to "humans/trying-their-best:v1" slowly')
-    expect(getWolvesHudLabel(357.632)).toBe('Hikari Protocol: Initialized')
+  it('leads the finale top statuses with the thesis lines, compresses the signal messages, and finishes on Titanfall', () => {
+    expect(getWolvesHudLabel(345)).toBe('We\'ve got your back.')
+    expect(getWolvesHudLabel(347.749)).toBe('We\'ve got your back.')
+    expect(getWolvesHudLabel(347.75)).toBe('You\'ll never walk alone ...')
+    expect(getWolvesHudLabel(350.5)).toBe('We are Universal Blue.')
+    expect(getWolvesHudLabel(359)).toBe('Evolve or die ...')
+    expect(getWolvesHudLabel(364.999)).toBe('Evolve or die ...')
+    expect(getWolvesHudLabel(365)).toBe('INCOMING SIGNAL:')
+    expect(getWolvesHudLabel(369.3)).toBe('Welcome to indie cloud native')
+    expect(getWolvesHudLabel(373.6)).toBe('Hikari Protocol: Initialized')
+    expect(getWolvesHudLabel(386.5)).toBe('M2 Status: [ Unknown ]')
+    expect(getWolvesHudLabel(403.7)).toBe('Projected Joining: Salt Lake City, Utah, Circa 2026')
     expect(getWolvesHudLabel(407.999)).toBe('Projected Joining: Salt Lake City, Utah, Circa 2026')
     expect(getWolvesHudLabel(408)).toBe('Bazzite Mk6 Units: Prepare for Titanfall')
     expect(getWolvesHudLabel(425)).toBe('Bazzite Mk6 Units: Prepare for Titanfall')
     expect(getWolvesHudLabel(425.001)).toBe('Bazzite Mk6 Units: Prepare for Titanfall')
+  })
+
+  it('keeps authored HUD notifications active through thesis-overlay gaps', () => {
+    expect(getWolvesHudLabel(12.632)).toBe('INCOMING SIGNAL:')
+    expect(getWolvesHudLabel(175.96)).toBe('The Blue Delivers')
+    expect(getWolvesHudLabel(196.359)).toBe('The Blue Delivers')
+    expect(getWolvesHudLabel(196.36)).toBe('Welcome to indie cloud native')
+    expect(getWolvesHudLabel(228.999)).toBe('pod/thriving-community created')
+    expect(getWolvesHudLabel(229)).toBe('Warning: ImagePullBackOff')
+    expect(getWolvesHudLabel(276.999)).toBe('"humans/collaboration:latest" is currently experimental.')
+    expect(getWolvesHudLabel(277)).toBe('Falling back to "humans/trying-their-best:v1" slowly')
+    expect(getWolvesHudLabel(357.632)).toBe('We are Universal Blue.')
+  })
+
+  it('holds the bare signal teaser before the hero run and plays the ambient signals after it', () => {
+    // Before the Jorge Bluefin hero window ends (196.36), only the teaser and
+    // "The Blue Delivers" may show — no ambient signals that name heroes, and
+    // no climax reports.
+    for (let time = 0; time < 196.36; time += 1) {
+      const label = getWolvesHudLabel(time)
+      expect(['INCOMING SIGNAL:', 'The Blue Delivers']).toContain(label)
+    }
+    // The remaining ambient signals compress evenly into the post-hero window,
+    // ending on the pod status at the ImagePullBackOff handoff.
+    const span = (229 - 196.36) / 7
+    expect(getWolvesHudLabel(196.36)).toBe('Welcome to indie cloud native')
+    expect(getWolvesHudLabel(196.36 + span)).toBe('Hikari Protocol: Initialized')
+    expect(getWolvesHudLabel(196.36 + 4 * span)).toBe('M2 Status: [ Unknown ]')
+    expect(getWolvesHudLabel(196.36 + 5 * span)).toBe('Field Medical Exoskeleton: [ Missing ]')
+    expect(getWolvesHudLabel(196.36 + 6 * span)).toBe('pod/thriving-community created')
+    // The climax reports stay reserved for the finale compression window.
+    for (let time = 196.36; time < 345; time += 0.5) {
+      expect(getWolvesHudLabel(time)).not.toMatch(/TARGET ACQUIRED|Kube of Destiny|Projected Joining/)
+    }
   })
 
   it('preserves the approved thesis window, HUD, and visual modes', () => {
@@ -92,17 +143,17 @@ describe('wolves thesis sequence', () => {
       active: true,
       mode: 'welcome',
       dayPulse: true,
-      hudLabel: 'INCOMING SIGNAL:',
+      hudLabel: 'We\'ve got your back.',
     })
     expect(getWolvesThesisState(351.316)).toMatchObject({
       active: true,
       mode: 'universal-blue',
-      hudLabel: 'Welcome to indie cloud native',
+      hudLabel: 'We are Universal Blue.',
     })
     expect(getWolvesThesisState(349)).toMatchObject({
       active: true,
       mode: 'welcome',
-      hudLabel: 'INCOMING SIGNAL:',
+      hudLabel: 'You\'ll never walk alone ...',
     })
     expect(getWolvesThesisState(395)).toMatchObject({ active: true, mode: 'growing-corruption' })
     expect(getWolvesThesisState(405)).toMatchObject({

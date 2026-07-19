@@ -253,8 +253,22 @@ function handleCaptionChange(event: Event) {
   width: 1.6rem;
   height: 1.6rem;
   margin: 0;
-  accent-color: var(--wc-gold);
   flex-shrink: 0;
+  appearance: none;
+  cursor: pointer;
+  border: 1px solid var(--wc-gold);
+  background: rgb(8 9 12 / 88%);
+}
+
+.wc-widget-toggle-input:checked {
+  background:
+    linear-gradient(var(--wc-gold), var(--wc-gold)) center / 0.8rem 0.8rem no-repeat,
+    rgb(8 9 12 / 88%);
+}
+
+.wc-widget-toggle-input:focus-visible {
+  outline: 2px solid var(--wc-gold);
+  outline-offset: 2px;
 }
 
 .wc-widget-toggle-text {

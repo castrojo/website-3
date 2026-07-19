@@ -10,49 +10,48 @@ const lobbyBackground = `${import.meta.env.BASE_URL}evening/night-sky.webp`
   <div class="wc-lobby" :style="{ '--wc-lobby-background': `url('${lobbyBackground}')` }">
     <div class="wc-lobby-frame">
       <p class="wc-label wc-lobby-brand">
-        PROJECT BLUEFIN
+        PROJECT BLUEFIN PRESENTS
       </p>
       <h1 class="wc-lobby-title">
         SEVEN DAYS<br>TO THE WOLVES
       </h1>
       <div class="wc-hairline" />
       <p class="wc-lobby-sub">
-        SEVEN PARTS · ONE TRANSMISSION
+        SEVEN PARTS · ONE COMMUNITY · ONE DESTINY
       </p>
 
       <p class="wc-lobby-status wc-label">
-        SIGNAL READY · NO ACCOUNT REQUIRED
+        COMING IN 2027
       </p>
-
-      <WolvesQrCodes />
 
       <button
         class="wc-lobby-enter wc-plate"
         type="button"
         @click="emit('enter')"
       >
-        BEGIN TRANSMISSION
+        MEET YOUR TEAMMATES
       </button>
 
       <blockquote class="wc-lobby-quote wc-plate wc-plate--sheen">
         <p>
-          I've watched AI empower and destroy open source communities faster than
-          anything yet. And it's getting faster. No one is talking, everyone is
+          I've watched AI change open source communities faster than
+          anything so far. And it's getting faster. No one is talking, everyone is
           yelling past each other. I'm just as guilty as anyone.
         </p>
         <p>
           So I did what any good open source maintainer would do -- I turned to my
           friends. And together, we turned to metal. This project is designed to
-          prove the value of the human spirity of creation. This is a collection of
+          prove the value of the human spirit of creation. This is a collection of
           artists involved in Bluefin, who have been compensated for their work
           thanks to your donations, we hope you enjoy the world they've created.
-          (If you don't like the metal then that's your problem.)
         </p>
         <div class="wc-lobby-quote-attribution">
           <span class="wc-lobby-quote-name">-- Jorge Castro //projectbluefin.io</span>
           <span class="wc-lobby-quote-detail">sabot-6 - Order of the Lost Saint - Die Vicesimo Primo mensis Iulii, Anno MMXXVI</span>
+          <p>If you don't like the metal then that's your problem.</p>
         </div>
       </blockquote>
+      <WolvesQrCodes />
     </div>
   </div>
 </template>

@@ -99,13 +99,14 @@ try {
     await page.goto(WOLVES_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 })
   }
 
-  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION/i }).click()
+  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION|MEET YOUR TEAMMATES/i }).click()
   await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 10_000 })
 
   async function assertNameplate(detail, label) {
-    await page.waitForSelector('.wc-nameplate', { state: 'visible', timeout: 5_000 })
-    expectEqual('Nameplate detail', await page.locator('.wc-nameplate-detail').textContent(), detail)
-    expectEqual('Nameplate label', await page.locator('.wc-nameplate-label').textContent(), label)
+    const nameplate = page.locator('.wc-intro-nameplate .wc-nameplate')
+    await nameplate.waitFor({ state: 'visible', timeout: 5_000 })
+    expectEqual('Nameplate detail', await nameplate.locator('.wc-nameplate-detail').textContent(), detail)
+    expectEqual('Nameplate label', await nameplate.locator('.wc-nameplate-label').textContent(), label)
   }
 
   async function assertNoNameplate() {
@@ -144,22 +145,25 @@ try {
     await seekMockPlayer(videoId, seconds)
   }
 
-  async function assertGuardianPair({ name, label, scientificName, artwork, lowerThird = true, leftAnchored = true }) {
+  async function assertGuardianPair({ name, artwork, lowerThird = true, leftAnchored = true }) {
     await page.waitForFunction((expected) => {
       const plate = document.querySelector('.wolves-guardian-plate')
-      const art = document.querySelector('.wolves-guardian-plate-dinosaur-art')
+      const art = document.querySelector('.wolves-companion-plate-art')
       const text = plate?.textContent ?? ''
       const src = art?.getAttribute('src') ?? ''
       return text.includes(expected.name)
-        && text.includes(expected.label)
-        && text.includes(expected.scientificName)
         && src.includes(expected.artwork)
-    }, { name, label, scientificName, artwork }, { timeout: 5_000 })
+    }, { name, artwork }, { timeout: 5_000 })
 
     const box = await page.locator('.wolves-guardian-plate').boundingBox()
     expectTruthy(`${name} guardian plate bounds`, box)
+    const companionBox = await page.locator('.wolves-companion-plate').boundingBox()
+    expectTruthy(`${name} companion plate bounds`, companionBox)
     if (!box) {
       return
+    }
+    if (companionBox) {
+      expectTruthy(`${name} companion sits beside the guardian plate`, companionBox.x > box.x + box.width - 1)
     }
 
     if (lowerThird) {
@@ -170,32 +174,14 @@ try {
     }
   }
 
-  await assertNoNameplate()
-  await page.waitForFunction(() => window.__mockWolvesPlayers.some(player => player.videoId === 'EB3IokHelRk'), null, { timeout: 5_000 })
-  await assertOverlayContains('A Gardener and a Winnower walked among the stars')
-  await seekMockPlayer('EB3IokHelRk', 5.1)
-  await assertOverlayContains('One to spread life')
-  const prologueHighlights = await page.locator('.wolves-intro-letter-highlight').allTextContents()
-  expectEqual('Prologue highlighted words', prologueHighlights.join(''), 'lifedrossGarden')
-  await assertNoNameplate()
-  await capture(page, '03-prologue-life-dross-garden')
-
-  await seekMockPlayer('EB3IokHelRk', 50.2)
-  await assertOverlayContains('In the space of a few days')
-  await assertNameplate('PROLOGUE', 'From the Age of Dinosaurs to the Pinnacle of Humanity')
-  await capture(page, '04-prologue-nameplate-override')
-
-  await page.getByLabel('Next').click()
   await page.waitForSelector('.wolves-intro-overlay-player', { state: 'visible', timeout: 10_000 })
-  await assertNameplate('UNIVERSAL BLUE BRIEFING', 'Destiny 2: Into the Light Cinematic')
+  await assertNameplate('Meet your Fireteam', 'Fighting for something greater')
   expectTruthy('Destiny player mounted', await page.locator('.wolves-intro-overlay-player').isVisible())
   await capture(page, '08-destiny-trailer')
 
   await seekActiveDestinyPlayer(6.2)
   await assertGuardianPair({
     name: 'Bob Killen',
-    label: 'TOROSAURUS',
-    scientificName: 'Torosaurus latus',
     artwork: 'bob-torosaurus.webp',
   })
   await capture(page, '09-destiny-bob-torosaurus')
@@ -203,8 +189,6 @@ try {
   await seekActiveDestinyPlayer(39)
   await assertGuardianPair({
     name: 'Kaslin Fields',
-    label: 'TOROSAURUS',
-    scientificName: 'Torosaurus latus',
     artwork: 'kaslin-torosaurus.webp',
   })
   await capture(page, '10-destiny-kaslin-torosaurus')

@@ -16,11 +16,16 @@ export interface WolvesGuardianDinosaurBond {
   guardianName: string
   /** Matches `DinosaurSpecies.id` in `wolves-dinosaur-species.ts`. */
   dinosaurSpeciesId: string
+  /**
+   * The dinosaur's authored name (`epic_name` in its character-sheet lore
+   * record). Omitted when no character sheet names the bonded dinosaur.
+   */
+  dinosaurName?: string
 }
 
 export const wolvesGuardianDinosaurBonds: readonly WolvesGuardianDinosaurBond[] = [
-  { guardianName: 'Kat Cosgrove', dinosaurSpeciesId: 'karl' },
-  { guardianName: 'Natali Vlatko', dinosaurSpeciesId: 'alamosaurus' },
+  { guardianName: 'Kat Cosgrove', dinosaurSpeciesId: 'karl', dinosaurName: 'Karl' },
+  { guardianName: 'Natali Vlatko', dinosaurSpeciesId: 'alamosaurus', dinosaurName: 'Alamo' },
   { guardianName: 'Bob Killen', dinosaurSpeciesId: 'bob-torosaurus' },
   { guardianName: 'Kaslin Fields', dinosaurSpeciesId: 'kaslin-torosaurus' },
 ]

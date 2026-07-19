@@ -37,12 +37,6 @@ const CinematicStageStub = defineComponent({
   template: '<div class="cinematic-stage-stub" />',
 })
 
-const WolvesCreatorShortsInterstitialStub = defineComponent({
-  name: 'WolvesCreatorShortsInterstitial',
-  emits: ['complete'],
-  template: '<div class="creator-shorts-stub" />',
-})
-
 const WolvesIntroOverlayStub = defineComponent({
   name: 'WolvesIntroOverlay',
   emits: ['status', 'complete'],
@@ -98,8 +92,9 @@ const NameplateStub = defineComponent({
   props: {
     detail: { type: String, default: '' },
     label: { type: String, default: '' },
+    glitch: { type: Boolean, default: false },
   },
-  template: '<div class="nameplate-stub">{{ detail }}|{{ label }}</div>',
+  template: '<div class="nameplate-stub" :class="{ glitching: glitch }">{{ detail }}|{{ label }}</div>',
 })
 
 describe('wolvesApp intro status handling', () => {
@@ -115,33 +110,21 @@ describe('wolvesApp intro status handling', () => {
   })
 
   afterEach(() => {
-    Object.defineProperty(document, 'startViewTransition', {
-      configurable: true,
-      value: undefined,
-    })
+    vi.useRealTimers()
   })
 
   function stubs() {
     return {
       CinematicLobby: CinematicLobbyStub,
       CinematicStage: CinematicStageStub,
-      WolvesCreatorShortsInterstitial: WolvesCreatorShortsInterstitialStub,
       MediaWidget: MediaWidgetStub,
       WolvesIntroOverlay: WolvesIntroOverlayStub,
       Nameplate: NameplateStub,
     }
   }
 
-  it('preloads the cinematic stage during the intro and hands off through a supported view transition', async () => {
-    const startViewTransition = vi.fn((update: () => Promise<void>) => {
-      expect(handoffCalls).toEqual(['prepare', 'start'])
-      return { updateCallbackDone: update() }
-    })
-    Object.defineProperty(document, 'startViewTransition', {
-      configurable: true,
-      value: startViewTransition,
-    })
-
+  it('preloads the cinematic stage during the intro and dissolves the overlay at the handoff', async () => {
+    vi.useFakeTimers()
     const wrapper = shallowMount(WolvesApp, {
       global: { stubs: stubs() },
     })
@@ -151,16 +134,21 @@ describe('wolvesApp intro status handling', () => {
     expect(handoffCalls).toEqual(['prepare'])
 
     wrapper.getComponent(WolvesIntroOverlayStub).vm.$emit('complete')
-    await flushPromises()
+    await vi.advanceTimersByTimeAsync(0)
     await nextTick()
 
-    expect(startViewTransition).toHaveBeenCalledTimes(1)
+    // The overlay stays mounted, transparent, while the dissolve plays out.
     expect(handoffCalls).toEqual(['prepare', 'start', 'transparent'])
     expect(useCinematicStore().phase).toBe('cinematic')
+    expect(wrapper.find('.wolves-intro-overlay-stub').exists()).toBe(true)
+
+    await vi.advanceTimersByTimeAsync(1400)
+    await nextTick()
     expect(wrapper.find('.wolves-intro-overlay-stub').exists()).toBe(false)
   })
 
-  it('hands off without requesting a view transition when the API is unavailable', async () => {
+  it('keeps the overlay mounted until the dissolve completes', async () => {
+    vi.useFakeTimers()
     const store = useCinematicStore()
     store.enterIntro()
     const wrapper = shallowMount(WolvesApp, {
@@ -168,30 +156,20 @@ describe('wolvesApp intro status handling', () => {
     })
 
     wrapper.getComponent(WolvesIntroOverlayStub).vm.$emit('complete')
-    await flushPromises()
+    await vi.advanceTimersByTimeAsync(0)
     await nextTick()
 
     expect(handoffCalls).toEqual(['start', 'transparent'])
     expect(store.phase).toBe('cinematic')
-  })
+    expect(wrapper.find('.wolves-intro-overlay-stub').exists()).toBe(true)
 
-  it('resumes the next cinematic video after Creator Shorts completes', async () => {
-    const store = useCinematicStore()
-    store.enterCinematic()
-    store.enterCreatorShorts()
-    const wrapper = shallowMount(WolvesApp, {
-      global: { stubs: stubs() },
-    })
-
-    const shorts = wrapper.getComponent(WolvesCreatorShortsInterstitialStub)
-    shorts.vm.$emit('complete')
-    await Promise.resolve()
+    await vi.advanceTimersByTimeAsync(1399)
     await nextTick()
+    expect(wrapper.find('.wolves-intro-overlay-stub').exists()).toBe(true)
 
-    expect(store.phase).toBe('cinematic')
-    expect(store.segmentIndex).toBe(1)
-    expect(handoffCalls).toEqual(['start'])
-    expect(wrapper.find('.cinematic-stage-stub').exists()).toBe(true)
+    await vi.advanceTimersByTimeAsync(1)
+    await nextTick()
+    expect(wrapper.find('.wolves-intro-overlay-stub').exists()).toBe(false)
   })
 
   it('destroys the cinematic stage before seeking back into the intro', async () => {
@@ -271,55 +249,6 @@ describe('wolvesApp intro status handling', () => {
     expect(handoffCalls).toEqual(['start', 'destroy', 'prepare'])
   })
 
-  it('hides the prologue nameplate absent a cue-level title and shows it only for the authored override', async () => {
-    const store = useCinematicStore()
-    store.enterIntro()
-
-    const wrapper = shallowMount(WolvesApp, {
-      global: {
-        stubs: stubs(),
-      },
-    })
-
-    const intro = wrapper.getComponent(WolvesIntroOverlayStub)
-
-    // Ordinary wolves-prologue status (no cue-level nameplateTitle) must hide the
-    // entire top-left nameplate rather than showing the default prologue plate.
-    intro.vm.$emit('status', {
-      currentTime: 10,
-      duration: 94,
-      paused: false,
-      segmentId: 'wolves-prologue',
-      canGoPrevious: true,
-    })
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.nameplate-stub').exists()).toBe(false)
-
-    intro.vm.$emit('status', {
-      currentTime: 50,
-      duration: 94,
-      paused: false,
-      segmentId: 'wolves-prologue',
-      canGoPrevious: true,
-      nameplateTitle: 'From the Age of Dinosaurs to the Pinnacle of Humanity',
-    })
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.get('.nameplate-stub').text()).toBe('PROLOGUE|From the Age of Dinosaurs to the Pinnacle of Humanity')
-
-    intro.vm.$emit('status', {
-      currentTime: 65,
-      duration: 94,
-      paused: false,
-      segmentId: 'wolves-prologue',
-      canGoPrevious: true,
-    })
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.nameplate-stub').exists()).toBe(false)
-  })
-
   it('shows the Destiny CC switch off by default and forwards its state to the intro overlay', async () => {
     const store = useCinematicStore()
     store.enterIntro()
@@ -332,19 +261,6 @@ describe('wolvesApp intro status handling', () => {
 
     const intro = wrapper.getComponent(WolvesIntroOverlayStub)
     const widget = () => wrapper.getComponent(MediaWidgetStub)
-
-    intro.vm.$emit('status', {
-      currentTime: 12,
-      duration: 94,
-      paused: false,
-      segmentId: 'wolves-prologue',
-      canGoPrevious: true,
-      showVoiceOverToggle: false,
-      voiceOverEnabled: false,
-    })
-    await wrapper.vm.$nextTick()
-
-    expect(widget().text()).toBe('false|false|Ikora voice over|false|false|CC')
 
     intro.vm.$emit('status', {
       currentTime: 18,
@@ -366,7 +282,7 @@ describe('wolvesApp intro status handling', () => {
     expect(setCaptionsEnabled).toHaveBeenCalledWith(true)
   })
 
-  it('shows the Nova tag in the bottom music plaque during the candle sequence', async () => {
+  it('keeps the Nova tag in the top status while preserving the Destiny music-widget title', async () => {
     const store = useCinematicStore()
     store.enterIntro()
 
@@ -392,21 +308,23 @@ describe('wolvesApp intro status handling', () => {
     })
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.get('.nameplate-stub').text()).toBe('Meet your Fireteam|Fighting for something greater than ourselves.')
-    expect(wrapper.getComponent(MediaWidgetStub).props('title')).toBe('Destiny 2: Into the Light Cinematic')
+    expect(wrapper.get('.nameplate-stub').text()).toBe('Meet your Fireteam|Fighting for something greater')
+    expect(wrapper.getComponent(MediaWidgetStub).props('title')).toBe('The Wolves are Coming')
 
     intro.vm.$emit('status', {
-      currentTime: 48,
+      currentTime: 52.2,
       duration: 121.5,
       paused: false,
       segmentId: 'wolves-intro',
       canGoPrevious: true,
-      mediaTitle: '#novaforever',
+      nameplateTitle: '#nova4ever',
+      nameplateGlitch: true,
     })
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.get('.nameplate-stub').text()).toBe('Meet your Fireteam|Fighting for something greater than ourselves.')
-    expect(wrapper.getComponent(MediaWidgetStub).props('title')).toBe('#novaforever')
+    expect(wrapper.get('.nameplate-stub').text()).toBe('Meet your Fireteam|#nova4ever')
+    expect(wrapper.get('.nameplate-stub').classes()).toContain('glitching')
+    expect(wrapper.getComponent(MediaWidgetStub).props('title')).toBe('The Wolves are Coming')
 
     intro.vm.$emit('status', {
       currentTime: 70.5,
@@ -417,7 +335,30 @@ describe('wolvesApp intro status handling', () => {
     })
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.getComponent(MediaWidgetStub).props('title')).toBe('Destiny 2: Into the Light Cinematic')
+    expect(wrapper.get('.nameplate-stub').text()).toBe('Meet your Fireteam|Fighting for something greater')
+    expect(wrapper.get('.nameplate-stub').classes()).not.toContain('glitching')
+    expect(wrapper.getComponent(MediaWidgetStub).props('title')).toBe('The Wolves are Coming')
+  })
+
+  it('uses a final Destiny cue to replace both top-status fields', async () => {
+    const store = useCinematicStore()
+    store.enterIntro()
+    const wrapper = shallowMount(WolvesApp, {
+      global: { stubs: stubs() },
+    })
+
+    wrapper.getComponent(WolvesIntroOverlayStub).vm.$emit('status', {
+      currentTime: 106.5,
+      duration: 121.5,
+      paused: false,
+      segmentId: 'wolves-intro',
+      canGoPrevious: true,
+      nameplateDetail: 'Legends Sought',
+      nameplateTitle: 'Follow the path, we\'ve got your back',
+    })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('.nameplate-stub').text()).toBe('Legends Sought|Follow the path, we\'ve got your back')
   })
 
   it('normalizes intro native time into canonical segment/sequence progress and preserves overall continuity on handoff', async () => {
@@ -440,17 +381,17 @@ describe('wolvesApp intro status handling', () => {
     })
     await wrapper.vm.$nextTick()
 
-    expect(store.segmentIndex).toBe(1)
+    expect(store.segmentIndex).toBe(0)
     expect(store.segmentElapsed).toBeCloseTo(60)
     expect(store.segmentDuration).toBeCloseTo(119.5)
     expect(store.nativeTime).toBe(62)
-    expect(store.sequenceElapsed).toBeCloseTo(154)
-    expect(store.overallElapsed).toBeCloseTo(154)
+    expect(store.sequenceElapsed).toBeCloseTo(60)
+    expect(store.overallElapsed).toBeCloseTo(60)
 
     intro.vm.$emit('complete')
     await wrapper.vm.$nextTick()
 
     expect(store.phase).toBe('cinematic')
-    expect(store.overallElapsed).toBeCloseTo(213.5)
+    expect(store.overallElapsed).toBeCloseTo(119.5)
   })
 })

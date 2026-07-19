@@ -26,16 +26,15 @@ export const wallpapers: Wallpaper[] = [
     "fit": "cover"
   },
   {
-    "type": "daynight",
-    "name": "bluefin-dusk",
-    "dayName": "wolves/wolves/bluefin-dusk-day.webp",
-    "nightName": "wolves/wolves/bluefin-dusk-night.webp",
-    "title": "Bluefin created by Andy Frazer and Jacob Schnurr"
-  },
-  {
     "type": "single",
     "name": "wolves/wolves/bluefin-huntress.webp",
     "title": "Bluefin created by Andy Frazer and Jacob Schnurr",
+    "fit": "cover"
+  },
+  {
+    "type": "single",
+    "name": "wolves/wolves/bluefin-lazy-days.webp",
+    "title": "Lazy Days by Jay Balamurugan",
     "fit": "cover"
   },
   {
@@ -47,15 +46,16 @@ export const wallpapers: Wallpaper[] = [
     "fit": "cover"
   },
   {
-    "type": "single",
-    "name": "wolves/wolves/bluefin-eyes.webp",
-    "title": "Eyes by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)"
+    "type": "daynight",
+    "name": "bluefin-dusk",
+    "dayName": "wolves/wolves/bluefin-dusk-day.webp",
+    "nightName": "wolves/wolves/bluefin-dusk-night.webp",
+    "title": "Bluefin created by Andy Frazer and Jacob Schnurr"
   },
   {
     "type": "single",
-    "name": "wolves/wolves/bluefin-lazy-days.webp",
-    "title": "Lazy Days by Jay Balamurugan",
-    "fit": "cover"
+    "name": "wolves/wolves/bluefin-eyes.webp",
+    "title": "Eyes by Dr. Natalia Jagielska and Delphic Melody (M. Gopal)"
   },
   {
     "type": "daynight",
@@ -93,18 +93,8 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/showcase/PXL_20230315_162515981.webp",
-    "title": "PXL 20230315 162515981"
-  },
-  {
-    "type": "single",
     "name": "wolves/showcase/PXL_20230724_132635290.webp",
     "title": "PXL 20230724 132635290"
-  },
-  {
-    "type": "single",
-    "name": "wolves/showcase/PXL_20230922_193924217.webp",
-    "title": "PXL 20230922 193924217"
   },
   {
     "type": "single",
@@ -153,18 +143,28 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/showcase/Screenshot From 2026-01-23 09-32-12.webp",
-    "title": "Screenshot From 2026 01 23 09 32 12"
-  },
-  {
-    "type": "single",
     "name": "wolves/showcase/Screenshot From 2026-02-03 17-43-17.webp",
     "title": "Screenshot From 2026 02 03 17 43 17"
   },
   {
     "type": "single",
+    "name": "wolves/showcase/bazaar.png",
+    "title": "Bazaar"
+  },
+  {
+    "type": "single",
     "name": "wolves/showcase/bluespeed-cpu.webp",
     "title": "Bluespeed Cpu"
+  },
+  {
+    "type": "single",
+    "name": "wolves/showcase/deinonychus_wallpaper_option.jpg",
+    "title": "Deinonychus Wallpaper Option"
+  },
+  {
+    "type": "single",
+    "name": "wolves/showcase/goose-quick-launch.png",
+    "title": "Goose Quick Launch"
   },
   {
     "type": "single",
@@ -228,6 +228,26 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/32433026808_c8529aca08_k.jpg",
+    "title": "32433026808 C8529aca08 K"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/33662742092_09c3f81574_b.jpg",
+    "title": "33662742092 09c3f81574 B"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/44488379080_1ca549538e_k.jpg",
+    "title": "44488379080 1ca549538e K"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/44541983690_6e8f7d8e0f_k.jpg",
+    "title": "44541983690 6e8f7d8e0f K"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/53322730377_ca5b65a035_k.jpg",
     "title": "53322730377 Ca5b65a035 K"
   },
@@ -240,11 +260,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/53324063295_08e12670ec_k.jpg",
     "title": "53324063295 08e12670ec K"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/54136344571_c1019a733a_k.jpg",
-    "title": "54136344571 C1019a733a K"
   },
   {
     "type": "single",
@@ -303,11 +318,6 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/Bluefin Advisor Ashley McNamara.webp",
-    "title": "Bluefin Advisor Ashley McNamara"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/Bluefin Advisor Chris Aniszczyk.webp",
     "title": "Bluefin Advisor Chris Aniszczyk"
   },
@@ -315,11 +325,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/Bluefin Advisor Craig McLuckie.webp",
     "title": "Bluefin Advisor Craig McLuckie"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/Bluefin Advisor Dustin Kirkland.png",
-    "title": "Bluefin Advisor Dustin Kirkland"
   },
   {
     "type": "single",
@@ -333,18 +338,8 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/Bluefin Advisor Stormy Peters.webp",
-    "title": "Bluefin Advisor Stormy Peters"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/CNCF Executive Directory Jonathan Bryce.webp",
     "title": "CNCF Executive Directory Jonathan Bryce"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/Christoph Blecker - First Amongst Equals - Platinum Member.webp",
-    "title": "Christoph Blecker   First Amongst Equals   Platinum Member"
   },
   {
     "type": "single",
@@ -373,23 +368,8 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/MVIMG_20180502_184727.webp",
-    "title": "MVIMG 20180502 184727"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/NOT John Bazzite.jpg",
-    "title": "NOT John Bazzite"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/Ralph Squillace - High Administrator of the Final Shape.webp",
     "title": "Ralph Squillace   High Administrator of the Final Shape"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/Screenshot From 2026-04-15 19-13-20.webp",
-    "title": "Screenshot From 2026 04 15 19 13 20"
   },
   {
     "type": "single",
@@ -413,18 +393,13 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/alexk.png",
-    "title": "Alexk"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/amberleighruth_reference.webp",
     "title": "Amberleighruth Reference"
   },
   {
     "type": "single",
     "name": "wolves/people/ashleymcnamara35365.webp",
-    "title": "Ashleymcnamara35365"
+    "title": "Bluefin Advisor Ashley McNamara"
   },
   {
     "type": "single",
@@ -433,13 +408,18 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/bootc creator Colin Walters.JPG",
-    "title": "Bootc creator Colin Walters"
+    "name": "wolves/people/brazil-homage.webp",
+    "title": "Brazil we see you! #diolinux #tulip"
   },
   {
     "type": "single",
-    "name": "wolves/people/brazil-homage.webp",
-    "title": "Brazil we see you! #diolinux #tulip"
+    "name": "wolves/people/chen.jpg",
+    "title": "Chen"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/coreos.jpg",
+    "title": "Coreos"
   },
   {
     "type": "single",
@@ -450,11 +430,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/distrobox.png",
     "title": "Distrobox"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/enthusiasts.png",
-    "title": "Enthusiasts"
   },
   {
     "type": "single",
@@ -498,18 +473,8 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/flickr-53775762912.webp",
-    "title": "2024-06-06_OHSNAP_KuberTENes_BirthdayBash_HL_0145"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/flickr-53776677826.webp",
     "title": "2024-06-06_OHSNAP_KuberTENes_BirthdayBash_HL_0038"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/flickr-53776677901.webp",
-    "title": "2024-06-06_OHSNAP_KuberTENes_BirthdayBash_HL_0058"
   },
   {
     "type": "single",
@@ -520,11 +485,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/flickr-53776678026.webp",
     "title": "2024-06-06_OHSNAP_KuberTENes_BirthdayBash_HL_0096"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/flickr-53776883538.webp",
-    "title": "2024-06-06_OHSNAP_KuberTENes_BirthdayBash_HL_0070"
   },
   {
     "type": "single",
@@ -594,7 +554,7 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/flickr-54137782365.webp",
-    "title": "KC+CNC_NA_241111_BF_KCS_026"
+    "title": "Christoph Blecker - First Amongst Equals - Platinum Member"
   },
   {
     "type": "single",
@@ -643,11 +603,6 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/flickr-55344127313.webp",
-    "title": "0R0A9020"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/flickr-55344186409.webp",
     "title": "DSC04181"
   },
@@ -669,8 +624,7 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/interview-clyde-seepersad-linux-foundation.webp",
-    "title": "AI Is Not Killing Tech Jobs — The Data Says Otherwise | Clyde Seepersad, Linux Foundation",
-    "theaterTitleOnly": true
+    "title": "Clyde Seepersad, Linux Foundation"
   },
   {
     "type": "single",
@@ -686,7 +640,7 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/jorge-bluefin.webp",
-    "title": "Jorge Bluefin"
+    "title": "Together we can save humanity from the tyranny of Linux Distributions. Forever."
   },
   {
     "type": "single",
@@ -701,7 +655,7 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/kirkland.png",
-    "title": "Kirkland"
+    "title": "Bluefin Advisor Dustin Kirkland"
   },
   {
     "type": "single",
@@ -830,18 +784,8 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/kubecon-55164226136.webp",
-    "title": "Maintainer Summit Evening Reception - 018 MN"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/kubecon-55164384988.webp",
     "title": "Maintainer Summit Breakouts - LM 009"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/kubecon-55164385253.webp",
-    "title": "Maintainer Summit Breakouts - MN 048"
   },
   {
     "type": "single",
@@ -872,11 +816,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/kubecon-55164464359.webp",
     "title": "Maintainer Summit Breakouts - LM 025"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/kubecon-55164466149.webp",
-    "title": "Maintainer Summit Breaks & Lunch - MN 010"
   },
   {
     "type": "single",
@@ -990,11 +929,6 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/kubecon-55176938501.webp",
-    "title": "Project Pavilion LM 028"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/kubecon-55176938596.webp",
     "title": "Learning Lounge MN 030"
   },
@@ -1007,11 +941,6 @@ export const wallpapers: Wallpaper[] = [
     "type": "single",
     "name": "wolves/people/kubecon-55177097253.webp",
     "title": "Keynote DK 019"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/kubecon-55177098028.webp",
-    "title": "Keynote DK 016"
   },
   {
     "type": "single",
@@ -1040,23 +969,8 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
-    "name": "wolves/people/kubecon-55177195819.webp",
-    "title": "Solutions Showcase MN 041"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/kubecon-55177329145.webp",
-    "title": "Keynote DK 037"
-  },
-  {
-    "type": "single",
     "name": "wolves/people/kubecon-55177329325.webp",
     "title": "Keynote DK 105"
-  },
-  {
-    "type": "single",
-    "name": "wolves/people/kubecon-55177329375.webp",
-    "title": "Keynote DK 099"
   },
   {
     "type": "single",
@@ -1086,7 +1000,12 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/kyle.jpg",
-    "title": "Kyle"
+    "title": "NOT John Bazzite"
+  },
+  {
+    "type": "single",
+    "name": "wolves/people/laura.png",
+    "title": "Laura"
   },
   {
     "type": "single",
@@ -1095,9 +1014,13 @@ export const wallpapers: Wallpaper[] = [
   },
   {
     "type": "single",
+    "name": "wolves/people/meuiss.jpg",
+    "title": "Meuiss"
+  },
+  {
+    "type": "single",
     "name": "wolves/people/nova4ever.webp",
-    "title": "Jay Balamurugan",
-    "theaterTitleOnly": true
+    "title": "Jay Balamurugan"
   },
   {
     "type": "single",
@@ -1127,7 +1050,7 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/stormy.faces23764.web_.webp",
-    "title": "Stormy.faces23764"
+    "title": "Bluefin Advisor Stormy Peters"
   },
   {
     "type": "single",
@@ -1152,6 +1075,6 @@ export const wallpapers: Wallpaper[] = [
   {
     "type": "single",
     "name": "wolves/people/walters.JPG",
-    "title": "Walters"
+    "title": "bootc creator Colin Walters"
   }
 ]

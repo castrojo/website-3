@@ -45,8 +45,11 @@ Routine Wolves content uses `wolves-content-maintenance.md`. Unapproved visual w
   intro only afterward so Vue remounts a usable overlay before its controls run.
 - `destroy()` must reset the dual buffer's active side to `a`; a later intro
   prewarm then starts Part I from its canonical buffer.
-- Feature-detect `document.startViewTransition`; put the reactive handoff
-  update in its callback, and run the same update directly when unsupported.
+- The intro-to-cinematic handoff is a timed dissolve: `handleIntroComplete`
+  sets the transparent flag, the overlay's background and chrome fade over
+  1.4s (`INTRO_HANDOFF_FADE_MS`, matching the CSS transition in
+  `.wolves-intro-overlay--transparent-handoff`), then the overlay unmounts.
+  Keep the constant and the CSS duration in sync.
 - Read scrub-derived state immediately; the live player poll loop can overwrite test positions.
 - Shared control geometry belongs in the shared control component, not a parent's scoped style.
 - Test embeds through `projectbluefin.io.localhost`; compare localhost error 150 with production before declaring a source broken.

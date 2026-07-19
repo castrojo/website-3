@@ -188,6 +188,7 @@ const curatedTitles = {
   // Captions for pinned slide ids whose curated duplicate copies were dropped by
   // dedupeByContent (the pinned filename survives; the caption from the curated copy lives on).
   'kyle': 'NOT John Bazzite',
+  'jorge-bluefin': 'Together we can save humanity from the tyranny of Linux Distributions. Forever.',
   'walters': 'bootc creator Colin Walters',
   'kirkland': 'Bluefin Advisor Dustin Kirkland',
   'ashleymcnamara35365': 'Bluefin Advisor Ashley McNamara',
@@ -385,8 +386,8 @@ async function generate() {
 
   const bluefinGroupSlideNames = [
     'wolves/wolves/bluefin-chicken.webp',
-    'bluefin-dusk',
     'wolves/wolves/bluefin-huntress.webp',
+    'wolves/wolves/bluefin-lazy-days.webp',
   ]
   const bluefinGroup = bluefinGroupSlideNames
     .map(name => wallpapers.find(wallpaper => wallpaper.name === name))

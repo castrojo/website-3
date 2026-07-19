@@ -26,8 +26,19 @@ export interface IntroOverlayTextCue {
   readonly end: number
   /** Optional top nameplate title to publish while this cue is active. */
   readonly nameplateTitle?: string
+  /** Optional top nameplate detail to publish while this cue is active. */
+  readonly nameplateDetail?: string
   /** Optional bottom music-plaque title to publish while this cue is active. */
   readonly mediaTitle?: string
+  /** Publishes a top status nameplate without rendering a lower-third or caption. */
+  readonly statusOnly?: boolean
+  /**
+   * Split-second glitch easter egg: the top nameplate briefly "glitches out" to this cue's
+   * `nameplateTitle` with an RGB-split distortion, then snaps back to the segment's default
+   * title when the cue ends. Keep these cue windows short (well under a second) so the reveal
+   * reads as interference, not a caption. Currently reserved for the #nova4ever bursts.
+   */
+  readonly glitch?: boolean
   /** Requires the user's CC switch before this burned-in caption is rendered. */
   readonly requiresCaptionToggle?: boolean
   /** Static background image shown behind the text for this cue only (e.g. a single hero photo). */
@@ -38,8 +49,8 @@ export interface IntroOverlayTextCue {
    * Day/night crossfade background(s) shown behind the text for this cue only. Accepts one or
    * more stages: a single-stage cue crossfades day->night once over its full duration; a
    * multi-stage cue splits its duration evenly across stages, crossfading day->night within
-   * each one in turn (e.g. cycling through several Bluefin wallpaper scenes under one line of
-   * unbroken text — see `bluefinMonthCrossfadePair`/`bluefinMonthCrossfadePairReversed`).
+   * each one in turn (e.g. cycling through several wallpaper scenes under one line of
+   * unbroken text).
    */
   readonly backgroundCrossfade?: readonly IntroBackgroundCrossfade[]
   /**
@@ -98,6 +109,13 @@ export interface IntroOverlayTextCue {
    * per explicit user request (2026-07-15) — do not apply broadly, it should read as singular.
    */
   readonly leader?: boolean
+  /**
+   * Renders the plate in a burnished silver treatment with a TRUSTEE // GUARDIAN
+   * label, marking Universal Blue trustees (Bob Killen here, Jorge Castro's
+   * Ghosts In The Mist plate mirrors it in WolvesComicReader.vue). Distinct from
+   * both the default blue plate and Christoph Blecker's singular gold leader plate.
+   */
+  readonly trustee?: boolean
   /**
    * A single exact substring of this cue's title line to render with a distinctive gold
    * shimmer/"bling" effect (`wolves-guardian-plate-bling` in `WolvesIntroOverlay.vue`), calling
@@ -162,6 +180,9 @@ export interface IntroStatusPayload {
   readonly segmentId: string
   readonly canGoPrevious: boolean
   readonly nameplateTitle?: string
+  /** True while a `glitch` cue is active, so the top nameplate applies the glitch treatment. */
+  readonly nameplateGlitch?: boolean
+  readonly nameplateDetail?: string
   readonly mediaTitle?: string
   readonly showVoiceOverToggle?: boolean
   readonly voiceOverEnabled?: boolean
@@ -325,14 +346,6 @@ export function buildDestinyCaptionCues(): readonly IntroOverlayTextCue[] {
   return [
     ...cues,
     { text: 'Comic Hero Shots of YOU', start: 24, end: 38, comicHeroTitleCard: true },
-    {
-      text: 'Fighting for Something Greater',
-      start: 48,
-      end: 70.5,
-      preservePunctuation: true,
-      mediaTitle: '#novaforever',
-      requiresCaptionToggle: true,
-    },
   ]
 }
 
@@ -377,27 +390,9 @@ export const PROLOGUE_TEXT_FADE_SECONDS = 7.8
 export const PROLOGUE_SCENE_CROSSFADE_SECONDS = PROLOGUE_TEXT_FADE_SECONDS / 2
 
 /**
- * Builds a day/night crossfade pair for one of Bluefin's twelve monthly wallpaper scenes
- * (`public/img/wallpapers/bluefin-01-day.webp` .. `bluefin-12-night.webp`, the same asset set
- * `WolvesApp.vue` uses for the live calendar-driven background). Reused here as the Prologue's
- * per-stanza backgrounds, per the user's chosen scene numbers for each line.
- */
-function bluefinMonthCrossfadePair(month: number): IntroBackgroundCrossfade {
-  const padded = String(month).padStart(2, '0')
-  return {
-    day: `img/wallpapers/bluefin-${padded}-day.webp`,
-    night: `img/wallpapers/bluefin-${padded}-night.webp`,
-  }
-}
-
-/** Reversed stage: starts on the month's night frame and crossfades into its day frame. */
-/**
  * The sequence played before the live playlist experience begins:
  *
- * 1. `wolves-prologue` — a 94s Gayane Ballet Suite (Adagio) cold open, establishing the
- *    Gardener/Winnower framing, the Collapse, and the "BLUEFIN — seven days to the wolves"
- *    title card. Its cue boundaries stay locked to the approved 94s excerpt.
- * 2. `wolves-intro` — the official YouTube IFrame Player embed of Bungie's "Destiny 2: Into
+ * `wolves-intro` — the official YouTube IFrame Player embed of Bungie's "Destiny 2: Into
  *    the Light Cinematic" trailer, with HTML/CSS text overlays introducing the six Guardians.
  *    The default unvoiced source runs ~2:03 and now uses an authored black-frame outro hold
  *    (`maxDuration`) while the optional Ikora-voiced source clamps to its own shorter end. A
@@ -412,103 +407,6 @@ function bluefinMonthCrossfadePair(month: number): IntroBackgroundCrossfade {
 export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
   return [
     {
-      id: 'wolves-prologue',
-      kind: 'text',
-      // Cut down from the song's full 5:26 (326s) to a 94s excerpt per explicit user request
-      // (2026-07-15 at 85s, extended 2026-07-16 to land the fade on the music). Loudness
-      // analysis of the track (per-second RMS) shows the final swell building from 89s,
-      // cresting at 92-94s, then resolving through a natural decrescendo into near-silence
-      // by 98s. Ending at 94 with a fade riding the decay lets the crest hit at full force
-      // instead of slicing mid-crescendo at a flat 90.
-      // The user hand-edited which lines survive and rewrote several. The remaining cues
-      // below are manually paced for readable holds across the runtime, with no dead/black
-      // gaps.
-      duration: 94,
-      // Fade the audio over the swell's own decay (94s cutoff, ~2.5s ramp).
-      audioFadeOutSeconds: 2.5,
-      audioYoutubeVideoId: 'EB3IokHelRk',
-      overlays: [
-        { text: 'A Gardener and a Winnower walked among the stars.', start: 0, end: 5 },
-        {
-          // Break rebalanced to three lines so no single word strands on its own
-          // at theater scale; wording unchanged.
-          text: `One to spread life,
-and one to cull the dross
-to shape the Garden of Earth.`,
-          start: 5,
-          end: 13.75,
-          backgroundCrossfade: [bluefinMonthCrossfadePair(6)],
-          textPosition: 'bottom-right',
-          highlightSubstrings: ['life', 'dross', 'Garden'],
-        },
-        {
-          text: 'One day changed the Garden forever.',
-          start: 13.75,
-          end: 21.5,
-          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
-        },
-        {
-          text: 'New Children arose and filled the pattern.',
-          start: 21.5,
-          end: 29.5,
-          emphasis: 'dominant',
-          textPosition: 'bottom',
-          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
-        },
-        {
-          text: 'For eons, Maintainer-Guardians cultivated the Garden...',
-          start: 29.5,
-          end: 36.25,
-          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
-        },
-        {
-          text: `Until an AI-fueled Society deemed Guardians unnecessary.
-And then, a threat.`,
-          start: 36.25,
-          end: 45,
-          backgroundImage: 'wolves-intro/bluefin-collapse-night.webp',
-        },
-        {
-          text: 'Others came to claim a bountiful and unprotected Garden.',
-          start: 45,
-          end: 50,
-        },
-        {
-          text: `In the space of a few days,
-humanity had lost its future`,
-          start: 50,
-          end: 59.375,
-          emphasis: 'dominant',
-          textPosition: 'bottom',
-          nameplateTitle: 'From the Age of Dinosaurs to the Pinnacle of Humanity',
-        },
-        {
-          text: `For the heart of any race is destroyed
-And its will to survive is utterly Broken`,
-          start: 59.375,
-          end: 65,
-          emphasis: 'dominant',
-          textPosition: 'bottom',
-        },
-        {
-          text: 'When its children are taken from it',
-          start: 65,
-          end: 72.5,
-          textPosition: 'bottom',
-        },
-        {
-          text: `Now, what's left of a proud order fights for survival,
-surrounded by predators.`,
-          start: 72.5,
-          end: 78.5,
-          emphasis: 'dominant',
-          textPosition: 'bottom',
-          highlightSubstring: 'fights',
-        },
-        { text: 'PROJECT BLUEFIN\nseven days to the wolves', start: 78.5, end: 94, slim: true },
-      ],
-    },
-    {
       // The Destiny segment now defaults to the unvoiced source and carries an optional voiced
       // toggle. Guardian window timings below were re-verified frame-by-frame
       // against the real embed (Playwright + the YouTube IFrame API, screenshotting every
@@ -518,13 +416,13 @@ surrounded by predators.`,
       //   5-17.5s footage-wise; the whip-pan cut to a Titan Ward of Dawn bubble forming happens
       //   at ~17.5s (confirmed via 0.5s-resolution frame capture — 17.0s is still clearly the
       //   Warlock's caped back, 18.5s is already the Titan crouched inside the bubble).
-      // - Kat Cosgrove's plate is deliberately cued 1s ahead of the frame-verified footage cut,
-      //   at 16.5s (explicit user request, confirmed 2026-07-15: her nameplate should "come
-      //   forward"). Bob Killen's window is shortened to match (5-16.5s) so the two plates
-      //   stay adjacent rather than overlapping — neither has a `position`, so two simultaneous
-      //   cues here would stack on top of each other instead of rendering side-by-side. Her
-      //   plate now runs 16.5-24.5s. This is an intentional exception to frame-accurate cueing —
-      //   do not "fix" the boundary back to 17.5 without a fresh user request.
+      // - Kat Cosgrove's plate is deliberately cued ahead of the frame-verified footage cut,
+      //   at 14.5s (explicit user request, 2026-07-18: her plate replaces Bob's with a quick
+      //   fade instead of overlapping). Bob Killen's window is shortened to match (5-14.5s) —
+      //   neither has a `position`, so two simultaneous cues here would stack on top of each
+      //   other instead of rendering side-by-side. Her plate now runs 14.5-24.5s. This is an
+      //   intentional exception to frame-accurate cueing — do not "fix" the boundary back to
+      //   17.5 without a fresh user request.
       // - Kaslin Fields' Arc Warlock lightning duel runs the full 38-48s (previously cut off at
       //   40s, well before the footage itself ends).
       // - Laura Santamaria's Solar Hunter window (70.5-77s) was already correct.
@@ -569,13 +467,18 @@ surrounded by predators.`,
       alternateMaxDuration: 120.2,
       burnedInCaptions: buildDestinyCaptionCues(),
       overlays: [
-        { text: 'Void Warlock — Bob Killen — Reconciler of the Plane', start: 5, end: 16.5 },
-        { text: 'Harbinger Titan — Kat Cosgrove — Defender Queen of the Lost', start: 14.5, end: 24.5 },
-        { text: 'Arc Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 },
-        { text: 'Fighting for Something Greater', start: 48, end: 70.5, nameplateTitle: '#nova4ever' },
-        { text: 'Solar Hunter — Laura Santamaria — Paragon to the Order of 7', start: 70.5, end: 77 },
-        { text: 'Strand Warlock — Christoph Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left', leader: true },
-        { text: 'Behemoth Titan — Natali Vlatko — Punch first, document later.', start: 87.5, end: 96, position: 'right', raised: true },
+        { text: 'Voidwalker Warlock — Bob Killen — Reconciler of the Plane', start: 5, end: 14.5, trustee: true },
+        { text: 'Sentinel Titan — Kat Cosgrove — Defender Queen of the Lost', start: 14.5, end: 24.5 },
+        { text: 'Stormcaller Warlock — Kaslin Fields — Rage of the Paradox', start: 38, end: 48 },
+        // #nova4ever easter egg: the default "Fighting for something greater" status briefly
+        // glitches out to the hashtag a few times during the 48-70.5 montage, then snaps back.
+        { text: '#nova4ever', start: 52, end: 52.45, nameplateTitle: '#nova4ever', statusOnly: true, glitch: true },
+        { text: '#nova4ever', start: 60.6, end: 61.05, nameplateTitle: '#nova4ever', statusOnly: true, glitch: true },
+        { text: '#nova4ever', start: 68.1, end: 68.55, nameplateTitle: '#nova4ever', statusOnly: true, glitch: true },
+        { text: 'Gunslinger Hunter — Laura Santamaria — The Order of Seven', start: 70.5, end: 77 },
+        { text: 'Broodweaver Warlock — Christoph Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left', leader: true },
+        { text: 'Behemoth Titan — Natali Vlatko — Shipwright of Kubernetes', start: 87.5, end: 96, position: 'right', raised: true },
+        { text: 'Follow the path, we\'ve got your back', start: 106.5, end: 121.5, nameplateDetail: 'Legends Sought', nameplateTitle: 'Follow the path, we\'ve got your back', statusOnly: true },
       ],
     },
   ] as const

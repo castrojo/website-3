@@ -5,6 +5,7 @@ KDE Plasma Couplings: ENGAGED
 Mechaphippy Deployment: [UNAUTHORIZED]
 M2 Status: [ Unknown ]
 Field Medical Exoskeleton: [ Missing ]
+---
 TARGET ACQUIRED: GOSPO, KYLE. Earth
 Kube of Destiny location: Earth
 Projected Joining: Salt Lake City, Utah, Circa 2026

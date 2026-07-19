@@ -6,10 +6,10 @@ const [width, height] = (process.env.WOLVES_VIEWPORT ?? '1440x900').split('x').m
 const VIEWPORT = { width, height }
 const SCREENSHOT_DIR = process.env.WOLVES_SCREENSHOT_DIR
 
-const INTRO_DURATION = 213.5
-const OVERALL_DURATION = 2317.5
-const PART_VII_START = 2046.5
-const DESTINY_SEEK_ELAPSED = 156
+const INTRO_DURATION = 119.5
+const OVERALL_DURATION = 1952.5
+const PART_VII_START = 1718.5
+const DESTINY_SEEK_ELAPSED = 62
 
 let passed = 0
 let failed = 0
@@ -90,7 +90,6 @@ try {
 
   await page.addInitScript(() => {
     const durations = {
-      EB3IokHelRk: 94,
       BV3BZKbpBns: 123.221,
       BKm0TPqeOjY: 120.221,
       LASru9j0oIc: 424,
@@ -203,12 +202,12 @@ try {
     }
   })
   assertWithin('Lobby title uses theater-scale typography', lobbyMetrics.titleFontSize, width < 600 ? 44 : 72, 140)
-  assertWithin('Lobby brand label scales up with the title', lobbyMetrics.brandFontSize, width < 600 ? 14 : 15, 24)
+  assertWithin('Lobby brand label scales up with the title', lobbyMetrics.brandFontSize, width < 600 ? 14 : 15, 28)
   assert('Lobby title fits inside the frame', lobbyMetrics.titleFits, true)
   assert('Lobby brand label fits inside the frame', lobbyMetrics.brandFits, true)
   await capture(page, '01-lobby')
 
-  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION/i }).click()
+  await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION|MEET YOUR TEAMMATES/i }).click()
   await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 10_000 })
 
   const introTelemetry = await page.locator('.wc-widget').evaluate((widget) => {
@@ -222,7 +221,7 @@ try {
   assertWithin('Intro footer stays within the 140px budget', introTelemetry.height, 0, 140)
   assert('Intro telemetry stays visible', introTelemetry.telemetryVisible, true)
   assertTruthy('Intro telemetry shows the deployment label', introTelemetry.text.includes('DEPLOYMENT: five-years-of-universal-blue'))
-  await capture(page, '02-intro-prologue')
+  await capture(page, '02-intro-destiny')
 
   await clickOverallRatio(page, (INTRO_DURATION + 20) / OVERALL_DURATION)
   await page.waitForSelector('.wc-trackzero-grid', { state: 'visible', timeout: 10_000 })
@@ -255,7 +254,7 @@ try {
   assertTruthy('Part I still renders a grid template', partIMetrics.templateColumns.length > 0)
   const partISeek = await page.evaluate((overallDuration) => {
     const progressRect = document.querySelector('.wc-widget-progress')?.getBoundingClientRect()
-    const player = window.__mockWolvesPlayers.find(entry => entry.videoId === 'LASru9j0oIc')
+    const player = [...window.__mockWolvesPlayers].reverse().find(entry => entry.videoId === 'LASru9j0oIc')
     return {
       currentTime: player?.currentTime ?? 0,
       tolerance: progressRect ? overallDuration / progressRect.width : Infinity,
@@ -272,7 +271,7 @@ try {
   )
   const partVIISeek = await page.evaluate((overallDuration) => {
     const progressRect = document.querySelector('.wc-widget-progress')?.getBoundingClientRect()
-    const player = window.__mockWolvesPlayers.find(entry => entry.videoId === 'rYkYLIYvI18')
+    const player = [...window.__mockWolvesPlayers].reverse().find(entry => entry.videoId === 'rYkYLIYvI18')
     return {
       currentTime: player?.currentTime ?? 0,
       tolerance: progressRect ? overallDuration / progressRect.width : Infinity,
@@ -287,7 +286,7 @@ try {
   }))
   assertWithin('Part VII footer stays within the 140px budget', partVIITelemetry.height, 0, 140)
   assertTruthy('Part VII telemetry still shows the deployment label', partVIITelemetry.text.includes('DEPLOYMENT: five-years-of-universal-blue'))
-  assert('Part VII deployment percent reflects overall progress', partVIITelemetry.valueNow, '89')
+  assert('Part VII deployment percent reflects overall progress', partVIITelemetry.valueNow, '88')
   await capture(page, '04-part-vii')
 
   await clickOverallRatio(page, DESTINY_SEEK_ELAPSED / OVERALL_DURATION)
@@ -295,7 +294,7 @@ try {
   assert('Destiny voice-over toggle is visible after seeking back into the intro', await page.getByLabel('Ikora voice over').isVisible(), true)
   const destinySeek = await page.evaluate((overallDuration) => {
     const progressRect = document.querySelector('.wc-widget-progress')?.getBoundingClientRect()
-    const player = window.__mockWolvesPlayers.find(entry => entry.videoId === 'BV3BZKbpBns')
+    const player = [...window.__mockWolvesPlayers].reverse().find(entry => entry.videoId === 'BV3BZKbpBns')
     return {
       currentTime: player?.currentTime ?? 0,
       tolerance: progressRect ? overallDuration / progressRect.width : Infinity,
@@ -308,7 +307,7 @@ try {
     text: widget.textContent ?? '',
   }))
   assertWithin('Destiny intro footer stays within the 140px budget', destinyTelemetry.height, 0, 140)
-  assertWithin('Destiny intro deployment percent reflects the overall intro/cinematic timeline', Number(destinyTelemetry.valueNow), 6, 7)
+  assertWithin('Destiny intro deployment percent reflects the overall intro/cinematic timeline', Number(destinyTelemetry.valueNow), 3, 4)
   assertTruthy('Destiny intro telemetry remains visible on the shared widget', destinyTelemetry.text.includes('DEPLOYMENT: five-years-of-universal-blue'))
   await capture(page, '05-intro-destiny')
 }
