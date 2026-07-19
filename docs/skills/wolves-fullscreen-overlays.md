@@ -56,6 +56,8 @@ Routine Wolves content uses `wolves-content-maintenance.md`. Unapproved visual w
 - Keep fixed media from collapsing adjacent text columns; inspect computed grid columns and bounds.
 - Theater typography is owned by `docs/wolves-maintenance.md`; never shrink type to fit copy.
 - For a frozen visual recovery, preserve the current player path and its tests; add targeted coverage for the documented element and transplant only the matching template/CSS hunks.
+- When a leader cue is also a trustee, exclude leader plates from every trustee color selector so the complete gold leader treatment takes precedence while the trustee label remains intact.
+- Pre-decode every Guardian companion image when the intro overlay mounts; a large asset such as Alamo must never perform its first decode in Natali's live cue.
 
 ## Common Rationalizations
 

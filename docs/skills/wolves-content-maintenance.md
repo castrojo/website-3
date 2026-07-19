@@ -37,10 +37,11 @@ Fullscreen overlay engineering uses `wolves-fullscreen-overlays.md`. Any other W
    alone may be unreachable.
 6. Never hand-edit `src/components/wolves/wallpapers-list.ts`.
 7. Preserve Track 0, timeline anchors, fixed slide windows, playlist order, and gallery shuffle rules exactly as documented.
-8. Chapter-transition `transitionLore` conversations stay authored in `src/config/wolves-cinematic.ts` and drive the transition sound effects, but the overlay renders the terminal block instead; do not restore the conversations to the overlay without explicit authorization.
-9. Every shot plays exactly once in the Track 0 slideshow. The generator collapses byte-identical wallpaper files to one manifest entry; never add a second copy of an existing shot under a new filename expecting both to play — give the curated copy its `curatedTitles` entry and let the dedupe pick the survivor. Shortfalls in the finale beat barrage are backfilled from the CNCF feed, never by repeating local slides.
-10. For the Comic Hero QR rotation, compare rendered candidate artwork rather than filenames. Include one high-quality representative of each distinct visual; reject pose duplicates and guardian-bond artwork, even if their files differ.
-11. Load `build-verify-deploy.md` and complete every Wolves-specific check from the canonical reference.
+8. For an explicitly owner-approved Track 0 pacing recovery, make the music authoritative over slideshow coverage. Use only measured section boundaries and `trackZeroBeatCuts()` tiers, assert allocations by beat index rather than a fixed duration range, carry unscheduled local people into later tracks, and capture the affected browser boundary.
+9. Chapter-transition `transitionLore` conversations stay authored in `src/config/wolves-cinematic.ts` and drive the transition sound effects, but the overlay renders the terminal block instead; do not restore the conversations to the overlay without explicit authorization.
+10. Every selected Track 0 shot plays once. The generator collapses byte-identical wallpaper files to one manifest entry; never add a second copy of an existing shot under a new filename expecting both to play — give the curated copy its `curatedTitles` entry and let the dedupe pick the survivor. Unscheduled local people carry forward to the later-track gallery; never backfill the music-authoritative barrage from the CNCF feed.
+11. For the Comic Hero QR rotation, compare rendered candidate artwork rather than filenames. Include one high-quality representative of each distinct visual; reject pose duplicates and guardian-bond artwork, even if their files differ. Record each source image's alpha-content bounds in its `contentFrame` so the visible dinosaur, not transparent canvas padding, determines its scale.
+12. Load `build-verify-deploy.md` and complete every Wolves-specific check from the canonical reference.
 
 ## Wallpaper Weight Budget
 

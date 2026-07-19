@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { wallpapers } from '../components/wolves/wallpapers-list'
 import WolvesComicReader from '../components/wolves/WolvesComicReader.vue'
+import { TRACK_ZERO_SECTIONS } from '../data/wolves-track-zero-beats'
 import { trackZeroFastFinalePhotoIds } from '../data/wolves-track-zero-slides'
 
 const source = {
@@ -134,11 +135,11 @@ describe('wolvesComicReader', () => {
     expect(srcs.some(src => src.includes('kubecon-55177109118.webp'))).toBe(true)
   })
 
-  it('holds the Maintainer Summit finale image from Become Legend through Track 0 completion', async () => {
+  it('holds the Maintainer Summit finale image after the paced barrage through Track 0 completion', async () => {
     const wrapper = mount(WolvesComicReader, {
       props: {
         trackIndex: 0,
-        playlistCurrentTime: 408,
+        playlistCurrentTime: 414.801,
       },
     })
 
@@ -293,7 +294,7 @@ describe('wolvesComicReader', () => {
     expect(archiveWrapper.get('.wallpaper-theater-caption.is-title-only').text()).toContain('The Cult Psychology of Kubernetes')
   })
 
-  it('uses each Track 0 wallpaper once', async () => {
+  it('keeps the music-authoritative Track 0 selection unique', async () => {
     const wrapper = mount(WolvesComicReader, {
       props: {
         trackIndex: 0,
@@ -322,9 +323,9 @@ describe('wolvesComicReader', () => {
     }
 
     expect(new Set(shownImages).size).toBe(shownImages.length)
-    expect(new Set(shownImages).size).toBe(wallpapers.length + missingReservedPaths.length)
-    expect([...reservedFirstSeenAt.keys()].sort()).toEqual(reservedPaths.sort())
-    expect([...reservedFirstSeenAt.values()].every(time => time >= 359 && time < 408)).toBe(true)
+    expect(new Set(shownImages).size).toBeLessThan(wallpapers.length + missingReservedPaths.length)
+    expect(shownImages.some(image => image.includes('wolves/showcase/claw.gif'))).toBe(false)
+    expect([...reservedFirstSeenAt.values()].every(time => time >= 359 && time < 408.2)).toBe(true)
   })
 
   it('keeps every photo in a later-track shuffle available only once', async () => {
@@ -357,7 +358,7 @@ describe('wolvesComicReader', () => {
     await wrapper.setProps({ trackIndex: 1, playlistCurrentTime: 0 })
 
     const firstTrackStart = galleryCaption(wrapper)
-    expect(firstTrackStart).toContain('CNCF STREAM //')
+    expect(firstTrackStart).toContain('BLUEFIN SHOWCASE //')
 
     await wrapper.setProps({ playlistCurrentTime: 10 })
     const secondTrackOnePhoto = galleryCaption(wrapper)
@@ -367,7 +368,6 @@ describe('wolvesComicReader', () => {
     await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 10 })
     await flushPromises()
     await wrapper.setProps({ playlistCurrentTime: 0 })
-    expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
     expect(galleryCaption(wrapper)).not.toBe(firstTrackStart)
     expect(galleryCaption(wrapper)).not.toBe(secondTrackOnePhoto)
   })
@@ -433,7 +433,7 @@ describe('wolvesComicReader', () => {
     expect(activeTimelineImage(wrapper)).not.toContain('55164222671_32d7ace307_c.jpg')
   })
 
-  it('does not restart a later-track shuffle after its final photo', async () => {
+  it('keeps later-track carry-forward candidates unique', async () => {
     const photos = [
       { id: 'photo-a', server: '1', secret: 'a', title: 'Photo A' },
       { id: 'photo-b', server: '1', secret: 'b', title: 'Photo B' },
@@ -456,11 +456,9 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    await wrapper.setProps({ playlistCurrentTime: 16 })
-    const finalCaption = galleryCaption(wrapper)
-
-    await wrapper.setProps({ playlistCurrentTime: 24 })
-    expect(galleryCaption(wrapper)).toBe(finalCaption)
+    const ids = ((wrapper.vm as any).shuffledLaterTrackPhotos as Array<{ id: string }>)
+      .map(photo => photo.id)
+    expect(new Set(ids).size).toBe(ids.length)
   })
 
   it('excludes Track 0 People Flickr photos from later tracks', async () => {
@@ -514,7 +512,7 @@ describe('wolvesComicReader', () => {
     expect(galleryCaption(wrapper)).not.toContain('Track 0 duplicate')
   })
 
-  it('does not show local images for later tracks when Flickr is unavailable', async () => {
+  it('carries unshown Track 0 people into later tracks when Flickr is unavailable', async () => {
     mockGalleryData(
       [
         coverTrack,
@@ -535,8 +533,8 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    expect(wrapper.find('.flickr-caption').exists()).toBe(false)
-    expect(wrapper.findAll('.flickr-img')).toHaveLength(0)
+    expect(wrapper.find('.flickr-caption').exists()).toBe(true)
+    expect(wrapper.get('.flickr-caption').text()).toContain('BLUEFIN SHOWCASE //')
   })
 
   it('switches an active later track to Flickr when the cache finishes loading', async () => {
@@ -576,14 +574,14 @@ describe('wolvesComicReader', () => {
     })
     await flushPromises()
 
-    expect(wrapper.find('.flickr-caption').exists()).toBe(false)
+    expect(wrapper.find('.flickr-caption').exists()).toBe(true)
 
     resolveFlickr(new Response(JSON.stringify(galleryPhotos)))
     await flushPromises()
-    expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
+    expect(((wrapper.vm as any).laterTrackPhotos as Array<{ id: string }>).some(photo => photo.id === 'photo-a')).toBe(true)
 
     await wrapper.setProps({ trackIndex: 2, playlistCurrentTime: 0 })
-    expect(galleryCaption(wrapper)).toContain('CNCF STREAM //')
+    expect(((wrapper.vm as any).laterTrackPhotos as Array<{ id: string }>).some(photo => photo.id === 'photo-b')).toBe(true)
   })
 
   it('doubles short BPM beat groups to a 10-second hold', async () => {
@@ -869,7 +867,7 @@ describe('wolvesComicReader', () => {
     }
   })
 
-  it('plays each Track 0 shot once and backfills the beat barrage from the CNCF feed', async () => {
+  it('limits the pre-legend barrage to the music-authoritative slide budget', async () => {
     const feed = Array.from({ length: 200 }, (_, index) => ({
       id: `feed-${index}`,
       server: 's',
@@ -889,24 +887,17 @@ describe('wolvesComicReader', () => {
       endTime: number
       duration: number
     }>
-    const ids = slides.map(slide => slide.id)
-    expect(new Set(ids).size, 'every Track 0 slide id must appear exactly once').toBe(ids.length)
-
     const remoteBackfill = slides.filter(slide => !slide.isLocal)
-    expect(remoteBackfill.length).toBeGreaterThan(0)
-    expect(remoteBackfill.length).toBeLessThanOrEqual(24)
-    for (const slide of remoteBackfill) {
-      expect(slide.startTime).toBeGreaterThanOrEqual(359)
-      expect(slide.endTime).toBeLessThanOrEqual(406)
-    }
-    // With the backfill in place the barrage stays a per-beat cut, never a
-    // slow uniform spread of a short pool.
-    const barrageSlides = slides.filter(slide => slide.startTime >= 359.2 && slide.endTime <= 405.8)
-    for (const slide of barrageSlides) {
-      expect(slide.duration).toBeLessThan(2)
-    }
+    expect(remoteBackfill).toHaveLength(0)
+    const barrageSlides = slides.filter(slide =>
+      slide.startTime >= TRACK_ZERO_SECTIONS.bkEnd
+      && slide.endTime <= TRACK_ZERO_SECTIONS.finaleStart)
+    expect(barrageSlides).toHaveLength(30)
+    const finaleSlide = slides.find(slide => slide.endTime === 423)
+    expect(finaleSlide?.startTime).toBe(TRACK_ZERO_SECTIONS.finaleStart)
 
-    // Reserved backfill photos are held out of the later-track rotations.
+    // External backfill is not consumed by Track 0 and remains available to
+    // later-track gallery rotations.
     const laterWrapper = mount(WolvesComicReader, {
       props: { trackIndex: 1, playlistCurrentTime: 0 },
     })
@@ -914,12 +905,10 @@ describe('wolvesComicReader', () => {
     const laterIds = new Set(
       ((laterWrapper.vm as any).laterTrackPhotos as Array<{ id: string }>).map(photo => photo.id),
     )
-    for (const slide of remoteBackfill) {
-      expect(laterIds.has(slide.id), `${slide.id} plays in Track 0 and must not repeat later`).toBe(false)
-    }
+    expect(laterIds.size).toBeGreaterThan(0)
   })
 
-  it('renders Clyde with the compact caption pill, not a theater banner', async () => {
+  it('carries Clyde into later tracks instead of forcing it into the pre-legend barrage', async () => {
     mockGalleryData([coverTrack])
     const wrapper = mount(WolvesComicReader, {
       props: { trackIndex: 0, playlistCurrentTime: 0 },
@@ -928,11 +917,9 @@ describe('wolvesComicReader', () => {
 
     const clydeSlide = ((wrapper.vm as any).timelineSlides as Array<{ id: string, startTime: number }>)
       .find(slide => slide.id === 'wolves/people/interview-clyde-seepersad-linux-foundation.webp')
-    expect(clydeSlide).toBeDefined()
-    await wrapper.setProps({ playlistCurrentTime: clydeSlide!.startTime + 0.1 })
-
-    expect(wrapper.find('.wallpaper-theater-caption.is-title-only').exists()).toBe(false)
-    expect(wrapper.get('.flickr-caption').text()).toContain('Clyde Seepersad, Linux Foundation')
-    expect(wrapper.get('.flickr-caption').text()).not.toContain('AI Is Not Killing Tech Jobs')
+    expect(clydeSlide).toBeUndefined()
+    await wrapper.setProps({ trackIndex: 1, playlistCurrentTime: 0 })
+    expect(((wrapper.vm as any).laterTrackPhotos as Array<{ id: string }>)
+      .some(photo => photo.id === 'wolves/people/interview-clyde-seepersad-linux-foundation.webp')).toBe(true)
   })
 })

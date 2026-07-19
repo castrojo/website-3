@@ -402,14 +402,14 @@ try {
   assert(
     'Unified lore column follows the authored viewport state',
     unifiedLoreMetrics.columnDisplay,
-    width < 1024 ? 'none' : 'block',
+    width < 1024 ? 'none' : 'grid',
   )
   assert('Unified lore root uses flex layout', unifiedLoreMetrics.rootDisplay, 'flex')
   assert('Unified lore feed uses flex layout', unifiedLoreMetrics.feedDisplay, 'flex')
   assert('Unified lore feed fills available height', unifiedLoreMetrics.feedFlexGrow, '1')
   assert('Unified lore feed permits shrinking', unifiedLoreMetrics.feedMinHeight, '0px')
   assertTruthy('Unified lore record retains vertical scrolling', ['auto', 'scroll'].includes(unifiedLoreMetrics.recordOverflowY))
-  assert('Unified dossier index stays in the column flow', unifiedLoreMetrics.directoryDisplay, 'flex')
+  assert('Unified dossier directory stays removed from the selected-record view', unifiedLoreMetrics.directoryDisplay, '')
   assert('Unified lore feed stays inside the lore column', unifiedLoreMetrics.withinColumn, true)
   assert('Legacy split lore tabs are removed', unifiedLoreMetrics.oldTabsPresent, false)
 
@@ -615,6 +615,20 @@ try {
   await assertSignal('Titanfall signal remains the locked finale handoff', 'Bazzite Mk6 Units: Prepare for Titanfall')
   assertTruthy('Lower thesis keeps its authored finale text', (await page.locator('.wc-thesis').textContent())?.includes('Become Legend'))
   await captureStage(page, 'track-zero-composites')
+
+  await seekStage(408.137)
+  const finaleImage = await page.locator('.flickr-photo-layer').evaluateAll((layers) => {
+    const activeLayer = layers.find(layer => getComputedStyle(layer).zIndex === '2')
+    return activeLayer?.querySelector('img')?.getAttribute('src')
+  })
+  assertTruthy('Music-authoritative barrage hands off to the Maintainer Summit finale image at 408.137', finaleImage?.includes('kubecon-55164466314.webp'))
+  await seekStage(422.99)
+  const heldFinaleImage = await page.locator('.flickr-photo-layer').evaluateAll((layers) => {
+    const activeLayer = layers.find(layer => getComputedStyle(layer).zIndex === '2')
+    return activeLayer?.querySelector('img')?.getAttribute('src')
+  })
+  assertTruthy('Maintainer Summit finale image holds through the Track 0 handoff', heldFinaleImage?.includes('kubecon-55164466314.webp'))
+  await captureStage(page, 'track-zero-paced-finale')
 
   await page.getByLabel('Next').click()
   await page.waitForFunction(() =>

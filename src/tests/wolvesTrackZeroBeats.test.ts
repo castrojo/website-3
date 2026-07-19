@@ -31,9 +31,9 @@ describe('track zero measured beat grid', () => {
     expect(TRACK_ZERO_SECTIONS.pivotalEnd).toBeGreaterThan(346)
     expect(TRACK_ZERO_SECTIONS.pivotalEnd).toBeLessThanOrEqual(351)
     expect(TRACK_ZERO_SECTIONS.bkEnd).toBeGreaterThan(351)
-    // Barrage stays inside the reserved finale window [359, 408).
+    // The music-authoritative barrage resolves on the Become Legend cue.
     expect(TRACK_ZERO_SECTIONS.bkEnd).toBeGreaterThanOrEqual(359)
-    expect(TRACK_ZERO_SECTIONS.finaleStart).toBeLessThan(408)
+    expect(TRACK_ZERO_SECTIONS.finaleStart).toBe(408.137)
   })
 
   it('returns no cuts for an empty pool', () => {
@@ -70,20 +70,37 @@ describe('track zero measured beat grid', () => {
     expect(cuts[1]).toBeGreaterThan(19.99)
   })
 
-  it('assigns one cut per measured beat through the barrage', () => {
+  it('allocates a restrained barrage that resolves on the legend cue', () => {
     const cuts = trackZeroBeatCuts(
       TRACK_ZERO_SECTIONS.bkEnd,
       TRACK_ZERO_SECTIONS.finaleStart,
-      116,
-      [2, 1],
+      30,
+      [8, 4, 2],
     )
-    expect(cuts.length).toBe(116)
-    const durations = cuts.map((cut, index) =>
-      cut - (index === 0 ? TRACK_ZERO_SECTIONS.bkEnd : cuts[index - 1]))
-    for (const duration of durations) {
-      expect(duration).toBeGreaterThan(0.3)
-      expect(duration).toBeLessThan(1.0)
-    }
+    expect(cuts.length).toBe(30)
+    const cutIndices = cuts.map(cut => TRACK_ZERO_BEAT_TIMES.indexOf(cut))
+    const startIndex = TRACK_ZERO_BEAT_TIMES.indexOf(TRACK_ZERO_SECTIONS.bkEnd)
+    expect(cutIndices.slice(0, 16).map((cut, index) =>
+      cut - (index === 0 ? startIndex : cutIndices[index - 1]))).toEqual([
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      4,
+      4,
+      2,
+      2,
+      2,
+      2,
+    ])
+    expect(cutIndices.slice(16).every((cut, index) => cut - cutIndices[index + 15] === 2)).toBe(true)
+    expect(cuts[cuts.length - 1]).toBe(TRACK_ZERO_SECTIONS.finaleStart)
   })
 
   it('falls back to a uniform split when the pool exceeds the beat budget', () => {

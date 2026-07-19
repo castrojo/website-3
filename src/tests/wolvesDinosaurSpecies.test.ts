@@ -12,7 +12,7 @@ describe('wolves dinosaur species', () => {
       'utahraptor': 'https://docs.projectbluefin.io/dinosaurs/#-redacted--1',
       'torosaurus': 'https://docs.projectbluefin.io/dinosaurs/#-redacted--2',
       'bob-torosaurus': 'https://docs.projectbluefin.io/dinosaurs/#-redacted--2',
-      'kaslin-torosaurus': 'https://docs.projectbluefin.io/dinosaurs/#-redacted--2',
+      'kentrosaurus': 'https://docs.projectbluefin.io/dinosaurs/#-redacted--2',
       'alamosaurus': 'https://docs.projectbluefin.io/dinosaurs/#-redacted--3',
     } as const
 
@@ -29,7 +29,7 @@ describe('wolves dinosaur species', () => {
     }
   })
 
-  it('registers Bob and Kaslin Torosaurus artwork separately under the same cited species', () => {
+  it('registers Katerina as a Kentrosaurus with her authored artwork', () => {
     expect(dinosaurSpecies).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: 'bob-torosaurus',
@@ -37,8 +37,8 @@ describe('wolves dinosaur species', () => {
         artwork: './characters/bob-torosaurus.webp',
       }),
       expect.objectContaining({
-        id: 'kaslin-torosaurus',
-        scientificName: 'Torosaurus latus',
+        id: 'kentrosaurus',
+        scientificName: 'Kentrosaurus aethiopicus',
         artwork: './characters/header/katharina.webp',
       }),
     ]))

@@ -1087,10 +1087,10 @@ export const TRACK_ZERO_SECTIONS = {
   /** bketelsen freeze end / beat barrage start (beat 889). */
   bkEnd: 359.166,
   /**
-   * Last measured accent of the barrage; finale hold rides the ring-out
-   *  and fade to silence (silence by ~419.5s) through the 423s handoff.
+   * Measured beat aligned to the Become Legend cue; the finale hold rides the
+   * remaining ring-out and fade to silence through the 423s handoff.
    */
-  finaleStart: 405.745,
+  finaleStart: 408.137,
 } as const
 
 function nearestBeatIndex(time: number): number {

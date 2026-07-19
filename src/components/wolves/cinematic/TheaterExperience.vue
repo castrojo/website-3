@@ -220,7 +220,7 @@ onBeforeUnmount(() => {
           data-trackzero-video-sidecar
         >
           <h3 class="wc-trackzero-video-title font-mono">
-            [ SIGNAL RELAY - EARTH ]
+            [ SIGNAL RELAY - EARTH - COMPANIONS IDENTIFIED ]
           </h3>
           <div class="wc-trackzero-video-frame">
             <iframe

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { YoutubePlayer } from '@/composables/useYoutubeIframeApi'
 import type { IntroOverlayTextCue, IntroStatusPayload, IntroVideoSpec } from '@/data/wolves-intro-sequence'
-import { computed, nextTick, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
 import qrMakeMeAComic from '@/assets/svg/qr-makemeacomic.svg'
 import { getYoutubePlayerConstructor, getYoutubePlayerState, loadYoutubeIframeApi } from '@/composables/useYoutubeIframeApi'
 import { getActiveComicHeroShot } from '@/data/wolves-comic-hero-shots'
@@ -208,6 +208,28 @@ function guardianDinosaurCompanion(guardianName: string): GuardianDinosaurCompan
     artwork: `${baseUrl}${species.artwork.slice(2)}`,
   }
 }
+
+function predecodeGuardianCompanionArtwork() {
+  const preloadedArtwork = new Set<string>()
+
+  for (const bond of wolvesGuardianDinosaurBonds) {
+    const companion = guardianDinosaurCompanion(bond.guardianName)
+    if (!companion || preloadedArtwork.has(companion.artwork)) {
+      continue
+    }
+
+    preloadedArtwork.add(companion.artwork)
+    const image = new Image()
+    image.src = companion.artwork
+    void image.decode().catch((error: unknown) => {
+      console.warn(`Unable to predecode guardian companion artwork: ${companion.artwork}`, error)
+    })
+  }
+}
+
+onMounted(() => {
+  predecodeGuardianCompanionArtwork()
+})
 
 /**
  * The Prologue/Epilogue's somber, BPM-paced fade only applies to text-card segments; the
@@ -781,13 +803,19 @@ defineExpose({
             <p class="wolves-intro-overlay-title-card-line">
               {{ activeComicTitleCardCue.text }}
             </p>
-            <img
-              v-if="activeComicHeroShot"
-              :src="`${baseUrl}${activeComicHeroShot.src}`"
-              :alt="activeComicHeroShot.label"
-              :data-comic-hero-shot="activeComicHeroShot.id"
-              class="wolves-intro-overlay-title-card-art"
-            >
+            <div v-if="activeComicHeroShot" class="wolves-intro-overlay-title-card-art-frame">
+              <img
+                :src="`${baseUrl}${activeComicHeroShot.src}`"
+                :alt="activeComicHeroShot.label"
+                :data-comic-hero-shot="activeComicHeroShot.id"
+                :style="{
+                  width: `${activeComicHeroShot.contentFrame.width}%`,
+                  left: `${activeComicHeroShot.contentFrame.left}%`,
+                  top: `${activeComicHeroShot.contentFrame.top}%`,
+                }"
+                class="wolves-intro-overlay-title-card-art"
+              >
+            </div>
             <p
               class="wolves-intro-overlay-title-card-line wolves-intro-overlay-title-card-line-small"
               data-comic-hero-paid-artists
@@ -869,10 +897,7 @@ defineExpose({
               <p class="wolves-guardian-plate-class">
                 {{ parseGuardianCue(cue.text)!.guardianClass }}
               </p>
-              <p
-                class="wolves-guardian-plate-name"
-                :class="{ 'wolves-guardian-plate-name-gold': cue.goldName }"
-              >
+              <p class="wolves-guardian-plate-name">
                 {{ parseGuardianCue(cue.text)!.name }}
               </p>
               <p class="wolves-guardian-plate-title">
@@ -1244,14 +1269,19 @@ defineExpose({
   min-width: 0;
 }
 
+.wolves-intro-overlay-title-card-art-frame {
+  /* This square viewport measures each source image by its visible alpha-content
+     bounds, not its transparent canvas. The title and pill remain pinned outside
+     the frame, so the hero art cannot move either text band. */
+  position: relative;
+  width: min(72vw, 42vh, 60rem);
+  aspect-ratio: 1;
+}
+
 .wolves-intro-overlay-title-card-art {
-  /* The art is the only in-flow occupant of the card's center: the title and
-     pill are pinned to the screen (position: absolute below), fully out of
-     the art's layout flow, so the cycling dinosaurs can render big and
-     resize freely without ever shifting the text. */
-  width: min(72vw, 60rem);
+  position: absolute;
+  max-width: none;
   height: auto;
-  max-height: min(42vh, 44rem);
   object-fit: contain;
   filter: drop-shadow(0 0 24px rgb(0 0 0 / 70%));
 }
@@ -1393,13 +1423,10 @@ defineExpose({
     width: 94vw;
   }
 
-  .wolves-intro-overlay-title-card-art {
+  .wolves-intro-overlay-title-card-art-frame {
     grid-column: 1;
     grid-row: 1;
-    /* Bigger art on phones too; the pinned text cannot be moved by it. */
-    width: min(48vw, 26rem);
-    height: auto;
-    max-height: 34vh;
+    width: min(48vw, 34vh, 26rem);
   }
 
   .wolves-intro-overlay-title-card-line-small {
@@ -1759,53 +1786,80 @@ defineExpose({
   color: #94a3b8;
 }
 
+/* Gilds the complete plate to signify leadership. Reserved for Christoph Blecker's
+   "First Among Equals" cue; it takes precedence over the trustee chrome. */
+.wolves-guardian-plate.wolves-guardian-plate-leader {
+  border-color: rgb(250 204 21 / 55%);
+  box-shadow: 0 0 24px rgb(250 204 21 / 20%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-burst {
+  background: radial-gradient(circle, #fff 0%, #facc15 45%, transparent 70%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-horizon {
+  background: linear-gradient(to right, transparent, #facc15 60%, #fff 100%);
+  box-shadow: 0 0 8px rgb(250 204 21 / 55%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-horizon-right {
+  background: linear-gradient(to left, transparent, #facc15 60%, #fff 100%);
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-crest {
+  filter: drop-shadow(0 0 8px rgb(250 204 21 / 70%));
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-crest-outer,
+.wolves-guardian-plate-leader .wolves-guardian-plate-crest-chevron {
+  stroke: #facc15;
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-label {
+  color: #facc15;
+}
+
+.wolves-guardian-plate-leader .wolves-guardian-plate-title {
+  color: #fde68a;
+  font-weight: 600;
+}
+
 /* Burnished silver treatment for Universal Blue trustees (Bob Killen's cue; Jorge
    Castro's Ghosts In The Mist plate mirrors it in WolvesComicReader.vue). Distinct
    from the default blue plate. */
-.wolves-guardian-plate-trustee {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) {
   border-color: rgb(203 213 225 / 55%);
   box-shadow: 0 0 24px rgb(226 232 240 / 20%);
 }
 
-.wolves-guardian-plate-trustee .wolves-guardian-plate-burst {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-burst {
   background: radial-gradient(circle, #fff 0%, #d1d5db 45%, transparent 70%);
 }
 
-.wolves-guardian-plate-trustee .wolves-guardian-plate-horizon {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-horizon {
   background: linear-gradient(to right, transparent, #d1d5db 60%, #fff 100%);
   box-shadow: 0 0 8px rgb(226 232 240 / 55%);
 }
 
-.wolves-guardian-plate-trustee .wolves-guardian-plate-horizon-right {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-horizon-right {
   background: linear-gradient(to left, transparent, #d1d5db 60%, #fff 100%);
 }
 
-.wolves-guardian-plate-trustee .wolves-guardian-plate-crest {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-crest {
   filter: drop-shadow(0 0 8px rgb(226 232 240 / 70%));
 }
 
-.wolves-guardian-plate-trustee .wolves-guardian-plate-crest-outer,
-.wolves-guardian-plate-trustee .wolves-guardian-plate-crest-chevron {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-crest-outer,
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-crest-chevron {
   stroke: #d1d5db;
 }
 
-.wolves-guardian-plate-trustee .wolves-guardian-plate-label {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-label {
   color: #e5e7eb;
 }
 
-.wolves-guardian-plate-trustee .wolves-guardian-plate-title {
+.wolves-guardian-plate-trustee:not(.wolves-guardian-plate-leader) .wolves-guardian-plate-title {
   color: #cbd5e1;
-}
-
-/* A trustee identity can remain gold while its surrounding plate retains the
-   standard trustee treatment. */
-.wolves-guardian-plate-name.wolves-guardian-plate-name-gold {
-  background: linear-gradient(to bottom, #fff7c2 0%, #facc15 60%, #ca8a04 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: none;
-  filter: none;
-  text-shadow: none;
 }
 
 /* Radial ignition flash behind the crest at the moment the plate appears. */
@@ -2035,6 +2089,4 @@ defineExpose({
 /* Permanent progress bar for the whole intro sequence (Prologue + Guardian trailer +
    Epilogue), so the runtime of the full experience is always visible, not just whichever
    segment happens to be playing. */
-/* TEMPORARY REVIEW TOOLING -- remove this whole rule block once the Prologue content pass is
-   signed off. Not part of the production intro experience. */
 </style>

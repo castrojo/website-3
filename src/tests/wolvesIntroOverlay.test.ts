@@ -129,6 +129,31 @@ describe('wolvesIntroOverlay video segments', () => {
     expect(wrapper.find('video').exists()).toBe(false)
   })
 
+  it('pre-decodes companion artwork before its guardian cue appears', async () => {
+    const images: Array<{ src: string, decode: ReturnType<typeof vi.fn> }> = []
+
+    class PreloadedImage {
+      src = ''
+      decode = vi.fn(() => Promise.resolve())
+
+      constructor() {
+        images.push(this)
+      }
+    }
+
+    vi.stubGlobal('Image', PreloadedImage)
+    mount(WolvesIntroOverlay, { props: { videos: videoOnlySequence } })
+    await flushPromises()
+
+    expect(images.map(image => image.src)).toEqual([
+      '/characters/karl.webp',
+      '/characters/alamosaurus.webp',
+      '/characters/bob-torosaurus.webp',
+      '/characters/header/katharina.webp',
+    ])
+    expect(images.every(image => image.decode.mock.calls.length === 1)).toBe(true)
+  })
+
   it('disables YouTube captions so the burned-in subtitles stay the only captions', async () => {
     mount(WolvesIntroOverlay, { props: { videos: videoOnlySequence } })
     await flushPromises()
@@ -270,7 +295,7 @@ describe('wolvesIntroOverlay video segments', () => {
 
     expect(ids).not.toEqual(expect.arrayContaining([
       'bob-torosaurus',
-      'kaslin-torosaurus',
+      'kentrosaurus',
       'karl',
       'chonky-alamo-blue',
       'chonky-alamo-vector',
@@ -294,6 +319,18 @@ describe('wolvesIntroOverlay video segments', () => {
       expect(characterKey(ids[index]), `adjacent shots ${ids[index - 1]} / ${ids[index]}`)
         .not
         .toBe(characterKey(ids[index - 1]))
+    }
+  })
+
+  it('sizes every QR hero shot from its measured visible artwork bounds', () => {
+    for (const shot of wolvesComicHeroShots) {
+      expect(shot.contentFrame).toEqual(expect.objectContaining({
+        width: expect.any(Number),
+        left: expect.any(Number),
+        top: expect.any(Number),
+      }))
+      expect(shot.contentFrame.width).toBeGreaterThan(75)
+      expect(shot.contentFrame.width).toBeLessThan(120)
     }
   })
 
@@ -840,15 +877,28 @@ describe('wolvesIntroOverlay guardian plate', () => {
     expect(overlay).not.toContain('wolves-guardian-plate-dinosaur-icon')
   })
 
-  it('keeps Christoph Blecker\'s gold trustee name sharp', () => {
+  it('renders Christoph Blecker with the complete gold leader plate treatment', () => {
     const overlay = readFileSync(resolve(process.cwd(), 'src/components/wolves/WolvesIntroOverlay.vue'), 'utf8')
-    const goldNameRule = overlay.match(/\.wolves-guardian-plate-name\.wolves-guardian-plate-name-gold \{([\s\S]*?)\n\}/)?.[1]
+    const leaderRule = overlay.match(/\.wolves-guardian-plate\.wolves-guardian-plate-leader \{([\s\S]*?)\n\}/)?.[1]
+    const leaderSelectors = [
+      '.wolves-guardian-plate-burst',
+      '.wolves-guardian-plate-horizon',
+      '.wolves-guardian-plate-crest',
+      '.wolves-guardian-plate-crest-outer',
+      '.wolves-guardian-plate-crest-chevron',
+      '.wolves-guardian-plate-label',
+      '.wolves-guardian-plate-title',
+    ]
 
-    expect(goldNameRule).toContain('animation: none')
-    expect(goldNameRule).toContain('filter: none')
-    expect(goldNameRule).toContain('text-shadow: none')
-    expect(goldNameRule).toContain('-webkit-background-clip: text')
-    expect(goldNameRule).toContain('background-clip: text')
+    expect(leaderRule).toContain('border-color: rgb(250 204 21 / 55%)')
+    expect(leaderRule).toContain('box-shadow: 0 0 24px rgb(250 204 21 / 20%)')
+    for (const selector of leaderSelectors) {
+      expect(overlay).toContain(`.wolves-guardian-plate-leader ${selector}`)
+    }
+    expect(overlay).toContain('stroke: #facc15')
+    expect(overlay).toContain('color: #facc15')
+    expect(overlay).toContain('color: #fde68a')
+    expect(overlay).not.toContain('wolves-guardian-plate-name-gold')
     expect(overlay).toContain('wolves-companion-plate-art')
     // The artwork breaks out of the chamfered card: the card carries the
     // clip-path while the art rides above it with a negative overlap.
@@ -887,6 +937,7 @@ describe('wolvesIntroOverlay guardian plate', () => {
 
     expect(wrapper.text()).toContain('Kaslin Fields')
     expect(wrapper.find('.wolves-companion-plate-name').text()).toBe('Katerina')
+    expect(wrapper.find('.wolves-companion-plate-species').text()).toBe('Kentrosaurus aethiopicus')
     expect(wrapper.find('.wolves-companion-plate-art').attributes('src')).toContain('header/katharina.webp')
   })
 

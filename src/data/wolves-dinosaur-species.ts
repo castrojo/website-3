@@ -55,8 +55,8 @@ export const dinosaurSpecies = [
     artwork: './characters/bob-torosaurus.webp',
   },
   {
-    id: 'kaslin-torosaurus',
-    scientificName: 'Torosaurus latus',
+    id: 'kentrosaurus',
+    scientificName: 'Kentrosaurus aethiopicus',
     documentationUrl: 'https://docs.projectbluefin.io/dinosaurs/#-redacted--2',
     artwork: './characters/header/katharina.webp',
   },

@@ -10,7 +10,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ghostsInTheMistOpeningSlide } from '@/data/wolves-gallery-featured'
 import { shuffleWolvesGalleryPhotos } from '@/data/wolves-gallery-shuffle'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
-import { TRACK_ZERO_SECTIONS, trackZeroBeatCuts, trackZeroBeatSpan } from '@/data/wolves-track-zero-beats'
+import { TRACK_ZERO_SECTIONS, trackZeroBeatCuts } from '@/data/wolves-track-zero-beats'
 import {
   bluefinGroupSlides,
   jonoBaconSlideId,
@@ -64,31 +64,6 @@ for (const id of curatedTrackZeroFeedPhotoIds) {
   trackZeroFlickrPhotoIds.add(id)
 }
 const flickrPhotos = ref<{ id: string, server: string, secret: string, title: string }[]>([])
-// Remote CNCF feed photos reserved to backfill the Track 0 finale beat
-// barrage (every shot plays exactly once, so the barrage tops up from the
-// feed instead of reusing local slides). Reserved ids are held out of the
-// later-track rotations below, so the reservation only engages when the
-// feed is comfortably larger than the reservation itself.
-const TRACK_ZERO_BARRAGE_BACKFILL_COUNT = 24
-const TRACK_ZERO_BARRAGE_BACKFILL_MIN_POOL = TRACK_ZERO_BARRAGE_BACKFILL_COUNT * 3
-const trackZeroBarrageBackfill = computed(() => {
-  const eligible = flickrPhotos.value.filter(photo => !trackZeroFlickrPhotoIds.has(photo.id))
-  if (eligible.length < TRACK_ZERO_BARRAGE_BACKFILL_MIN_POOL) {
-    return []
-  }
-  return deterministicShuffle(eligible, 505)
-    .slice(0, TRACK_ZERO_BARRAGE_BACKFILL_COUNT)
-    .map(photo => ({
-      id: photo.id,
-      isLocal: false,
-      path: `https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}_b.jpg`,
-      title: photo.title,
-      type: 'single' as const,
-      dayName: undefined,
-      nightName: undefined,
-      rawPhoto: photo,
-    }))
-})
 const laterTrackPhotos = ref<any[]>([])
 const shuffledLaterTrackPhotos = ref<any[]>([])
 const manifest = ref<WolvesSoundtrackManifest | null>(null)
@@ -129,7 +104,7 @@ const mixedPhotos = computed(() => {
   // 1. Local Showcase and Story wallpapers (isPeople = false)
   const localShowcase = wallpapers.filter((wp) => {
     const isPeople = wp.name?.includes('/people/') || wp.dayName?.includes('/people/') || wp.nightName?.includes('/people/')
-    return !isPeople
+    return !isPeople && !wp.name?.endsWith('.gif')
   }).map(wp => ({
     id: wp.name,
     isLocal: true,
@@ -260,7 +235,7 @@ interface TimelineSlide {
 const timelineSlides = computed<TimelineSlide[]>(() => {
   const localShowcase = wallpapers.filter((wp) => {
     const isPeople = wp.name?.includes('/people/') || wp.dayName?.includes('/people/') || wp.nightName?.includes('/people/')
-    return !isPeople
+    return !isPeople && !wp.name?.endsWith('.gif')
   }).map(wp => ({
     id: wp.name || wp.dayName || wp.nightName || '',
     isLocal: true,
@@ -548,24 +523,14 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
     currentTime = endTime
   }
 
-  // Beat barrage: one cut per measured beat (a couple of 2-beat holds up
-  // front), running to the last measured accent at ~405.7s. The local pool
-  // covers each shot exactly once, so remaining beats top up with reserved
-  // remote CNCF feed photos rather than repeating a slide.
+  // Music-authoritative barrage: enough curated shots to follow the measured
+  // build into Become Legend without forcing one-beat cuts.
   const barrageBase = [
     ...shuffledPeople.slice(buildPoolEnd),
     ...finaleSlides,
   ]
-  const barrageTarget = Math.max(
-    barrageBase.length,
-    trackZeroBeatSpan(currentTime, TRACK_ZERO_SECTIONS.finaleStart) - 2,
-  )
-  const barrageBackfill = trackZeroBarrageBackfill.value.slice(0, barrageTarget - barrageBase.length)
-  const peoplePool4 = deterministicShuffle([
-    ...barrageBase,
-    ...barrageBackfill,
-  ], 404)
-  const sec6Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.finaleStart, peoplePool4.length, [2, 1])
+  const peoplePool4 = deterministicShuffle(barrageBase, 404).slice(0, 30)
+  const sec6Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.finaleStart, peoplePool4.length, [8, 4, 2])
   peoplePool4.forEach((item, index) => {
     const endTime = sec6Cuts[index]
     result.push({
@@ -591,6 +556,24 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
   }
 
   return result
+})
+
+const trackZeroCarryForwardPhotos = computed(() => {
+  const scheduledIds = new Set(timelineSlides.value.map(slide => slide.id))
+  return wallpapers
+    .filter(wallpaper => wallpaper.name?.includes('/people/'))
+    .map(wallpaper => ({
+      id: wallpaper.name ?? '',
+      isLocal: true,
+      path: wallpaper.name,
+      title: wallpaper.title,
+      type: wallpaper.type,
+      dayName: wallpaper.dayName,
+      nightName: wallpaper.nightName,
+      fit: wallpaper.fit,
+      description: wallpaper.description,
+    }))
+    .filter(photo => !scheduledIds.has(photo.id))
 })
 
 const activeTimelineSlide = computed(() => {
@@ -727,7 +710,7 @@ watch([activeDisplayIndex, mixedPhotosToUse], ([newVal]) => {
   if (!activePhotoObj) {
     return
   }
-  if ((props.trackIndex ?? 0) > 0 && !activePhotoObj.isLocal) {
+  if ((props.trackIndex ?? 0) > 0) {
     shownLaterTrackPhotoIds.add(activePhotoObj.id)
   }
 
@@ -834,9 +817,8 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 function snapshotLaterTrackPhotos() {
-  const reservedTrackZeroIds = new Set(trackZeroBarrageBackfill.value.map(photo => photo.id))
   const remotePhotos = flickrPhotos.value
-    .filter(photo => !trackZeroFlickrPhotoIds.has(photo.id) && !reservedTrackZeroIds.has(photo.id))
+    .filter(photo => !trackZeroFlickrPhotoIds.has(photo.id))
     .map((photo) => {
       const isFeaturedOpening = photo.id === ghostsInTheMistOpeningSlide.photoId
       return {
@@ -851,17 +833,25 @@ function snapshotLaterTrackPhotos() {
         rawPhoto: photo
       }
     })
-  if (remotePhotos.length === 0) {
+  const galleryCandidates = [...trackZeroCarryForwardPhotos.value, ...remotePhotos]
+  if (galleryCandidates.length === 0) {
     shuffledLaterTrackPhotos.value = []
     shownLaterTrackPhotoIds.clear()
     laterTrackPhotos.value = []
     return
   }
 
-  const featuredOpening = remotePhotos.find(photo => photo.id === ghostsInTheMistOpeningSlide.photoId)
-  const shufflePool = remotePhotos.filter(photo => photo.id !== ghostsInTheMistOpeningSlide.photoId)
+  const featuredOpening = galleryCandidates.find(photo => photo.id === ghostsInTheMistOpeningSlide.photoId)
+  const shufflePool = galleryCandidates.filter(photo => photo.id !== ghostsInTheMistOpeningSlide.photoId)
   if (shuffledLaterTrackPhotos.value.length === 0) {
     shuffledLaterTrackPhotos.value = shuffleWolvesGalleryPhotos(shufflePool)
+  }
+  else {
+    const knownIds = new Set(shuffledLaterTrackPhotos.value.map(photo => photo.id))
+    const newPhotos = shufflePool.filter(photo => !knownIds.has(photo.id))
+    if (newPhotos.length > 0) {
+      shuffledLaterTrackPhotos.value.push(...shuffleWolvesGalleryPhotos(newPhotos))
+    }
   }
 
   const displayedPhotoIds = new Set([photoA.value?.id, photoB.value?.id])

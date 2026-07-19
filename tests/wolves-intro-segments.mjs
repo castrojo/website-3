@@ -37,6 +37,12 @@ try {
 
   await page.addInitScript(() => {
     window.__mockWolvesPlayers = []
+    window.__wolvesDecodedImages = []
+    const decode = HTMLImageElement.prototype.decode
+    HTMLImageElement.prototype.decode = function() {
+      window.__wolvesDecodedImages.push(this.src)
+      return decode.call(this)
+    }
 
     window.YT = {
       Player: class MockPlayer {
@@ -101,6 +107,7 @@ try {
 
   await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION|MEET YOUR TEAMMATES/i }).click()
   await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 10_000 })
+  await page.waitForFunction(() => window.__wolvesDecodedImages.some(src => src.endsWith('/characters/alamosaurus.webp')))
 
   async function assertNameplate(detail, label) {
     const nameplate = page.locator('.wc-intro-nameplate .wc-nameplate')
@@ -190,6 +197,24 @@ try {
   expectTruthy('Destiny player mounted', await page.locator('.wolves-intro-overlay-player').isVisible())
   await capture(page, '08-destiny-trailer')
 
+  await seekActiveDestinyPlayer(24.1)
+  const comicHeroArt = page.locator('[data-comic-hero-shot]')
+  await comicHeroArt.waitFor({ state: 'visible', timeout: 5_000 })
+  expectEqual('Comic Hero first frame', await comicHeroArt.getAttribute('data-comic-hero-shot'), 'youre-holding-it-wrong-post1')
+  expectEqual('Comic Hero art uses visible-content width', await comicHeroArt.evaluate(element => element.style.width), '97.01%')
+  expectEqual('Comic Hero art uses visible-content left offset', await comicHeroArt.evaluate(element => element.style.left), '-2.68%')
+  expectEqual('Comic Hero art uses visible-content top offset', await comicHeroArt.evaluate(element => element.style.top), '-0.17%')
+  await capture(page, '08a-comic-hero-content-frame')
+
+  const comicHeroSlotDuration = 14 / 23
+  await seekActiveDestinyPlayer(24 + (comicHeroSlotDuration * 17) + 0.01)
+  await page.waitForFunction(() =>
+    document.querySelector('[data-comic-hero-shot]')?.getAttribute('data-comic-hero-shot') === 'nest',
+  )
+  expectEqual('Comic Hero padded frame', await comicHeroArt.getAttribute('data-comic-hero-shot'), 'nest')
+  expectEqual('Comic Hero padded art uses visible-content width', await comicHeroArt.evaluate(element => element.style.width), '93.32%')
+  await capture(page, '08b-comic-hero-padded-content-frame')
+
   await seekActiveDestinyPlayer(6.2)
   await assertGuardianPair({
     name: 'Bob Killen',
@@ -210,7 +235,8 @@ try {
     artwork: 'header/katharina.webp',
   })
   expectEqual('Kaslin companion name', await page.locator('.wolves-companion-plate-name').textContent(), 'Katerina')
-  await capture(page, '10-destiny-kaslin-torosaurus')
+  expectEqual('Katerina companion species', await page.locator('.wolves-companion-plate-species').textContent(), 'Kentrosaurus aethiopicus')
+  await capture(page, '10-destiny-katerina')
 
   await seekActiveDestinyPlayer(90)
   await page.waitForFunction(() => {
@@ -232,12 +258,22 @@ try {
   const christophClasses = await page.locator('.wolves-guardian-plate').filter({ hasText: 'Christoph Blecker' }).getAttribute('class')
   expectTruthy('Christoph Blecker uses the trustee badge', christophClasses?.includes('wolves-guardian-plate-trustee'))
   expectTruthy('Christoph Blecker is classified as a leader', christophClasses?.includes('wolves-guardian-plate-leader'))
-  const christophName = page.locator('.wolves-guardian-plate').filter({ hasText: 'Christoph Blecker' })
-    .locator('.wolves-guardian-plate-name')
-  expectTruthy('Christoph Blecker has the gold name class', await christophName.getAttribute('class').then(classes => classes?.includes('wolves-guardian-plate-name-gold')))
-  const christophNameGradient = await christophName.evaluate(element => getComputedStyle(element).backgroundImage)
-  expectTruthy('Christoph Blecker keeps a gold name', christophNameGradient.includes('rgb(250, 204, 21)'))
-  expectEqual('Christoph Blecker gold name has no blur filter', await christophName.evaluate(element => getComputedStyle(element).filter), 'none')
+  const christophPlate = page.locator('.wolves-guardian-plate').filter({ hasText: 'Christoph Blecker' })
+  expectEqual(
+    'Christoph Blecker leader plate has gold border',
+    await christophPlate.evaluate(element => getComputedStyle(element).borderTopColor),
+    'rgba(250, 204, 21, 0.55)',
+  )
+  expectEqual(
+    'Christoph Blecker leader badge has gold crest',
+    await christophPlate.locator('.wolves-guardian-plate-crest-outer').evaluate(element => getComputedStyle(element).stroke),
+    'rgb(250, 204, 21)',
+  )
+  expectEqual(
+    'Christoph Blecker leader plate has gold label',
+    await christophPlate.locator('.wolves-guardian-plate-label').evaluate(element => getComputedStyle(element).color),
+    'rgb(250, 204, 21)',
+  )
   if (christophBox && alamoBox) {
     expectTruthy('Alamo shares Christoph Blecker\'s lower baseline', Math.abs((alamoBox.y + alamoBox.height) - (christophBox.y + christophBox.height)) < 8)
   }

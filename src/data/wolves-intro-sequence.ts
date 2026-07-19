@@ -105,15 +105,12 @@ export interface IntroOverlayTextCue {
   readonly highlightSubstrings?: readonly string[]
   /**
    * Renders the plate in a burnished silver treatment with a TRUSTEE // GUARDIAN
-   * label, marking Universal Blue trustees. Christoph Blecker keeps his name in
-   * gold on this plate; Jorge Castro's Ghosts In The Mist plate mirrors the
-   * standard trustee treatment in WolvesComicReader.vue.
+   * label, marking Universal Blue trustees. Jorge Castro's Ghosts In The Mist
+   * plate mirrors the standard trustee treatment in WolvesComicReader.vue.
    */
   readonly trustee?: boolean
-  /** Marks a Guardian leader without overriding a trustee plate's classification. */
+  /** Renders the complete gold leader plate treatment, reserved for Christoph Blecker. */
   readonly leader?: boolean
-  /** Keeps a trustee Guardian's displayed name gold without changing the plate treatment. */
-  readonly goldName?: boolean
   /**
    * A single exact substring of this cue's title line to render with a distinctive gold
    * shimmer/"bling" effect (`wolves-guardian-plate-bling` in `WolvesIntroOverlay.vue`), calling
@@ -431,9 +428,8 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
       //   (matching Natali's own end) at explicit user request, confirmed 2026-07-15 — his green
       //   Strand arm is still clearly visible reaching into frame through 94-96s (re-verified via
       //   frame capture), so this also corrects the plate disappearing while he's still on
-      //   screen, not just a stylistic hold. His name stays gold inside the trustee treatment,
-      //   pairing with his existing "First Among Equals" title line — reserved for him alone,
-      //   do not apply broadly. His title line carries two segments joined the same way
+      //   screen, not just a stylistic hold. His complete leader plate is gold, while its
+      //   trustee label remains authoritative. His title line carries two segments joined the same way
       //   ("First Among Equals — The North Star"), rendered on one `wolves-guardian-plate-title`
       //   line with identical styling so both read with equal visual weight. "Uncompromising
       //   Purity" and "Platinum Member" (added 2026-07-15, the latter with a `blingTitle`
@@ -473,7 +469,7 @@ export function buildIntroVideoSequence(): readonly IntroVideoSpec[] {
         { text: '#nova4ever', start: 60.6, end: 61.05, nameplateTitle: '#nova4ever', statusOnly: true, glitch: true },
         { text: '#nova4ever', start: 68.1, end: 68.55, nameplateTitle: '#nova4ever', statusOnly: true, glitch: true },
         { text: 'Gunslinger Hunter — Laura Santamaria — The Order of Seven', start: 70.5, end: 77 },
-        { text: 'Broodweaver Warlock — Christoph Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left', trustee: true, leader: true, goldName: true },
+        { text: 'Broodweaver Warlock — Christoph Blecker — First Among Equals — The North Star', start: 83, end: 96, position: 'left', trustee: true, leader: true },
         { text: 'Behemoth Titan — Natali Vlatko — Shipwright of Kubernetes', start: 87.5, end: 96, position: 'right', raised: true },
         { text: 'Follow the path, we\'ve got your back', start: 106.5, end: 121.5, nameplateDetail: 'Legends Sought', nameplateTitle: 'Follow the path, we\'ve got your back', statusOnly: true },
       ],
