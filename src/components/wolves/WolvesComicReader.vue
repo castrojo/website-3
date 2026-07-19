@@ -10,6 +10,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ghostsInTheMistOpeningSlide } from '@/data/wolves-gallery-featured'
 import { shuffleWolvesGalleryPhotos } from '@/data/wolves-gallery-shuffle'
 import { loadWolvesSoundtrack } from '@/data/wolves-soundtrack'
+import { TRACK_ZERO_SECTIONS, trackZeroBeatCuts } from '@/data/wolves-track-zero-beats'
 import {
   bluefinGroupSlides,
   jonoBaconSlideId,
@@ -297,37 +298,39 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
   const result: TimelineSlide[] = []
   let currentTime = 0
 
-  // 1. Ambient Intro [0, 42] seconds (42s total) -> 5 Day/Night wallpapers shown slowly
+  // 1. Ambient Intro [0, ~42] -> Day/Night wallpapers on long measured holds
+  // (32-beat opening hold, 24-beat holds after; cuts land on measured beats).
   const dnPool = shuffledDaynight.slice(0, 5)
-  const sec1BaseDuration = 42 / dnPool.length
-  for (const item of dnPool) {
-    const duration = sec1BaseDuration
+  const sec1Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.verseStart, dnPool.length, [32, 24])
+  dnPool.forEach((item, index) => {
+    const endTime = sec1Cuts[index]
     result.push({
       ...item,
       path: item.path || '',
       startTime: currentTime,
-      duration,
-      endTime: currentTime + duration
+      duration: endTime - currentTime,
+      endTime
     })
-    currentTime += duration
-  }
+    currentTime = endTime
+  })
 
-  // 2. Heavy Driving Verse 1 [42, 127] seconds (85s total) -> 22 normal showcase wallpapers
+  // 2. Heavy Driving Verse 1 [~42, ~127] -> 22 normal showcase wallpapers;
+  // 16-beat holds while the verse settles in, tightening to 8-beat phrases.
   const normalPool1 = shuffledNormalShowcase.slice(0, 22)
-  const sec2BaseDuration = 85 / normalPool1.length
-  for (const item of normalPool1) {
-    const duration = sec2BaseDuration
+  const sec2Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.chorusStart, normalPool1.length, [16, 8])
+  normalPool1.forEach((item, index) => {
+    const endTime = sec2Cuts[index]
     result.push({
       ...item,
       path: item.path || '',
       startTime: currentTime,
-      duration,
-      endTime: currentTime + duration
+      duration: endTime - currentTime,
+      endTime
     })
-    currentTime += duration
-  }
+    currentTime = endTime
+  })
 
-  // 3. Heavy Chorus 1 / Verse 2 / Chorus 2 [127, 229] seconds (102s total) -> 17 leftover showcase + 15 people wallpapers
+  // 3. Heavy Chorus 1 / Verse 2 / Chorus 2 [~127, ~229] -> leftover showcase + people wallpapers
   const normalPool2 = shuffledNormalShowcase.slice(22, 39)
   const peoplePool1 = shuffledPeople.slice(0, 15)
   const jonoPhoto = peoplePool1.find(item => item.id === jonoBaconSlideId)
@@ -351,32 +354,33 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
 
   if (!jonoPhoto) {
     const sec3Items = [...normalPool2, ...peoplePool1]
-    const sec3BaseDuration = 102 / sec3Items.length
-    for (const item of sec3Items) {
-      const duration = sec3BaseDuration
+    const sec3Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.bridgeStart, sec3Items.length, [8, 4])
+    sec3Items.forEach((item, index) => {
+      const endTime = sec3Cuts[index]
       result.push({
         ...item,
         path: item.path || '',
         startTime: currentTime,
-        duration,
-        endTime: currentTime + duration
+        duration: endTime - currentTime,
+        endTime
       })
-      currentTime += duration
-    }
+      currentTime = endTime
+    })
   }
   else {
-    const beforeJonoDuration = (jonoBaconTrackZeroWindow.startTime - currentTime) / normalPool2.length
-    for (const item of normalPool2) {
-      const duration = beforeJonoDuration
+    // Chorus fill on 8-beat phrases; the final cut clamps to the Jono lock start.
+    const beforeJonoCuts = trackZeroBeatCuts(currentTime, jonoBaconTrackZeroWindow.startTime, normalPool2.length, [12, 8])
+    normalPool2.forEach((item, index) => {
+      const endTime = beforeJonoCuts[index]
       result.push({
         ...item,
         path: item.path || '',
         startTime: currentTime,
-        duration,
-        endTime: currentTime + duration
+        duration: endTime - currentTime,
+        endTime
       })
-      currentTime += duration
-    }
+      currentTime = endTime
+    })
 
     result.push({
       ...jonoPhoto,
@@ -411,97 +415,106 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
       }
     }
 
-    const afterJonoDuration = (229 - currentTime) / remainingPeoplePool1.length
-    for (const item of remainingPeoplePool1) {
-      const duration = afterJonoDuration
+    // Post-hero people ride the measured 136 BPM region on 10-beat holds,
+    // tightening to 8-beat as the second chorus closes into the bridge.
+    const afterJonoCuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.bridgeStart, remainingPeoplePool1.length, [10, 8])
+    remainingPeoplePool1.forEach((item, index) => {
+      const endTime = afterJonoCuts[index]
       result.push({
         ...item,
         path: item.path || '',
         startTime: currentTime,
-        duration,
-        endTime: currentTime + duration
+        duration: endTime - currentTime,
+        endTime
       })
-      currentTime += duration
-    }
+      currentTime = endTime
+    })
   }
 
-  // 4. Chanting Bridge [229, 277] seconds (48s total) -> 24 people wallpapers shown faster
+  // 4. Chanting Bridge [~229, ~277] -> 24 people wallpapers; 6-beat holds
+  // tightening to 4-beat as the chant gathers.
   const peoplePool2 = shuffledPeople.slice(15, 39)
-  const sec4BaseDuration = 48 / peoplePool2.length
-  for (const item of peoplePool2) {
-    const duration = sec4BaseDuration
+  const sec4Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.buildStart, peoplePool2.length, [6, 4])
+  peoplePool2.forEach((item, index) => {
+    const endTime = sec4Cuts[index]
     result.push({
       ...item,
       path: item.path || '',
       startTime: currentTime,
-      duration,
-      endTime: currentTime + duration
+      duration: endTime - currentTime,
+      endTime
     })
-    currentTime += duration
-  }
+    currentTime = endTime
+  })
 
-  // 5. Heavy Build-Up [277, 345] seconds (68s total) -> 34 people wallpapers
+  // 5. Heavy Build-Up [~277, ~345] -> people wallpapers; 8-beat phrase holds
+  // as the tempo returns to 152 BPM, tightening to 4-beat toward the climax.
   const peoplePool3 = shuffledPeople.slice(39, 73)
   if (heartPhoto) {
-    peoplePool3.splice(22, 0, heartPhoto)
+    // Index 19 places the heart photo on the slide window covering the
+    // 321s owner anchor under the measured 4-beat cuts.
+    peoplePool3.splice(19, 0, heartPhoto)
   }
-  const sec5BaseDuration = 68 / peoplePool3.length
-  for (const item of peoplePool3) {
-    const duration = sec5BaseDuration
+  const sec5Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.pivotalStart, peoplePool3.length, [8, 4])
+  peoplePool3.forEach((item, index) => {
+    const endTime = sec5Cuts[index]
     result.push({
       ...item,
       path: item.path || '',
       startTime: currentTime,
-      duration,
-      endTime: currentTime + duration
+      duration: endTime - currentTime,
+      endTime
     })
-    currentTime += duration
-  }
+    currentTime = endTime
+  })
 
-  // 6. Fast Solo Climax & Outro [345, 423] seconds (78s total)
+  // 6. Fast Solo Climax & Outro [~345, 423]
 
   if (pivotalPhoto) {
-    const freezeDuration = 5.5
+    const endTime = TRACK_ZERO_SECTIONS.pivotalEnd
     result.push({
       ...pivotalPhoto,
       path: pivotalPhoto.path || '',
       startTime: currentTime,
-      duration: freezeDuration,
-      endTime: currentTime + freezeDuration
+      duration: endTime - currentTime,
+      endTime
     })
-    currentTime += freezeDuration
+    currentTime = endTime
   }
 
   if (bkPhoto) {
-    const freezeDuration = 8.5
+    const endTime = TRACK_ZERO_SECTIONS.bkEnd
     result.push({
       ...bkPhoto,
       path: bkPhoto.path || '',
       startTime: currentTime,
-      duration: freezeDuration,
-      endTime: currentTime + freezeDuration
+      duration: endTime - currentTime,
+      endTime
     })
-    currentTime += freezeDuration
+    currentTime = endTime
   }
 
   const peoplePool4 = deterministicShuffle([
     ...shuffledPeople.slice(73),
     ...finaleSlides,
   ], 404)
-  const finaleStartTime = 408
-  const sec6BaseDuration = (finaleStartTime - currentTime) / peoplePool4.length
-  for (const item of peoplePool4) {
-    const duration = sec6BaseDuration
+  // Beat barrage: one cut per measured beat (a couple of 2-beat holds up
+  // front), running to the last measured accent at ~405.7s.
+  const sec6Cuts = trackZeroBeatCuts(currentTime, TRACK_ZERO_SECTIONS.finaleStart, peoplePool4.length, [2, 1])
+  peoplePool4.forEach((item, index) => {
+    const endTime = sec6Cuts[index]
     result.push({
       ...item,
       path: item.path || '',
       startTime: currentTime,
-      duration,
-      endTime: currentTime + duration
+      duration: endTime - currentTime,
+      endTime
     })
-    currentTime += duration
-  }
+    currentTime = endTime
+  })
 
+  // Finale hold rides the measured ring-out and fade to silence (~419.5s)
+  // through the 423s handoff.
   if (finalePhoto) {
     result.push({
       ...finalePhoto,
@@ -562,7 +575,9 @@ const currentSlideTransitionDuration = computed(() => {
   if (!slide) {
     return 1000
   }
-  return Math.min(800, slide.duration * 300)
+  // Long ambient holds get long dissolves; beat-length slides get near-cuts.
+  const crossfadeCap = slide.duration >= 8 ? 1600 : 800
+  return Math.min(crossfadeCap, slide.duration * 300)
 })
 
 const daynightNightOpacityA = computed(() => {
@@ -642,10 +657,16 @@ watch([activeDisplayIndex, mixedPhotosToUse], ([newVal]) => {
     shownLaterTrackPhotoIds.add(activePhotoObj.id)
   }
 
-  // Preload the next image to prevent decode/network stutter during exact beat crossfades
-  const nextIndex = (newVal + 1) % mixedPhotosToUse.value.length
-  const nextPhoto = mixedPhotosToUse.value[nextIndex]
-  if (nextPhoto) {
+  // Preload upcoming images to prevent decode/network stutter during exact
+  // beat crossfades; sub-second barrage slides need a deeper lookahead.
+  const activeDuration = (activePhotoObj as { duration?: number }).duration
+  const lookahead = activeDuration !== undefined && activeDuration < 1 ? 3 : 1
+  for (let ahead = 1; ahead <= lookahead; ahead++) {
+    const nextIndex = (newVal + ahead) % mixedPhotosToUse.value.length
+    const nextPhoto = mixedPhotosToUse.value[nextIndex]
+    if (!nextPhoto) {
+      continue
+    }
     if (nextPhoto.type === 'daynight') {
       const imgDay = new Image()
       imgDay.src = `${baseUrl}img/wallpapers/${nextPhoto.dayName}`
@@ -1458,7 +1479,9 @@ onBeforeUnmount(() => {
   text-shadow: 0 2px 8px rgb(0 0 0 / 70%);
 
   &.is-featured-opening {
-    max-height: 64%;
+    width: min(96%, 72rem);
+    max-height: 55%;
+    padding-block: clamp(0.9rem, 0.7rem + 0.7vw, 1.4rem);
   }
 
   &.is-title-only {
