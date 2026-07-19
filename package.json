@@ -13,6 +13,7 @@
     "test:run": "vitest run",
     "typecheck": "vue-tsc --noEmit",
     "update:wolves-playlist": "node scripts/update-wolves-playlist.js",
+    "update:back-catalogue": "node scripts/update-back-catalogue.js",
     "record:wolves": "node record-wolves.cjs",
     "generate:wolves-qrs": "node scripts/generate-qrs.js"
   },

@@ -1,5 +1,6 @@
+import type { ExperienceManifest, ExperienceSegment } from '@/config/experience-manifest'
 import { defineStore } from 'pinia'
-import { CINEMATIC_SEGMENTS } from '@/config/wolves-cinematic'
+import { CINEMATIC_SEGMENTS, DEFAULT_CROSSFADE_MS } from '@/config/wolves-cinematic'
 import { buildIntroVideoSequence, isTextSegment } from '@/data/wolves-intro-sequence'
 
 export type CinematicPhase
@@ -32,6 +33,27 @@ export interface OverallTimelineTarget {
 
 const INTRO_SEGMENTS = buildIntroVideoSequence()
 const CINEMATIC_AUTHORED_DURATIONS = [424, 347, 251, 384, 193, 234] as const
+
+/**
+ * The authored Wolves cinematic expressed as a generic experience manifest —
+ * the default the runtime boots with. Back-catalogue albums load their own
+ * manifests through loadExperience(); the renderer is identical for both.
+ */
+export const WOLVES_EXPERIENCE: ExperienceManifest = {
+  id: 'seven-days-to-the-wolves',
+  title: 'Seven Days to the Wolves',
+  artwork: 'wolves-artwork/LASru9j0oIc.jpg',
+  includeIntro: true,
+  segments: CINEMATIC_SEGMENTS.map((segment, index) => ({
+    ...segment,
+    durationSeconds: CINEMATIC_AUTHORED_DURATIONS[index] ?? 0,
+  })),
+}
+
+// Active experience: module-level so the timeline math below stays plain
+// functions; the store's reactive `segments` state mirrors it.
+let activeSegments: ExperienceSegment[] = WOLVES_EXPERIENCE.segments
+let introIncluded = true
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
@@ -67,11 +89,11 @@ function introNativeStart(index: number): number {
 }
 
 function cinematicSegmentDuration(index: number): number {
-  return CINEMATIC_AUTHORED_DURATIONS[index] ?? 0
+  return activeSegments[index]?.durationSeconds ?? 0
 }
 
 function cinematicNativeStart(index: number): number {
-  return CINEMATIC_SEGMENTS[index]?.startSeconds ?? 0
+  return activeSegments[index]?.startSeconds ?? 0
 }
 
 const INTRO_TIMELINE: TimelineEntry[] = INTRO_SEGMENTS.map((segment, index) => ({
@@ -83,24 +105,44 @@ const INTRO_TIMELINE: TimelineEntry[] = INTRO_SEGMENTS.map((segment, index) => (
   nativeStart: introNativeStart(index),
 }))
 
-const CINEMATIC_TIMELINE: TimelineEntry[] = CINEMATIC_SEGMENTS.map((segment, index) => ({
-  phase: 'cinematic',
-  segmentIndex: index,
-  segmentId: segment.youtubeId,
-  segmentDuration: cinematicSegmentDuration(index),
-  seekDuration: cinematicSegmentDuration(index),
-  nativeStart: cinematicNativeStart(index),
-}))
+function buildCinematicTimeline(): TimelineEntry[] {
+  return activeSegments.map((segment, index) => ({
+    phase: 'cinematic',
+    segmentIndex: index,
+    segmentId: segment.youtubeId,
+    segmentDuration: cinematicSegmentDuration(index),
+    seekDuration: cinematicSegmentDuration(index),
+    nativeStart: cinematicNativeStart(index),
+  }))
+}
 
-const OVERALL_TIMELINE = [...INTRO_TIMELINE, ...CINEMATIC_TIMELINE]
+let CINEMATIC_TIMELINE = buildCinematicTimeline()
+let OVERALL_TIMELINE = [...INTRO_TIMELINE, ...CINEMATIC_TIMELINE]
 
 function sumTimelineDurations(entries: readonly TimelineEntry[]): number {
   return entries.reduce((sum, entry) => sum + entry.segmentDuration, 0)
 }
 
 export const INTRO_SEQUENCE_DURATION = sumTimelineDurations(INTRO_TIMELINE)
-export const CINEMATIC_SEQUENCE_DURATION = sumTimelineDurations(CINEMATIC_TIMELINE)
-export const OVERALL_SEQUENCE_DURATION = INTRO_SEQUENCE_DURATION + CINEMATIC_SEQUENCE_DURATION
+
+function introSequenceDuration(): number {
+  return introIncluded ? INTRO_SEQUENCE_DURATION : 0
+}
+
+function cinematicSequenceDuration(): number {
+  return sumTimelineDurations(CINEMATIC_TIMELINE)
+}
+
+function overallSequenceDuration(): number {
+  return introSequenceDuration() + cinematicSequenceDuration()
+}
+
+function rebuildTimelines() {
+  CINEMATIC_TIMELINE = buildCinematicTimeline()
+  OVERALL_TIMELINE = introIncluded
+    ? [...INTRO_TIMELINE, ...CINEMATIC_TIMELINE]
+    : [...CINEMATIC_TIMELINE]
+}
 
 function authoredSequenceElapsed(
   entries: readonly TimelineEntry[],
@@ -117,7 +159,8 @@ function authoredSequenceElapsed(
 }
 
 export function resolveOverallElapsedTarget(elapsed: number): OverallTimelineTarget {
-  const overallElapsed = clamp(elapsed, 0, OVERALL_SEQUENCE_DURATION)
+  const overallDuration = overallSequenceDuration()
+  const overallElapsed = clamp(elapsed, 0, overallDuration)
   let consumed = 0
   const lastEntry = OVERALL_TIMELINE[OVERALL_TIMELINE.length - 1]
 
@@ -139,7 +182,7 @@ export function resolveOverallElapsedTarget(elapsed: number): OverallTimelineTar
         seekRatio: denominator > 0 ? clamp(numerator / denominator, 0, 1) : 0,
         nativeTime,
         overallElapsed,
-        overallDuration: OVERALL_SEQUENCE_DURATION,
+        overallDuration,
       }
     }
     consumed = segmentEnd
@@ -154,13 +197,13 @@ export function resolveOverallElapsedTarget(elapsed: number): OverallTimelineTar
     seekRatio: 1,
     nativeTime: (CINEMATIC_TIMELINE[CINEMATIC_TIMELINE.length - 1]?.nativeStart ?? 0)
       + (CINEMATIC_TIMELINE[CINEMATIC_TIMELINE.length - 1]?.segmentDuration ?? 0),
-    overallElapsed: OVERALL_SEQUENCE_DURATION,
-    overallDuration: OVERALL_SEQUENCE_DURATION,
+    overallElapsed: overallDuration,
+    overallDuration,
   }
 }
 
 export function resolveOverallRatioTarget(ratio: number): OverallTimelineTarget {
-  return resolveOverallElapsedTarget(clamp(ratio, 0, 1) * OVERALL_SEQUENCE_DURATION)
+  return resolveOverallElapsedTarget(clamp(ratio, 0, 1) * overallSequenceDuration())
 }
 
 /**
@@ -171,6 +214,8 @@ export function resolveOverallRatioTarget(ratio: number): OverallTimelineTarget 
 export const useCinematicStore = defineStore('cinematic', {
   state: () => ({
     phase: 'lobby' as CinematicPhase,
+    /** Segments of the active experience (defaults to the Wolves cinematic). */
+    segments: WOLVES_EXPERIENCE.segments as ExperienceSegment[],
     segmentIndex: 0,
     /** Seconds elapsed inside the current segment (relative to any authored trim). */
     segmentElapsed: 0,
@@ -197,8 +242,11 @@ export const useCinematicStore = defineStore('cinematic', {
   }),
 
   getters: {
-    segment: state => CINEMATIC_SEGMENTS[state.segmentIndex] ?? CINEMATIC_SEGMENTS[0],
-    segmentCount: () => CINEMATIC_SEGMENTS.length,
+    segment: state => state.segments[state.segmentIndex] ?? state.segments[0],
+    segmentCount: state => state.segments.length,
+    /** Crossfade window for the active experience's segment at `index`. */
+    crossfadeMsAt: state => (index: number): number =>
+      state.segments[index]?.crossfadeMs ?? DEFAULT_CROSSFADE_MS,
     totalElapsed: state => state.completedElapsed + state.segmentElapsed,
     segmentProgress: state =>
       state.segmentDuration > 0 ? Math.min(1, state.segmentElapsed / state.segmentDuration) : 0,
@@ -207,7 +255,7 @@ export const useCinematicStore = defineStore('cinematic', {
         return INTRO_SEQUENCE_DURATION
       }
       if (state.phase === 'cinematic') {
-        return CINEMATIC_SEQUENCE_DURATION
+        return cinematicSequenceDuration()
       }
       return 0
     },
@@ -220,20 +268,21 @@ export const useCinematicStore = defineStore('cinematic', {
       }
       return 0
     },
-    overallDuration: () => OVERALL_SEQUENCE_DURATION,
+    overallDuration: () => overallSequenceDuration(),
     overallElapsed(): number {
       if (this.phase === 'intro') {
         return this.sequenceElapsed
       }
       if (this.phase === 'cinematic') {
-        return INTRO_SEQUENCE_DURATION + this.sequenceElapsed
+        return introSequenceDuration() + this.sequenceElapsed
       }
       return 0
     },
     overallProgress(): number {
-      return OVERALL_SEQUENCE_DURATION > 0 ? Math.min(1, this.overallElapsed / OVERALL_SEQUENCE_DURATION) : 0
+      const duration = overallSequenceDuration()
+      return duration > 0 ? Math.min(1, this.overallElapsed / duration) : 0
     },
-    isLastSegment: state => state.segmentIndex >= CINEMATIC_SEGMENTS.length - 1,
+    isLastSegment: state => state.segmentIndex >= state.segments.length - 1,
     /** What the hero widget shows: the intro override when present, else the segment. */
     display(state): { chapter: string, title: string, artist: string, artwork: string, counter: string } {
       if (state.displayOverride) {
@@ -245,7 +294,7 @@ export const useCinematicStore = defineStore('cinematic', {
         title: segment.title,
         artist: segment.artist,
         artwork: segment.artwork,
-        counter: `${segment.chapter} · ${state.segmentIndex + 1}/${CINEMATIC_SEGMENTS.length}`,
+        counter: `${segment.chapter} · ${state.segmentIndex + 1}/${state.segments.length}`,
       }
     },
     widgetCanPrevious(state): boolean {
@@ -263,6 +312,26 @@ export const useCinematicStore = defineStore('cinematic', {
   },
 
   actions: {
+    /**
+     * Swap the active experience. The Wolves cinematic is loaded by default;
+     * back-catalogue albums pass their generated manifests here. Resets all
+     * playback state and returns to the lobby phase.
+     */
+    loadExperience(manifest: ExperienceManifest) {
+      activeSegments = manifest.segments
+      introIncluded = manifest.includeIntro === true
+      rebuildTimelines()
+      this.segments = manifest.segments
+      this.phase = 'lobby'
+      this.segmentIndex = 0
+      this.segmentElapsed = 0
+      this.nativeTime = 0
+      this.segmentDuration = 0
+      this.completedElapsed = 0
+      this.playing = false
+      this.crossfading = false
+      this.displayOverride = null
+    },
     /** Lobby exit: the authored Destiny intro overlay plays first. */
     enterIntro() {
       this.phase = 'intro'
@@ -302,7 +371,7 @@ export const useCinematicStore = defineStore('cinematic', {
     },
     advanceSegment() {
       this.completedElapsed += this.segmentDuration || this.segmentElapsed
-      this.segmentIndex = Math.min(this.segmentIndex + 1, CINEMATIC_SEGMENTS.length - 1)
+      this.segmentIndex = Math.min(this.segmentIndex + 1, this.segments.length - 1)
       this.segmentElapsed = 0
       this.nativeTime = 0
       this.segmentDuration = CINEMATIC_TIMELINE[this.segmentIndex]?.segmentDuration ?? 0
@@ -311,14 +380,14 @@ export const useCinematicStore = defineStore('cinematic', {
     /** Manual skip to an arbitrary segment (prev/next); only watched time accrues. */
     jumpToSegment(index: number) {
       this.completedElapsed += this.segmentElapsed
-      this.segmentIndex = Math.min(Math.max(index, 0), CINEMATIC_SEGMENTS.length - 1)
+      this.segmentIndex = Math.min(Math.max(index, 0), this.segments.length - 1)
       this.segmentElapsed = 0
       this.nativeTime = 0
       this.segmentDuration = CINEMATIC_TIMELINE[this.segmentIndex]?.segmentDuration ?? 0
       this.crossfading = false
     },
     finish() {
-      this.segmentIndex = CINEMATIC_SEGMENTS.length - 1
+      this.segmentIndex = this.segments.length - 1
       this.segmentDuration = CINEMATIC_TIMELINE[this.segmentIndex]?.segmentDuration ?? this.segmentDuration
       this.segmentElapsed = this.segmentDuration
       this.nativeTime = cinematicNativeStart(this.segmentIndex) + this.segmentDuration

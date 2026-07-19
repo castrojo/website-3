@@ -367,8 +367,9 @@ describe('useDualBufferPlayer', () => {
 
   it('supports authored trims when a segment defines a startSeconds/endSeconds window', async () => {
     // No current segment is trimmed; pin a temporary authored window on segment 1
-    // to keep the trim capability covered.
-    const segment = CINEMATIC_SEGMENTS[1] as { startSeconds?: number, endSeconds?: number }
+    // to keep the trim capability covered. The runtime reads the store's active
+    // experience segments, so the window is pinned there.
+    const segment = useCinematicStore().segments[1] as { startSeconds?: number, endSeconds?: number }
     segment.startSeconds = 2
     segment.endSeconds = 114
     try {

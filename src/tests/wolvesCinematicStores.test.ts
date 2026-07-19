@@ -12,7 +12,7 @@ describe('cinematic store', () => {
     const store = useCinematicStore()
     expect(store.phase).toBe('lobby')
     expect(store.segmentIndex).toBe(0)
-    expect(store.segment).toBe(CINEMATIC_SEGMENTS[0])
+    expect(store.segment).toMatchObject(CINEMATIC_SEGMENTS[0])
   })
 
   it('tracks per-segment and total elapsed time across handoffs', () => {

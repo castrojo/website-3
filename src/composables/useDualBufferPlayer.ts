@@ -7,9 +7,7 @@ import {
   loadYoutubeIframeApi,
 } from '@/composables/useYoutubeIframeApi'
 import {
-  CINEMATIC_SEGMENTS,
   PRE_END_THRESHOLD_S,
-  segmentCrossfadeMs,
   TIME_POLL_MS,
 } from '@/config/wolves-cinematic'
 import { useCinematicStore } from '@/stores/cinematic'
@@ -79,12 +77,12 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
 
   function cueNext(side: PlayerSide, segmentIndex: number) {
     const state = sides[side]
-    if (!state.player || segmentIndex >= CINEMATIC_SEGMENTS.length) {
+    if (!state.player || segmentIndex >= store.segments.length) {
       state.segmentIndex = -1
       return
     }
     state.segmentIndex = segmentIndex
-    const segment = CINEMATIC_SEGMENTS[segmentIndex]
+    const segment = store.segments[segmentIndex]
     state.player.cueVideoById?.({ videoId: segment.youtubeId, startSeconds: segment.startSeconds })
     applyVolume(state.player, 0)
   }
@@ -133,7 +131,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     }
 
     swapping = true
-    const crossfadeMs = segmentCrossfadeMs(store.segmentIndex)
+    const crossfadeMs = store.crossfadeMsAt(store.segmentIndex)
     store.beginCrossfade()
 
     applyVolume(incoming, 0)
@@ -154,7 +152,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
    * hard-loaded there; the transition overlay covers the brief buffering gap.
    */
   function skip(delta: number) {
-    const target = Math.min(Math.max(store.segmentIndex + delta, 0), CINEMATIC_SEGMENTS.length - 1)
+    const target = Math.min(Math.max(store.segmentIndex + delta, 0), store.segments.length - 1)
     if (swapping || target === store.segmentIndex) {
       return
     }
@@ -169,13 +167,13 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     swapping = true
     store.beginCrossfade()
 
-    const segment = CINEMATIC_SEGMENTS[target]
+    const segment = store.segments[target]
     sides[toSide].segmentIndex = target
     applyVolume(incoming, 0)
     incoming.loadVideoById?.({ videoId: segment.youtubeId, startSeconds: segment.startSeconds })
     activeSide.value = toSide
 
-    rampVolumes(outgoing, incoming, segmentCrossfadeMs(store.segmentIndex), () => {
+    rampVolumes(outgoing, incoming, store.crossfadeMsAt(store.segmentIndex), () => {
       outgoing?.pauseVideo?.()
       store.jumpToSegment(target)
       cueNext(fromSide, target + 1)
@@ -188,7 +186,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     if (!player) {
       return
     }
-    const segment = CINEMATIC_SEGMENTS[store.segmentIndex]
+    const segment = store.segments[store.segmentIndex]
     const time = player.getCurrentTime?.() ?? 0
     const duration = player.getDuration?.() ?? 0
     // Authored trims: elapsed/duration are reported relative to the segment's own
@@ -401,7 +399,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     if (store.segmentDuration <= 0) {
       return
     }
-    const startAt = CINEMATIC_SEGMENTS[store.segmentIndex]?.startSeconds ?? 0
+    const startAt = store.segments[store.segmentIndex]?.startSeconds ?? 0
     const clamped = Math.min(Math.max(ratio, 0), 1)
     activePlayer()?.seekTo?.(startAt + clamped * store.segmentDuration, true)
   }

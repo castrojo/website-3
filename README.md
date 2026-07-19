@@ -64,6 +64,24 @@ npm run update:wolves-playlist
 
 This workflow requires [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to read the public YouTube playlist and writes the checked-in manifest to `public/wolves-playlist.json`. The frontend consumes that checked-in file directly, so no YouTube Data API key is exposed to browsers.
 
+## Back catalogue and experience manifests
+
+The Wolves lobby's Back Catalogue grid (below the QR codes) lists every album from `music.projectbluefin.io`. It is regenerated locally with:
+
+```bash
+npm run update:back-catalogue
+```
+
+This requires `yt-dlp`. It reads the album index from the documentation repo's published `playlist-metadata.json`, copies each cover byte-for-byte to `public/experiences/<playlistId>.jpg`, resolves each playlist's tracks, and writes the checked-in `public/experiences/catalogue.json`. Re-run it to pick up new albums; the frontend consumes the checked-in file directly.
+
+Each catalogue entry is an experience manifest — the declarative format the cinematic runtime plays. The schema lives in `src/config/experience-manifest.ts` with three complete inline examples covering the canonical shapes:
+
+- **Image-based album**: `kind: 'image'` segments with `imageUrl`, `durationSeconds`, and per-slide text via `captionsText`.
+- **YouTube playlist with synced text**: `kind: 'youtube'` segments with `youtubeId`, authored `durationSeconds`, and `seconds|text` caption cues keyed to the video's native timeline.
+- **Mixed media**: stills interleaved with trimmed video (`startSeconds`/`endSeconds`, per-segment `crossfadeMs`).
+
+A manifest also carries launcher metadata (`title`, `subtitle`, `artwork`, `credits`). The Wolves tour itself is the default manifest (`WOLVES_EXPERIENCE` in `src/stores/cinematic.ts`); albums load through the same `loadExperience()` store action and render through the identical stage, transitions, transport, and seek behavior. New experiences are authored by writing a manifest — no renderer changes.
+
 The `/wolves` player starts only after a visitor clicks the control. Its YouTube iframe is retained as a hidden 200x200 audio player because the IFrame API requires that minimum viewport; do not replace it with a visible video widget or shrink it to 1px. The visible panel includes a YouTube Music deep link and sign-in/Premium guidance.
 
 ## Wolves local video capture

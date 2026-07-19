@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { CinematicTransitionLine } from '@/config/wolves-cinematic'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { CINEMATIC_SEGMENTS } from '@/config/wolves-cinematic'
 import { useCinematicStore } from '@/stores/cinematic'
 import { createTransitionSfxPlayer } from './transition-sfx'
 
@@ -30,7 +29,7 @@ let transitionRuns = 0
 const sfxPlayer = createTransitionSfxPlayer()
 sfxPlayer.armFromUserGestures()
 
-const segment = computed(() => CINEMATIC_SEGMENTS[store.segmentIndex])
+const segment = computed(() => store.segments[store.segmentIndex])
 const loreLines = computed(() => segment.value?.transitionLore ?? [])
 // The authored lore conversations stay in the config (and still drive the
 // transition sound effects) but are hidden from the overlay; every handoff

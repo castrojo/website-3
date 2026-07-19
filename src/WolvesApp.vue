@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ExperienceManifest } from '@/config/experience-manifest'
 import type { IntroStatusPayload } from '@/data/wolves-intro-sequence'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import CinematicLobby from '@/components/wolves/cinematic/CinematicLobby.vue'
@@ -33,6 +34,18 @@ async function startCinematicStage() {
 async function enterCinematic() {
   store.enterCinematic()
   await startCinematicStage()
+}
+
+/**
+ * Launch a back-catalogue experience through the exact same cinematic runtime.
+ * Album manifests carry no authored intro, so they enter the cinematic phase
+ * directly; everything else (stage, transitions, transport, seek) is shared.
+ */
+async function launchExperience(manifest: ExperienceManifest) {
+  stage.value?.destroy?.()
+  clearIntroUi()
+  store.loadExperience(manifest)
+  await enterCinematic()
 }
 
 const introVideos = buildIntroVideoSequence()
@@ -339,7 +352,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="wolves-cinematic">
-    <CinematicLobby v-if="store.phase === 'lobby'" @enter="enterIntro" />
+    <CinematicLobby v-if="store.phase === 'lobby'" @enter="enterIntro" @launch-experience="launchExperience" />
 
     <!-- The Destiny intro shares the cinematic transport and universal top title placard. -->
     <div v-else-if="store.phase === 'intro' || store.phase === 'cinematic'" class="wc-runtime">

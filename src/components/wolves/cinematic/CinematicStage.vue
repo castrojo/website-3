@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useDualBufferPlayer } from '@/composables/useDualBufferPlayer'
-import { segmentCrossfadeMs } from '@/config/wolves-cinematic'
 import { getWolvesHudLabel } from '@/data/wolves-thesis-sequence'
 import { useCinematicStore } from '@/stores/cinematic'
 import CinematicCaptions from './CinematicCaptions.vue'
@@ -51,14 +50,14 @@ defineExpose({
     <div
       class="wc-layer"
       :class="{ 'wc-layer--active': player.activeSide.value === 'a' }"
-      :style="{ transitionDuration: `${segmentCrossfadeMs(store.segmentIndex)}ms` }"
+      :style="{ transitionDuration: `${store.crossfadeMsAt(store.segmentIndex)}ms` }"
     >
       <div ref="hostA" class="wc-iframe-host" />
     </div>
     <div
       class="wc-layer"
       :class="{ 'wc-layer--active': player.activeSide.value === 'b' }"
-      :style="{ transitionDuration: `${segmentCrossfadeMs(store.segmentIndex)}ms` }"
+      :style="{ transitionDuration: `${store.crossfadeMsAt(store.segmentIndex)}ms` }"
     >
       <div ref="hostB" class="wc-iframe-host" />
     </div>
