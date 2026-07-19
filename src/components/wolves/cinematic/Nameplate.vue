@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { dinosaurSpecies } from '@/data/wolves-dinosaur-species'
+
 withDefaults(defineProps<{
   /** Small secondary detail line (chapter / status). */
   detail: string
@@ -24,6 +27,24 @@ function labelParts(label: string): readonly { text: string, mono: boolean }[] {
     .map((text, index) => ({ text, mono: index % 2 === 1 }))
     .filter(part => part.text)
 }
+
+/**
+ * Bluefin-branded emblem on the left of the plate: the roster of dinosaur
+ * avatars rotates slowly through the badge, always starting on the Bluefin
+ * raptor so the brand reads first.
+ */
+const AVATAR_ROTATE_MS = 20_000
+const avatarUrls = dinosaurSpecies.map(
+  species => `${import.meta.env.BASE_URL}${species.artwork.slice(2)}`,
+)
+const avatarIndex = ref(0)
+let avatarTimer: number | undefined
+onMounted(() => {
+  avatarTimer = window.setInterval(() => {
+    avatarIndex.value = (avatarIndex.value + 1) % avatarUrls.length
+  }, AVATAR_ROTATE_MS)
+})
+onBeforeUnmount(() => window.clearInterval(avatarTimer))
 </script>
 
 <template>
@@ -35,20 +56,32 @@ function labelParts(label: string): readonly { text: string, mono: boolean }[] {
       'wc-nameplate--blue-delivers': label === 'The Blue Delivers',
     }"
   >
-    <span class="wc-nameplate-detail wc-label">{{ detail }}</span>
-    <Transition v-if="slowFade" name="wc-nameplate-label" mode="out-in">
-      <span :key="label" class="wc-nameplate-label">
+    <span class="wc-nameplate-badge" aria-hidden="true">
+      <Transition name="wc-nameplate-avatar">
+        <img
+          :key="avatarUrls[avatarIndex]"
+          class="wc-nameplate-avatar"
+          :src="avatarUrls[avatarIndex]"
+          alt=""
+        >
+      </Transition>
+    </span>
+    <span class="wc-nameplate-text">
+      <span class="wc-nameplate-detail wc-label">{{ detail }}</span>
+      <Transition v-if="slowFade" name="wc-nameplate-label" mode="out-in">
+        <span :key="label" class="wc-nameplate-label">
+          <template v-for="(part, index) in labelParts(label)" :key="index">
+            <span v-if="part.mono" class="wc-nameplate-label-mono">{{ part.text }}</span>
+            <template v-else>{{ part.text }}</template>
+          </template>
+        </span>
+      </Transition>
+      <span v-else class="wc-nameplate-label">
         <template v-for="(part, index) in labelParts(label)" :key="index">
           <span v-if="part.mono" class="wc-nameplate-label-mono">{{ part.text }}</span>
           <template v-else>{{ part.text }}</template>
         </template>
       </span>
-    </Transition>
-    <span v-else class="wc-nameplate-label">
-      <template v-for="(part, index) in labelParts(label)" :key="index">
-        <span v-if="part.mono" class="wc-nameplate-label-mono">{{ part.text }}</span>
-        <template v-else>{{ part.text }}</template>
-      </template>
     </span>
   </div>
 </template>
@@ -56,12 +89,52 @@ function labelParts(label: string): readonly { text: string, mono: boolean }[] {
 <style scoped lang="scss">
 .wc-nameplate {
   display: inline-flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 1.2rem;
   box-sizing: border-box;
   max-width: 100%;
   padding: 1.2rem 2.4rem 1.2rem 1.6rem;
   border-left: 2px solid var(--wc-gold);
+}
+
+.wc-nameplate-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+/* Bluefin emblem: a small, quiet roundel holding the rotating dino avatar. */
+.wc-nameplate-badge {
+  position: relative;
+  flex: none;
+  width: 4.4rem;
+  height: 4.4rem;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgb(212 175 55 / 55%);
+  background: rgb(10 14 22 / 78%);
+  box-shadow: inset 0 0 0.8rem rgb(0 0 0 / 55%);
+}
+
+.wc-nameplate-avatar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.4rem;
+  box-sizing: border-box;
+}
+
+.wc-nameplate-avatar-enter-active,
+.wc-nameplate-avatar-leave-active {
+  transition: opacity 1.5s ease;
+}
+
+.wc-nameplate-avatar-enter-from,
+.wc-nameplate-avatar-leave-to {
+  opacity: 0;
 }
 
 .wc-nameplate-label {
