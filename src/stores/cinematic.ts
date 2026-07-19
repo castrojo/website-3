@@ -41,6 +41,7 @@ const CINEMATIC_AUTHORED_DURATIONS = [424, 347, 251, 384, 193, 234] as const
  */
 export const WOLVES_EXPERIENCE: ExperienceManifest = {
   id: 'seven-days-to-the-wolves',
+  sourcePlaylistId: 'PLA78oiE-RGAE',
   title: 'Seven Days to the Wolves',
   artwork: 'wolves-artwork/LASru9j0oIc.jpg',
   includeIntro: true,

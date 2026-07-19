@@ -88,6 +88,8 @@ export interface ExperienceSegment extends CinematicSegment {
 export interface ExperienceManifest {
   /** Stable identifier. */
   id: string
+  /** Optional upstream playlist identifier used to match generated launchers. */
+  sourcePlaylistId?: string
   /** Launcher card + lobby title. */
   title: string
   /** Optional launcher card sub-line. */

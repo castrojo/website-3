@@ -4,12 +4,12 @@ import { flushPromises, shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
-import { useCinematicStore } from '@/stores/cinematic'
+import { useCinematicStore, WOLVES_EXPERIENCE } from '@/stores/cinematic'
 import WolvesApp from '@/WolvesApp.vue'
 
 const CinematicLobbyStub = defineComponent({
   name: 'CinematicLobby',
-  emits: ['enter'],
+  emits: ['enter', 'launchExperience'],
   template: '<button class="cinematic-lobby-stub" @click="$emit(\'enter\')" />',
 })
 
@@ -115,6 +115,7 @@ describe('wolvesApp intro status handling', () => {
     startStage = async () => {
       handoffCalls.push('start')
     }
+    useCinematicStore().loadExperience(WOLVES_EXPERIENCE)
   })
 
   afterEach(() => {
@@ -153,6 +154,71 @@ describe('wolvesApp intro status handling', () => {
     await vi.advanceTimersByTimeAsync(1400)
     await nextTick()
     expect(wrapper.find('.wolves-intro-overlay-stub').exists()).toBe(false)
+  })
+
+  it('routes the Seven Days catalogue card through the authored Wolves experience', async () => {
+    const wrapper = shallowMount(WolvesApp, {
+      global: { stubs: stubs() },
+    })
+    const sourcePlaylistId = (WOLVES_EXPERIENCE as typeof WOLVES_EXPERIENCE & {
+      sourcePlaylistId?: string
+    }).sourcePlaylistId
+    expect(sourcePlaylistId).toBe('PLA78oiE-RGAE')
+    const generatedPlaylistManifest = {
+      id: sourcePlaylistId!,
+      title: 'Seven Days to the Wolves',
+      artwork: 'experiences/PLA78oiE-RGAE.jpg',
+      segments: [{
+        id: 'generated-track',
+        kind: 'youtube' as const,
+        youtubeId: 'generated-track',
+        chapter: 'TRACK 1',
+        title: 'Generated Track',
+        artist: 'Artist',
+        artwork: 'track.jpg',
+        durationSeconds: 100,
+      }],
+    }
+
+    wrapper.getComponent(CinematicLobbyStub).vm.$emit('launchExperience', generatedPlaylistManifest)
+    await flushPromises()
+    await nextTick()
+
+    const store = useCinematicStore()
+    expect(store.phase).toBe('intro')
+    expect(store.segmentCount).toBe(WOLVES_EXPERIENCE.segments.length)
+    expect(store.segment.id).toBe(WOLVES_EXPERIENCE.segments[0].id)
+    expect(handoffCalls).toEqual(['prepare'])
+  })
+
+  it('launches other catalogue albums directly in the shared cinematic', async () => {
+    const wrapper = shallowMount(WolvesApp, {
+      global: { stubs: stubs() },
+    })
+    const albumManifest = {
+      id: 'another-album',
+      title: 'Another Album',
+      artwork: 'experiences/another.jpg',
+      segments: [{
+        id: 'track',
+        kind: 'youtube' as const,
+        youtubeId: 'track',
+        chapter: 'TRACK 1',
+        title: 'Track',
+        artist: 'Artist',
+        artwork: 'track.jpg',
+        durationSeconds: 100,
+      }],
+    }
+
+    wrapper.getComponent(CinematicLobbyStub).vm.$emit('launchExperience', albumManifest)
+    await flushPromises()
+    await nextTick()
+
+    const store = useCinematicStore()
+    expect(store.phase).toBe('cinematic')
+    expect(store.segment.id).toBe('track')
+    expect(handoffCalls).toEqual(['start'])
   })
 
   it('keeps the overlay mounted until the dissolve completes', async () => {

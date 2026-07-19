@@ -8,7 +8,7 @@ import MediaWidget from '@/components/wolves/cinematic/MediaWidget.vue'
 import Nameplate from '@/components/wolves/cinematic/Nameplate.vue'
 import WolvesIntroOverlay from '@/components/wolves/WolvesIntroOverlay.vue'
 import { buildIntroVideoSequence, isTextSegment } from '@/data/wolves-intro-sequence'
-import { resolveOverallRatioTarget, useCinematicStore } from '@/stores/cinematic'
+import { resolveOverallRatioTarget, useCinematicStore, WOLVES_EXPERIENCE } from '@/stores/cinematic'
 
 const store = useCinematicStore()
 
@@ -44,6 +44,13 @@ async function enterCinematic() {
 async function launchExperience(manifest: ExperienceManifest) {
   stage.value?.destroy?.()
   clearIntroUi()
+  // Preserve the authored intro and Track 0 presentation for the canonical
+  // Wolves catalogue card instead of playing its generated fallback manifest.
+  if (manifest.id === WOLVES_EXPERIENCE.sourcePlaylistId) {
+    store.loadExperience(WOLVES_EXPERIENCE)
+    await enterIntro()
+    return
+  }
   store.loadExperience(manifest)
   await enterCinematic()
 }
