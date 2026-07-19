@@ -19,7 +19,10 @@ const TERMINAL_LINES = [
   '// Deploy CNCF Projects Team, scramble all Guardians.',
 ]
 
-const HOLD_MS = 6000
+// Every segment handoff (natural or manual skip) raises the overlay for
+// eleven seconds — it doubles as cover for the brief buffering gap on manual
+// skips and gives the status terminal time to read without any flicker.
+const HOLD_MS = 11000
 let hideTimer: ReturnType<typeof setTimeout> | null = null
 let motionMedia: MediaQueryList | null = null
 let transitionRuns = 0
@@ -29,10 +32,11 @@ sfxPlayer.armFromUserGestures()
 
 const segment = computed(() => CINEMATIC_SEGMENTS[store.segmentIndex])
 const loreLines = computed(() => segment.value?.transitionLore ?? [])
+// The authored lore conversations stay in the config (and still drive the
+// transition sound effects) but are hidden from the overlay; every handoff
+// renders the terminal block instead.
 const renderedLines = computed<readonly (CinematicTransitionLine | { kind: 'terminal', text: string })[]>(() =>
-  loreLines.value.length
-    ? loreLines.value
-    : TERMINAL_LINES.map(text => ({ kind: 'terminal' as const, text })))
+  TERMINAL_LINES.map(text => ({ kind: 'terminal' as const, text })))
 const transitionStyle = computed(() => ({
   '--wc-transition-enter-ms': prefersReducedMotion.value ? '0ms' : '400ms',
   '--wc-transition-leave-ms': prefersReducedMotion.value ? '0ms' : '1200ms',
@@ -49,8 +53,7 @@ if (typeof window !== 'undefined' && 'matchMedia' in window) {
   motionMedia.addListener?.(syncReducedMotion)
 }
 
-// Every segment handoff (natural or manual skip) raises the overlay for six
-// seconds — it doubles as cover for the brief buffering gap on manual skips.
+// Every segment handoff (natural or manual skip) raises the overlay.
 // Ghosts In The Mist opens on the Jorge guardian plate, so its handoff skips
 // the title slide instead of covering the plate.
 watch(
@@ -174,7 +177,6 @@ onBeforeUnmount(() => {
   font-size: 1.3rem;
   letter-spacing: 0.06em;
   color: #7fd4d4;
-  animation: wc-terminal-flicker 1.1s steps(2) infinite;
 }
 
 .wc-transition-line {
@@ -207,10 +209,6 @@ onBeforeUnmount(() => {
   color: #b3c8d9;
 }
 
-.wc-transition-overlay--reduced-motion .wc-transition-terminal {
-  animation: none;
-}
-
 .wc-transition-title {
   font-size: clamp(2.8rem, 5vw, 4.6rem);
   font-weight: 800;
@@ -226,18 +224,6 @@ onBeforeUnmount(() => {
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--wc-grey);
-}
-
-@keyframes wc-terminal-flicker {
-  0%,
-  92% {
-    opacity: 1;
-  }
-
-  96%,
-  100% {
-    opacity: 0.75;
-  }
 }
 
 .wc-transition-enter-active {

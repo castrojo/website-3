@@ -14,7 +14,7 @@ describe('cinematicTransition overlay duration', () => {
     vi.useRealTimers()
   })
 
-  it('holds the transition overlay for 6 seconds then hides it', async () => {
+  it('holds the transition overlay for 11 seconds then hides it', async () => {
     const store = useCinematicStore()
     store.phase = 'cinematic'
     store.segmentIndex = 0
@@ -28,11 +28,11 @@ describe('cinematicTransition overlay duration', () => {
 
     expect(wrapper.find('.wc-transition-overlay').exists()).toBe(true)
 
-    // Advance 5.9 seconds
-    await vi.advanceTimersByTimeAsync(5900)
+    // Advance 10.9 seconds
+    await vi.advanceTimersByTimeAsync(10900)
     expect(wrapper.find('.wc-transition-overlay').exists()).toBe(true)
 
-    // Complete the 6 seconds
+    // Complete the 11 seconds
     await vi.advanceTimersByTimeAsync(100)
     expect(wrapper.find('.wc-transition-overlay').exists()).toBe(false)
   })
