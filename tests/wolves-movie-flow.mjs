@@ -7,12 +7,8 @@
  *
  * Flow under test:
  *   1. Enter immersive playback at Track 0 via the test-only progress helper.
- *   2. Advance the soundtrack playlist index from 0 to 1.
- *   3. Assert the Creator Shorts interstitial mounts and is visible.
- *   4. Drive the four-video chapter to completion through mock player ENDED
- *      events.
- *   5. Assert the interstitial is removed and the soundtrack resumes at Track 1
- *      ("Ghosts In The Mist").
+ *   2. Advance directly from Part I to Part II.
+ *   3. Assert the cinematic resumes at Track 1 ("Ghosts In The Mist").
  *
  * Prerequisites: dev server must be running at http://localhost:5173
  *   just serve   (from repo root)
@@ -28,7 +24,7 @@ const WOLVES_URL = `${BASE_URL}/wolves/`
 const [width, height] = (process.env.WOLVES_VIEWPORT ?? '1440x900').split('x').map(Number)
 const VIEWPORT = { width, height }
 const SCREENSHOT_DIR = process.env.WOLVES_SCREENSHOT_DIR
-const JORGE_GHOSTS_QUOTE = 'These people inspire me to no end, and a bunch of unknowns created Aurora, Bazzite, Bluefin, Bluebuild, Secureblue, and others. Not a Universal Blue ecosystem, not a bootc ecosystem. A cloud native ecosystem. Sorry about my Titan manners sometimes. In one short weekend you\'ve proven to the world that enthusiasts matter. Thank you to Chainguard, Microsoft, Red Hat, Edera, for investing in the unknowns from Universal Blue! Need talent? Go cloud native, we\'re a proven Guardian Academy.'
+const JORGE_GHOSTS_QUOTE = 'Our projects depend on good apps, support GNOME, KDE, and Flathub to bring app developers to Linux! Not a Universal Blue ecosystem or a bootc ecosystem. A cloud native ecosystem. In one short weekend you\'ve proven to the world that enthusiasts matter. Thank you to Chainguard, Microsoft, Red Hat, Edera, for sourcing talent from Universal Blue! Need talent? Cloud native projets like ours are focused on sustainability. Judge us by our metrics.'
 
 let passed = 0
 let failed = 0
@@ -85,8 +81,8 @@ try {
   const page = await browser.newPage({ viewport: VIEWPORT })
 
   // Intercept the YouTube IFrame API before any page script runs. Provide a
-  // deterministic mock Player that the Wolves soundtrack and Creator Shorts
-  // interstitial can drive without making external network requests.
+  // deterministic mock Player that the Wolves runtime can drive without making
+  // external network requests.
   await page.addInitScript(() => {
     Math.random = () => 0
     window.__mockWolvesPlayers = []
@@ -202,17 +198,11 @@ try {
   }
   await page.waitForTimeout(1000)
 
-  // The same forward/play-pause controls must cover the complete movie, including
-  // the fullscreen prologue and Destiny segments that conceal the soundtrack footer.
+  // The same forward/play-pause controls must cover the Destiny intro and cinematic.
   await page.getByRole('button', { name: /JOIN THE EVOLUTION|BEGIN TRANSMISSION/i }).click()
   await page.waitForSelector('.wolves-intro-overlay', { state: 'visible', timeout: 10_000 })
   await hasVisibleControl(page, 'Pause')
   await hasVisibleControl(page, 'Next')
-  await captureStage(page, 'prologue')
-
-  await page.getByLabel('Next').click()
-  await page.waitForTimeout(250)
-
   await page.waitForSelector('.wolves-intro-overlay-player', { state: 'visible', timeout: 10_000 })
   await hasVisibleControl(page, 'Pause')
   await hasVisibleControl(page, 'Next')
@@ -221,15 +211,16 @@ try {
     await page.locator('.wc-intro-nameplate .wc-nameplate-detail').textContent(),
     'Meet your Fireteam',
   )
+  await captureStage(page, 'destiny-intro')
   assert(
     'Destiny nameplate label',
     await page.locator('.wc-intro-nameplate .wc-nameplate-label').textContent(),
-    'Fighting for something greater than ourselves.',
+    'Fighting for something greater',
   )
   assert(
-    'Destiny media plaque retains the cinematic title',
+    'Destiny media plaque uses the authored title',
     await page.locator('.wc-widget-title').textContent(),
-    'Destiny 2: Into the Light Cinematic',
+    'The Wolves are Coming',
   )
   const introPlayerIndex = await page.evaluate(() =>
     window.__mockWolvesPlayers.findIndex(player => player.videoId === 'BV3BZKbpBns'),
@@ -249,20 +240,10 @@ try {
   await page.evaluate((index) => {
     window.__mockWolvesPlayers[index].seekTo(48.01, true)
   }, introPlayerIndex)
-  const captionsToggle = page.getByLabel('CC')
-  assert('Destiny CC switch is visible and off by default', await captionsToggle.isChecked(), false)
-  assert('Post-Kaslin status stays hidden until CC is enabled', await page.locator('.wolves-intro-overlay-burned-caption').count(), 0)
-  await captionsToggle.check()
-  await page.waitForSelector('.wolves-intro-overlay-burned-caption', { state: 'visible', timeout: 5_000 })
   assert(
-    'Post-Kaslin status appears after CC is enabled',
-    await page.locator('.wolves-intro-overlay-burned-caption').textContent(),
-    'they serve humanity, they fight for their something greater than themselves',
-  )
-  assert(
-    'Candle sequence shows the Nova tag in the music plaque',
+    'Candle sequence keeps the authored music plaque',
     await page.locator('.wc-widget-title').textContent(),
-    '#novaforever',
+    'The Wolves are Coming',
   )
   await page.evaluate((index) => {
     window.__mockWolvesPlayers[index].seekTo(87.5, true)
@@ -338,9 +319,19 @@ try {
   await seekStage(167.8)
   const trackZeroNameplateLabel = page.locator('.wc-stage-nameplate .wc-nameplate-label')
   const trackZeroSignal = page.locator('.wc-stage-nameplate .wc-nameplate-detail')
+  // The plate label slow-fades (1.5s out-in) between authored signal lines, so signal
+  // assertions wait for the expected authored text instead of sampling mid-fade.
+  const assertSignal = async (label, expected) => {
+    const ok = await page.waitForFunction(
+      text => document.querySelector('.wc-stage-nameplate .wc-nameplate-label')?.textContent === text,
+      expected,
+      { timeout: 5_000 },
+    ).then(() => true).catch(() => false)
+    assert(label, ok ? expected : await trackZeroNameplateLabel.textContent(), expected)
+  }
   assert('Track 0 nameplate enables slow signal fades', await page.locator('.wc-stage-nameplate .wc-nameplate').evaluate(node => node.classList.contains('wc-nameplate--slow-fade')), true)
-  assert('Track 0 keeps its static command label', await trackZeroNameplateLabel.textContent(), 'kubectl apply -f ublue.yaml -n k8s-community')
-  assert('Track 0 opens with the colon-free signal detail', await trackZeroSignal.textContent(), 'Incoming Signal')
+  await assertSignal('Track 0 publishes the authored signal cycle in the plate label', 'Field Medical Exoskeleton: [ Missing ]')
+  assert('Track 0 keeps the authored track title in the detail line', await trackZeroSignal.textContent(), '7 Days to the Wolves')
   const jonoAtStart = await page.locator('.flickr-photo-layer').evaluateAll((layers) => {
     const activeLayer = layers.find(layer => getComputedStyle(layer).zIndex === '2')
     return activeLayer?.querySelector('img')?.getAttribute('src')
@@ -388,7 +379,7 @@ try {
   assert('Track 0 lower thesis overlay remains inactive during Marina Moore', await page.locator('.wc-thesis').count(), 0)
 
   await seekStage(175.958)
-  assert('Incoming Signal holds until the Bluefin group', await trackZeroSignal.textContent(), 'Incoming Signal')
+  await assertSignal('Signal cycle holds until the Bluefin group', 'TARGET ACQUIRED: GOSPO, KYLE. Earth')
   const marinaBeforeComposite = await page.locator('.flickr-photo-layer').evaluateAll((layers) => {
     const activeLayer = layers.find(layer => getComputedStyle(layer).zIndex === '2')
     return activeLayer?.querySelector('img')?.getAttribute('src')
@@ -403,7 +394,7 @@ try {
   assertTruthy('Sherman + m2 composite starts at 2:55.959', shermanAtStart?.includes('sherman-m2.webp'))
 
   await seekStage(175.97)
-  assert('Bluefin group receives its authored signal', await trackZeroSignal.textContent(), 'The Blue Delivers')
+  await assertSignal('Bluefin group receives its authored signal', 'The Blue Delivers')
   await captureStage(page, 'track-zero-bluefin-signal')
 
   await seekStage(184.118)
@@ -465,14 +456,13 @@ try {
   assert('Second Hikari slide hands off at 3:12.279', hikariAtHandoff?.includes('hikari2.JPG'), false)
 
   await seekStage(196.36)
-  assert('Post-Bluefin signal reports the thriving-community pod', await trackZeroSignal.textContent(), 'pod/thriving-community created')
+  await assertSignal('Post-Bluefin signal reports the thriving-community pod', 'pod/thriving-community created')
   assert('Lower thesis remains separate after the Bluefin group', await page.locator('.wc-thesis').count(), 0)
 
   await seekStage(229)
-  assert(
-    'Chanting bridge reports the experimental collaboration image',
-    await trackZeroSignal.textContent(),
-    'Warning: ImagePullBackOff - "humans/collaboration:latest" is currently experimental.',
+  await assertSignal(
+    'Chanting bridge reports the ImagePullBackOff warning',
+    'Warning: ImagePullBackOff',
   )
   const warningNameplateBounds = await page.locator('.wc-stage-nameplate .wc-nameplate').evaluate((nameplate) => {
     const label = nameplate.querySelector('.wc-nameplate-label')
@@ -488,31 +478,24 @@ try {
   await captureStage(page, 'track-zero-community-warning')
 
   await seekStage(277)
-  assert(
+  await assertSignal(
     'Heavy build-up reports the human fallback',
-    await trackZeroSignal.textContent(),
-    'Falling back to "humans/trying-their-best:v1"',
+    'Falling back to "humans/trying-their-best:v1" slowly',
   )
   assert('Lower thesis remains separate during the fallback', await page.locator('.wc-thesis').count(), 0)
   await captureStage(page, 'track-zero-community-fallback')
 
   await seekStage(345)
   await page.waitForTimeout(250)
-  assert('Fallback signal remains through the thesis opening', await trackZeroSignal.textContent(), 'Falling back to "humans/trying-their-best:v1"')
+  await assertSignal('Thesis opening restarts the authored signal cycle', 'INCOMING SIGNAL:')
   assertTruthy('Lower thesis keeps its authored opening text', (await page.locator('.wc-thesis').textContent())?.includes('We\'ve got your back.'))
 
   await seekStage(408)
-  assert('Titanfall signal remains the locked finale handoff', await trackZeroSignal.textContent(), 'Bazzite Mk6 Units: Prepare for Titanfall.')
+  await assertSignal('Titanfall signal remains the locked finale handoff', 'Bazzite Mk6 Units: Prepare for Titanfall')
   assertTruthy('Lower thesis keeps its authored finale text', (await page.locator('.wc-thesis').textContent())?.includes('Become Legend'))
   await captureStage(page, 'track-zero-composites')
 
   await page.getByLabel('Next').click()
-  await page.waitForSelector('.wolves-creator-shorts-interstitial', { state: 'visible', timeout: 10_000 })
-  await page.getByRole('button', { name: /\[ START SHORTS \]/ }).click()
-  for (let index = 0; index < 4; index++) {
-    await page.getByLabel('Skip video').click()
-  }
-  await page.waitForSelector('.wolves-creator-shorts-interstitial', { state: 'hidden', timeout: 10_000 })
   await page.waitForFunction(() =>
     document.querySelector('.wc-stage-nameplate')?.textContent?.includes('Ghosts In The Mist'),
   )
@@ -527,7 +510,9 @@ try {
   const ghostsCaptionText = (await ghostsCaption.locator('.wallpaper-theater-caption-body').allTextContents())
     .map(paragraph => paragraph.replace(/\s+/g, ' ').trim())
     .join(' ')
-  assert('Ghosts opener identifies Jorge Castro', await ghostsCaption.locator('.wallpaper-theater-caption-title').textContent(), 'Jorge Castro')
+  assert('Ghosts opener identifies Jorge Castro', await ghostsCaption.locator('.theater-guardian-name').textContent(), 'Jorge Castro')
+  assert('Ghosts opener carries the Sentinel Titan class', await ghostsCaption.locator('.theater-guardian-class').textContent(), 'Sentinel Titan')
+  assertTruthy('Ghosts opener carries the guardian titles', (await ghostsCaption.locator('.theater-guardian-title').textContent())?.includes('Upender of Antipatterns'))
   assert('Ghosts opener preserves Jorge quote', ghostsCaptionText, JORGE_GHOSTS_QUOTE)
   const ghostsCaptionMetrics = await ghostsCaption.evaluate((caption) => {
     const viewer = document.querySelector('.flickr-gallery-wrapper')

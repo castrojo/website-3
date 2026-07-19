@@ -83,6 +83,36 @@ export function pinTrackZeroHeroSlides<T extends { id: string }>(slides: readonl
   ]
 }
 
+/**
+ * Locked opening run of the post-hero People stretch (starts right after the
+ * Bluefin group hands off at 196.36s): Walters -> Tophee -> Kirkland ->
+ * 0R0A9083 -> Daily Highlights 052, back-to-back in this exact order.
+ */
+export const postHeroOpeningSequenceIds = [
+  'wolves/people/walters.JPG',
+  'wolves/people/flickr-54137782365.webp',
+  'wolves/people/kirkland.png',
+  'wolves/people/flickr-55343975781.webp',
+  'wolves/people/kubecon-55168545279.webp',
+] as const
+
+/**
+ * Moves the post-hero opening sequence to the front of the People pool in its
+ * locked order, keeping every other slide in the given order. Missing members
+ * are skipped so pool drift cannot break the schedule.
+ */
+export function pinTrackZeroPostHeroOpening<T extends { id: string }>(slides: readonly T[]): T[] {
+  const sequenceIds: readonly string[] = postHeroOpeningSequenceIds
+  const openingSlides = sequenceIds
+    .map(id => slides.find(slide => slide.id === id))
+    .filter((slide): slide is T => slide !== undefined)
+
+  return [
+    ...openingSlides,
+    ...slides.filter(slide => !sequenceIds.includes(slide.id)),
+  ]
+}
+
 // Explicit reservation of ten user-supplied People photos for the fast finale.
 export const trackZeroFastFinalePhotoIds: ReadonlySet<string> = new Set([
   'wolves/people/20260709-osc26-distrobox-1.webp',

@@ -18,6 +18,7 @@ import {
   marinaMooreSlideId,
   marinaMooreTrackZeroWindow,
   pinTrackZeroHeroSlides,
+  pinTrackZeroPostHeroOpening,
   splitTrackZeroFastFinaleSlides,
 } from '@/data/wolves-track-zero-slides'
 import { wallpapers } from './wallpapers-list'
@@ -287,13 +288,11 @@ const timelineSlides = computed<TimelineSlide[]>(() => {
   const shuffledDaynight = deterministicShuffle(daynightShowcase, 101)
   const shuffledNormalShowcase = deterministicShuffle(normalShowcase, 202)
   const { regularSlides, finaleSlides } = splitTrackZeroFastFinaleSlides(localPeople)
-  const shuffledPeople = pinTrackZeroHeroSlides(deterministicShuffle(regularSlides, 303))
-  const waltersTarget = 'wolves/people/walters.JPG'
-  const waltersIndex = shuffledPeople.findIndex(wp => wp.id === waltersTarget)
-  if (waltersIndex !== -1) {
-    const waltersPhoto = shuffledPeople.splice(waltersIndex, 1)[0]
-    shuffledPeople.unshift(waltersPhoto)
-  }
+  // Locked post-hero opening (Walters -> Tophee -> Kirkland -> 0R0A9083 -> 052)
+  // sits at the head of the People pool; the hero locks are extracted by id below.
+  const shuffledPeople = pinTrackZeroPostHeroOpening(
+    pinTrackZeroHeroSlides(deterministicShuffle(regularSlides, 303)),
+  )
 
   const result: TimelineSlide[] = []
   let currentTime = 0
@@ -990,7 +989,33 @@ onBeforeUnmount(() => {
                 'is-featured-opening': activePhoto.id === ghostsInTheMistOpeningSlide.photoId,
               }"
             >
-              <p class="wallpaper-theater-caption-title">
+              <template v-if="activePhoto.id === ghostsInTheMistOpeningSlide.photoId">
+                <div class="theater-guardian-header" aria-hidden="true">
+                  <div class="theater-guardian-horizon theater-guardian-horizon-left" />
+                  <svg class="theater-guardian-crest" viewBox="0 0 100 100">
+                    <polygon points="50,5 85,20 95,55 50,95 5,55 15,20" class="theater-guardian-crest-outer" />
+                    <polygon points="50,12 78,25 87,52 50,85 13,52 22,25" class="theater-guardian-crest-inner" />
+                    <path d="M35,45 L50,60 L65,45" class="theater-guardian-crest-chevron" />
+                  </svg>
+                  <div class="theater-guardian-horizon theater-guardian-horizon-right" />
+                </div>
+                <p class="theater-guardian-label">
+                  MAINTAINER // GUARDIAN
+                </p>
+                <p class="theater-guardian-class">
+                  {{ ghostsInTheMistOpeningSlide.guardianClass }}
+                </p>
+                <p class="theater-guardian-name">
+                  {{ activePhoto.title }}
+                </p>
+                <p class="theater-guardian-title">
+                  <template v-for="(token, tIdx) in ghostsInTheMistOpeningSlide.guardianTitle.split(' | ')" :key="tIdx">
+                    <span v-if="tIdx > 0" class="theater-guardian-title-sep" aria-hidden="true">|</span>
+                    {{ token }}
+                  </template>
+                </p>
+              </template>
+              <p v-else class="wallpaper-theater-caption-title">
                 {{ activePhoto.title }}
               </p>
               <template v-if="activePhoto.description">
@@ -1479,9 +1504,17 @@ onBeforeUnmount(() => {
   text-shadow: 0 2px 8px rgb(0 0 0 / 70%);
 
   &.is-featured-opening {
+    bottom: 2%;
     width: min(96%, 72rem);
-    max-height: 55%;
-    padding-block: clamp(0.9rem, 0.7rem + 0.7vw, 1.4rem);
+    max-height: 60%;
+    padding-block: clamp(0.7rem, 0.5rem + 0.5vw, 1rem);
+    text-align: center;
+
+    .wallpaper-theater-caption-body {
+      margin-bottom: 0.6rem;
+      font-size: clamp(1.15rem, 1rem + 0.5vw, 1.45rem);
+      line-height: 1.4;
+    }
   }
 
   &.is-title-only {
@@ -1517,6 +1550,96 @@ onBeforeUnmount(() => {
   &:last-child {
     margin-bottom: 0;
   }
+}
+
+/* Guardian nameplate treatment for the featured Ghosts In The Mist opening slide, mirroring
+   the intro video's guardian plates (crest, horizon lines, class label, gradient name). */
+.theater-guardian-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.theater-guardian-horizon {
+  flex: 1 1 auto;
+  height: 2px;
+  min-width: 2rem;
+  background: linear-gradient(to right, transparent, #93c5fd 60%, #fff 100%);
+  box-shadow: 0 0 8px rgb(147 197 253 / 55%);
+}
+
+.theater-guardian-horizon-right {
+  background: linear-gradient(to left, transparent, #93c5fd 60%, #fff 100%);
+}
+
+.theater-guardian-crest {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 6px rgb(147 197 253 / 65%));
+}
+
+.theater-guardian-crest-outer {
+  fill: none;
+  stroke: #93c5fd;
+  stroke-width: 2;
+}
+
+.theater-guardian-crest-inner {
+  fill: rgb(8 12 20 / 95%);
+  stroke: #f5f5f5;
+  stroke-width: 1;
+}
+
+.theater-guardian-crest-chevron {
+  fill: none;
+  stroke: #93c5fd;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theater-guardian-label {
+  margin: 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.6rem);
+  letter-spacing: 0.35em;
+  color: #93c5fd;
+}
+
+.theater-guardian-class {
+  margin: 0.3rem 0 0;
+  font-size: clamp(1.4rem, 1.1rem + 0.7vw, 1.9rem);
+  letter-spacing: 0.05em;
+  color: #bfdbfe;
+  text-transform: uppercase;
+}
+
+.theater-guardian-name {
+  margin: 0.2rem 0 0;
+  font-size: clamp(2.2rem, 1.7rem + 1.3vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #f5f5f5;
+  background: linear-gradient(to bottom, #fff 0%, #e2e8f0 60%, #a0aec0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgb(255 255 255 / 25%));
+}
+
+.theater-guardian-title {
+  margin: 0.35rem 0 0.9rem;
+  font-size: clamp(1.3rem, 1.1rem + 0.6vw, 1.7rem);
+  color: #94a3b8;
+}
+
+.theater-guardian-title-sep {
+  display: inline-block;
+  margin: 0 0.4em;
+  color: #93c5fd;
+  font-weight: 400;
 }
 
 .animate-fade {

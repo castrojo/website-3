@@ -15,6 +15,8 @@ import {
   marinaMooreTrackZeroWindow,
   pinJonoBaconAtTrackZeroWindow,
   pinTrackZeroHeroSlides,
+  pinTrackZeroPostHeroOpening,
+  postHeroOpeningSequenceIds,
   shermanM2CompositeSlideId,
   shermanM2CompositeTrackZeroWindow,
   splitTrackZeroFastFinaleSlides,
@@ -136,5 +138,40 @@ describe('wolves Track 0 slide locks', () => {
     expect(trackZeroFastFinalePhotoIds).toContain(newPhoto.id)
     expect(regularSlides).toEqual(regular)
     expect(finaleSlides).toEqual([newPhoto])
+  })
+
+  it('locks the post-hero opening run in order: walters, tophee, kirkland, 0R0A9083, 052', () => {
+    expect(postHeroOpeningSequenceIds).toEqual([
+      'wolves/people/walters.JPG',
+      'wolves/people/flickr-54137782365.webp',
+      'wolves/people/kirkland.png',
+      'wolves/people/flickr-55343975781.webp',
+      'wolves/people/kubecon-55168545279.webp',
+    ])
+
+    const sequence = postHeroOpeningSequenceIds.map(id => ({ id }))
+    const scrambled = [
+      { id: 'people-a' },
+      sequence[3],
+      sequence[0],
+      { id: 'people-b' },
+      sequence[4],
+      sequence[1],
+      sequence[2],
+    ]
+
+    expect(pinTrackZeroPostHeroOpening(scrambled)).toEqual([
+      ...sequence,
+      { id: 'people-a' },
+      { id: 'people-b' },
+    ])
+  })
+
+  it('skips missing post-hero opening members without breaking the pool', () => {
+    const walters = { id: 'wolves/people/walters.JPG' }
+    const regular = { id: 'people-a' }
+
+    expect(pinTrackZeroPostHeroOpening([regular, walters])).toEqual([walters, regular])
+    expect(pinTrackZeroPostHeroOpening([regular])).toEqual([regular])
   })
 })
