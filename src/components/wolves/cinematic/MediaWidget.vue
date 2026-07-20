@@ -175,7 +175,7 @@ function handleCaptionChange(event: Event) {
   flex-wrap: wrap;
   gap: 1.6rem;
   margin: 0 auto;
-  max-width: 116rem;
+  max-width: 84rem;
   padding: 1.2rem 1.6rem;
 }
 
