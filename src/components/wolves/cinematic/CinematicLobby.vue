@@ -109,7 +109,7 @@ const lobbyBackground = `${import.meta.env.BASE_URL}evening/night-sky.webp`
 }
 
 .wc-lobby-title {
-  font-size: clamp(1.8rem, 3vw, 3rem);
+  font-size: clamp(1.5rem, 2.2vw, 2.4rem);
   font-weight: 800;
   letter-spacing: 0.22em;
   margin-right: -0.22em; // optically recenters tracked uppercase
@@ -207,7 +207,7 @@ const lobbyBackground = `${import.meta.env.BASE_URL}evening/night-sky.webp`
   }
 
   .wc-lobby-title {
-    font-size: clamp(1.8rem, 6vw, 2.5rem);
+    font-size: clamp(1.5rem, 5vw, 2rem);
     letter-spacing: 0.18em;
     margin-right: -0.18em;
   }
