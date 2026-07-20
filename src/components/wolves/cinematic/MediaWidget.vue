@@ -66,6 +66,28 @@ function handleSeek(event: MouseEvent) {
   emit('seek', (event.clientX - rect.left) / rect.width)
 }
 
+function handleSeekKeydown(event: KeyboardEvent) {
+  const step = event.shiftKey ? 0.1 : 0.02
+  let ratio = store.overallProgress
+  if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
+    ratio += step
+  }
+  else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
+    ratio -= step
+  }
+  else if (event.key === 'Home') {
+    ratio = 0
+  }
+  else if (event.key === 'End') {
+    ratio = 1
+  }
+  else {
+    return
+  }
+  event.preventDefault()
+  emit('seek', Math.min(Math.max(ratio, 0), 1))
+}
+
 function handleVoiceOverChange(event: Event) {
   emit('toggleVoiceOver', (event.target as HTMLInputElement).checked)
 }
@@ -88,11 +110,13 @@ function handleCaptionChange(event: Event) {
         ref="progressEl"
         class="wc-widget-progress"
         role="slider"
-        aria-label="Seek"
+        aria-label="Seek through playback"
         :aria-valuenow="deploymentPercent"
         aria-valuemin="0"
         aria-valuemax="100"
+        tabindex="0"
         @click="handleSeek"
+        @keydown="handleSeekKeydown"
       >
         <div class="wc-widget-progress-fill" :style="{ width: `${store.overallProgress * 100}%` }" />
       </div>
@@ -143,7 +167,7 @@ function handleCaptionChange(event: Event) {
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
       </button>
       <button
-        class="wc-control"
+        class="wc-control wc-control--primary"
         type="button"
         :aria-label="store.playing ? 'Pause' : 'Play'"
         @click="emit('togglePlay')"
@@ -167,53 +191,65 @@ function handleCaptionChange(event: Event) {
 <style scoped lang="scss">
 .wc-widget {
   position: fixed;
-  inset-inline: 0;
-  bottom: 0;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 1000; // above the intro overlay's fixed layer so one transport rules both phases
-  display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 1.6rem;
-  margin: 0 auto;
-  max-width: 84rem;
-  padding: 1.2rem 1.6rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'info controls';
+  align-items: center;
+  gap: 8px;
+  width: min(calc(100vw - 32px), 576px);
+  margin: 0;
+  padding: 12px 16px;
+  transform: translateX(-50%);
+  touch-action: manipulation;
+}
+
+.wc-widget-art,
+.wc-widget-telemetry {
+  display: none;
 }
 
 .wc-widget-art {
-  width: 5.6rem;
-  height: 5.6rem;
+  grid-area: art;
+  width: 3.2rem;
+  height: 3.2rem;
   object-fit: cover;
   clip-path: polygon(0.5rem 0, 100% 0, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%, 0 0.5rem);
 }
 
 .wc-widget-info {
+  grid-area: info;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  flex: 1;
+  gap: 2px;
   min-width: 0;
 }
 
 .wc-widget-title {
-  font-size: 1.7rem;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .wc-widget-progress {
   position: relative;
-  height: 0.8rem;
+  height: 32px;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 
   &::before {
     content: '';
     position: absolute;
     top: 50%;
     inset-inline: 0;
-    height: 0.3rem;
+    height: 0.2rem;
     transform: translateY(-50%);
     background: rgb(233 233 229 / 14%);
   }
@@ -223,7 +259,7 @@ function handleCaptionChange(event: Event) {
   position: absolute;
   top: 50%;
   left: 0;
-  height: 0.3rem;
+  height: 0.2rem;
   transform: translateY(-50%);
   background: var(--wc-gold);
   transition: width 0.15s linear;
@@ -232,8 +268,9 @@ function handleCaptionChange(event: Event) {
 
 .wc-widget-meta {
   display: flex;
-  gap: 1.6rem;
+  gap: 8px;
   align-items: baseline;
+  flex-wrap: wrap;
 }
 
 .wc-widget-toggle {
@@ -278,20 +315,20 @@ function handleCaptionChange(event: Event) {
 
 .wc-widget-time {
   font-family: var(--wc-font-mono);
-  font-size: 1.1rem;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.06em;
   color: var(--wc-grey);
 }
 
 .wc-widget-telemetry {
+  grid-area: telemetry;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  flex-shrink: 0;
-  min-width: min(30rem, 100%);
+  gap: 0.25rem;
+  min-width: 0;
   font-family: var(--wc-font-mono);
-  font-size: 0.95rem;
-  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
   color: var(--wc-grey);
 }
 
@@ -300,6 +337,10 @@ function handleCaptionChange(event: Event) {
   justify-content: space-between;
   gap: 0.8rem;
   white-space: nowrap;
+}
+
+.wc-widget-telemetry {
+  display: none;
 }
 
 .wc-widget-telemetry-accent {
@@ -329,69 +370,67 @@ function handleCaptionChange(event: Event) {
 }
 
 .wc-widget-controls {
+  grid-area: controls;
   display: flex;
-  gap: 0.8rem;
-  margin-left: auto;
+  gap: 8px;
 }
 
-@media (max-width: 900px) {
-  .wc-widget {
-    gap: 1rem 1.2rem;
-    align-items: flex-start;
-    padding: 0.9rem 1.1rem;
-  }
+.wc-widget-controls .wc-control {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
 
-  .wc-widget-info {
-    flex: 1 1 36rem;
-  }
+.wc-widget-controls .wc-control svg {
+  width: 20px;
+  height: 20px;
+}
 
-  .wc-widget-telemetry {
-    order: 3;
-    width: 100%;
-    min-width: 0;
-    gap: 0.3rem;
-    font-size: 0.85rem;
-    letter-spacing: 0.04em;
-  }
+.wc-widget-controls .wc-control--primary {
+  color: var(--wc-bg);
+  background: var(--wc-gold);
+  border-color: var(--wc-gold);
+}
 
-  .wc-widget-telemetry-row {
-    white-space: nowrap;
-  }
+.wc-widget-controls .wc-control--primary:hover,
+.wc-widget-controls .wc-control--primary:focus-visible {
+  color: var(--wc-bg);
+  background: var(--wc-white);
+  border-color: var(--wc-white);
+}
 
-  .wc-widget-controls {
-    margin-left: 0;
-  }
+.wc-widget-progress:focus-visible {
+  outline: 2px solid var(--wc-gold);
+  outline-offset: 3px;
 }
 
 @media (max-width: 640px) {
   .wc-widget {
-    max-width: none;
-    gap: 0.5rem 0.8rem;
-    padding: 0.5rem 0.9rem;
-  }
-
-  .wc-widget-art {
-    display: none;
+    width: calc(100vw - 24px);
+    gap: 8px;
+    padding: 10px 12px;
   }
 
   .wc-widget-info {
-    gap: 0.3rem;
+    gap: 0.2rem;
   }
 
   .wc-widget-title {
     white-space: normal;
-    font-size: 1.25rem;
+    font-size: 15px;
     line-height: 1.1;
   }
 
   .wc-widget-meta {
-    gap: 0.7rem;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
   .wc-widget-time {
-    font-size: 0.92rem;
-    letter-spacing: 0.08em;
+    font-size: 12px;
+    letter-spacing: 0.06em;
   }
 
   .wc-widget-toggle {
@@ -409,32 +448,8 @@ function handleCaptionChange(event: Event) {
     white-space: normal;
   }
 
-  .wc-widget-telemetry {
-    gap: 0.2rem;
-    font-size: 0.72rem;
-    letter-spacing: 0.03em;
-  }
-
-  .wc-widget-telemetry-row:last-child {
-    display: none;
-  }
-
-  .wc-widget-meter {
-    height: 0.25rem;
-  }
-
   .wc-widget-controls {
-    gap: 0.5rem;
-  }
-
-  .wc-widget-controls .wc-control {
-    width: 3.4rem;
-    height: 3.4rem;
-  }
-
-  .wc-widget-controls .wc-control svg {
-    width: 1.6rem;
-    height: 1.6rem;
+    gap: 8px;
   }
 
   // The block readout wraps badly at phone widths; times remain.

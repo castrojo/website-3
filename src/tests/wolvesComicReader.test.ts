@@ -273,6 +273,22 @@ describe('wolvesComicReader', () => {
     expect(galleryCrossfadeDuration(wrapper)).toBeCloseTo(612, 5)
   })
 
+  it('changes the slideshow on the 4:08 scene cut', async () => {
+    const wrapper = mount(WolvesComicReader, {
+      props: {
+        trackIndex: 0,
+        playlistCurrentTime: 247.592,
+      },
+    })
+
+    const beforeCut = activeTimelineImage(wrapper)
+    expect(beforeCut).toBeTruthy()
+
+    await wrapper.setProps({ playlistCurrentTime: 247.596 })
+
+    expect(activeTimelineImage(wrapper)).not.toBe(beforeCut)
+  })
+
   it('renders Jono Bacon’s Cult Psychology title as a theater banner', async () => {
     const wrapper = mount(WolvesComicReader, {
       props: {
@@ -711,6 +727,9 @@ describe('wolvesComicReader', () => {
     expect(galleryCaption(wrapper)).toBe(firstCaption)
     await wrapper.setProps({ playlistCurrentTime: hold })
     expect(galleryCaption(wrapper)).not.toBe(firstCaption)
+    const activeLayer = wrapper.findAll('.flickr-photo-layer')
+      .find(layer => (layer.attributes('style') ?? '').includes('z-index: 2'))
+    expect(activeLayer?.attributes('style')).toContain('transition: opacity')
     expect(galleryCrossfadeDuration(wrapper)).toBeLessThanOrEqual(hold * 1000 * 0.25)
   })
 

@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import type { YoutubePlayer } from '@/composables/useYoutubeIframeApi'
 import { ref } from 'vue'
 import {
+  getChromeFreeYoutubePlayerVars,
   getYoutubePlayerConstructor,
   getYoutubePlayerState,
   loadYoutubeIframeApi,
@@ -85,6 +86,12 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
     const segment = store.segments[segmentIndex]
     state.player.cueVideoById?.({ videoId: segment.youtubeId, startSeconds: segment.startSeconds })
     applyVolume(state.player, 0)
+
+    // Prewarm the inactive buffer in the background so the next segment is
+    // already buffered and ready to take over without a visible hitch.
+    if (side !== activeSide.value) {
+      state.player.playVideo?.()
+    }
   }
 
   /** rAF volume ramp between the two players over the segment's crossfade window. */
@@ -264,18 +271,7 @@ export function useDualBufferPlayer(options: DualBufferOptions) {
       const player: YoutubePlayer = new PlayerCtor(host, {
         width: '100%',
         height: '100%',
-        playerVars: {
-          // Strip all YouTube chrome. modestbranding/showinfo are deprecated no-ops
-          // upstream but harmless; kept for older embed behavior.
-          controls: 0,
-          rel: 0,
-          iv_load_policy: 3,
-          disablekb: 1,
-          fs: 0,
-          playsinline: 1,
-          modestbranding: 1,
-          origin: window.location.origin,
-        },
+        playerVars: getChromeFreeYoutubePlayerVars(),
         events: {
           onReady: () => resolveReady(player),
           onStateChange: (event: { data: number }) => handleStateChange(side, event.data),

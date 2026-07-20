@@ -22,6 +22,40 @@ describe('wolves cinematic stage status plate', () => {
     setActivePinia(createPinia())
   })
 
+  it('keeps Wolves-only theater overlays out of back-catalogue albums', async () => {
+    const store = useCinematicStore()
+    store.loadExperience({
+      id: 'album-test',
+      title: 'Album Test',
+      artwork: 'album.jpg',
+      segments: [{
+        id: 'album-track-1',
+        kind: 'youtube',
+        youtubeId: 'album-track-1',
+        chapter: 'ALBUM',
+        title: 'Track One',
+        artist: 'Artist',
+        artwork: 'track.jpg',
+        durationSeconds: 120,
+      }],
+    })
+
+    const wrapper = mount(CinematicStage, {
+      global: {
+        stubs: {
+          TheaterExperience: { template: '<div class="theater-experience-stub" />' },
+          WolvesOrgAds: { template: '<div class="org-ads-stub" />' },
+          Nameplate: true,
+          CinematicCaptions: true,
+          CinematicTransition: true,
+        },
+      },
+    })
+
+    expect(wrapper.find('.theater-experience-stub').exists()).toBe(false)
+    expect(wrapper.find('.org-ads-stub').exists()).toBe(false)
+  })
+
   it('keeps Track 0 communications when the slide deck reports a people title', async () => {
     const store = useCinematicStore()
     store.segmentIndex = 0

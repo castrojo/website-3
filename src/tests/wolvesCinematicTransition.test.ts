@@ -17,6 +17,7 @@ describe('cinematicTransition overlay duration', () => {
   it('holds the transition overlay for 11 seconds then hides it', async () => {
     const store = useCinematicStore()
     store.phase = 'cinematic'
+    store.showTransitionOverlay = true
     store.segmentIndex = 0
 
     const wrapper = mount(CinematicTransition)
@@ -54,6 +55,7 @@ describe('cinematicTransition overlay duration', () => {
   it('does not show a transition when returning to 7 Days to the Wolves', async () => {
     const store = useCinematicStore()
     store.phase = 'cinematic'
+    store.showTransitionOverlay = true
     store.segmentIndex = 1
 
     const wrapper = mount(CinematicTransition)
@@ -63,9 +65,23 @@ describe('cinematicTransition overlay duration', () => {
     expect(wrapper.find('.wc-transition-overlay').exists()).toBe(false)
   })
 
+  it('skips the transition overlay for back-catalogue albums', async () => {
+    const store = useCinematicStore()
+    store.phase = 'cinematic'
+    store.showTransitionOverlay = false
+    store.segmentIndex = 0
+
+    const wrapper = mount(CinematicTransition)
+    store.segmentIndex = 2
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.wc-transition-overlay').exists()).toBe(false)
+  })
+
   it('does not show a title slide for the Ghosts In The Mist handoff', async () => {
     const store = useCinematicStore()
     store.phase = 'cinematic'
+    store.showTransitionOverlay = true
     store.segmentIndex = 0
 
     const wrapper = mount(CinematicTransition)

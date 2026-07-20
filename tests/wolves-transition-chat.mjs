@@ -189,6 +189,17 @@ try {
   await page.waitForSelector('.wolves-intro-overlay', { state: 'hidden', timeout: 10_000 })
 
   await page.waitForSelector('.wc-stage', { state: 'visible', timeout: 10_000 })
+  const compactPlayerBounds = await page.locator('.wc-stage .wc-layer').evaluateAll(layers =>
+    layers.map(layer => {
+      const rect = layer.getBoundingClientRect()
+      return { width: rect.width, height: rect.height, opacity: getComputedStyle(layer).opacity }
+    }),
+  )
+  assertTruthy(
+    'Cinematic YouTube buffers stay compact and invisible while the theater owns presentation',
+    compactPlayerBounds.length === 2
+      && compactPlayerBounds.every(bounds => bounds.width <= 2 && bounds.height <= 2 && bounds.opacity === '0'),
+  )
 
   for (const transition of transitions) {
     await page.getByLabel('Next').click()

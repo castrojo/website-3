@@ -27,8 +27,8 @@ const legacyTrimmedBodyTimeline = [
   ['quote-third-disciple', 231.112018, 234.143025],
   ['maintenance-window', 234.143025, 238.206856],
   ['quote-berkus', 238.206856, 242.175375],
-  ['lorem-prologue-1', 242.175375, 247.487362],
-  ['lorem-prologue-2', 247.487362, 256.03479],
+  ['lorem-prologue-1', 242.175375, 247.594],
+  ['lorem-prologue-2', 247.594, 256.03479],
   ['forbidden-factory', 256.03479, 260.308503],
   ['jordan-adrian', 260.308503, 268.224845],
   ['quote-childhoods-end-future', 268.224845, 271.224845],
@@ -137,6 +137,17 @@ describe('wolves narrative timeline', () => {
   it('keeps every Track 0 slot at its approved trimmed-body boundaries', () => {
     expect(wolvesNarrativeTimeline.map(slot => [slot.artifactId, slot.startTime, slot.endTime]))
       .toEqual(legacyTrimmedBodyTimeline)
+  })
+
+  it('coalesces the 4:08 prologue handoff with its beat-authoritative slide cut', () => {
+    expect(getNarrativeSlotForTime(247.593)).toMatchObject({
+      artifactId: 'lorem-prologue-1',
+      endTime: 247.594,
+    })
+    expect(getNarrativeSlotForTime(247.594)).toMatchObject({
+      artifactId: 'lorem-prologue-2',
+      startTime: 247.594,
+    })
   })
 
   it('keeps each retimed post-Golden-Era slot between three and eighteen seconds', () => {

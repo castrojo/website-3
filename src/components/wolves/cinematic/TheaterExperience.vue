@@ -5,7 +5,7 @@ import WolvesLoreColumn from '@/components/wolves/WolvesLoreColumn.vue'
 import { getChromeFreeYoutubeEmbedParams } from '@/composables/useYoutubeIframeApi'
 import { getNarrativeSlotForTime } from '@/data/wolves-narrative-timeline'
 import { getWolvesThesisState } from '@/data/wolves-thesis-sequence'
-import { useCinematicStore } from '@/stores/cinematic'
+import { useCinematicStore, WOLVES_EXPERIENCE } from '@/stores/cinematic'
 
 // The authored seven-days immersive layer, mounted over the video during the
 // 7 Days segment. The video below stays the audio source; the locked comic
@@ -222,7 +222,11 @@ onBeforeUnmount(() => {
       <div class="wc-trackzero-viewer">
         <!-- One persistent reader across every part preserves the single
              Fisher-Yates gallery shuffle (no photo reuse between songs). -->
-        <WolvesComicReader :track-index="store.segmentIndex" :playlist-current-time="time" />
+        <WolvesComicReader
+          :track-index="store.segmentIndex"
+          :playlist-current-time="time"
+          :wolves-experience="store.experienceId === WOLVES_EXPERIENCE.id"
+        />
 
         <Transition name="wc-thesis">
           <div

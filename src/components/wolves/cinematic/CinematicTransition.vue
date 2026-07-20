@@ -56,10 +56,17 @@ if (typeof window !== 'undefined' && 'matchMedia' in window) {
 // Ghosts In The Mist opens on the Jorge guardian plate, so its handoff skips
 // the title slide instead of covering the plate.
 watch(
-  () => store.segmentIndex,
+  () => [store.segmentIndex, store.phase, store.showTransitionOverlay] as const,
   () => {
-    if (store.phase !== 'cinematic' || store.segmentIndex === 0
-      || segment.value?.id === 'ghosts-in-the-mist') {
+    if (store.phase !== 'cinematic' || !store.showTransitionOverlay) {
+      active.value = false
+      if (hideTimer) {
+        clearTimeout(hideTimer)
+        hideTimer = null
+      }
+      return
+    }
+    if (store.segmentIndex === 0 || segment.value?.id === 'ghosts-in-the-mist') {
       return
     }
     active.value = true

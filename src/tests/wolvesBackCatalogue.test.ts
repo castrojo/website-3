@@ -44,6 +44,7 @@ describe('back catalogue experiences', () => {
     store.loadExperience(ALBUM)
 
     expect(store.phase).toBe('lobby')
+    expect(store.experienceId).toBe(ALBUM.id)
     expect(store.segmentCount).toBe(2)
     expect(store.segment.youtubeId).toBe('v1')
 

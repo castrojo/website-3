@@ -24,10 +24,15 @@ import {
 } from '@/data/wolves-track-zero-slides'
 import { wallpapers } from './wallpapers-list'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   trackIndex?: number
   playlistCurrentTime?: number
-}>()
+  wolvesExperience?: boolean
+}>(), {
+  wolvesExperience: true,
+})
+
+const isWolvesExperience = computed(() => props.wolvesExperience)
 
 // PDF source ───────────────────────────────────────────────────────────────
 const pdfUrl = `${import.meta.env.BASE_URL}color-with-bluefin.pdf`
@@ -76,6 +81,8 @@ const opacityA = ref(1)
 const opacityB = ref(0)
 const slideAIndex = ref(-1)
 const slideBIndex = ref(-1)
+const crossfadeActive = ref(false)
+let crossfadeTimer: ReturnType<typeof setTimeout> | null = null
 const TIMELINE_BOUNDARY_EPSILON_SECONDS = 0.001
 
 const activePhoto = computed(() => {
@@ -671,7 +678,8 @@ const activeFlickrIndex = computed(() => {
   }
 
   const standardHold = laterTrackSlideHold.value ?? 7
-  const hasFeaturedOpening = props.trackIndex === ghostsInTheMistOpeningSlide.trackIndex
+  const hasFeaturedOpening = isWolvesExperience.value
+    && props.trackIndex === ghostsInTheMistOpeningSlide.trackIndex
     && laterTrackPhotos.value[0]?.id === ghostsInTheMistOpeningSlide.photoId
   if (!hasFeaturedOpening) {
     return Math.floor(props.playlistCurrentTime / standardHold)
@@ -704,6 +712,17 @@ const mixedPhotosToUse = computed(() => {
   }
   return mixedPhotos.value
 })
+
+function beginCrossfade(duration: number) {
+  if (crossfadeTimer) {
+    clearTimeout(crossfadeTimer)
+  }
+  crossfadeActive.value = true
+  crossfadeTimer = setTimeout(() => {
+    crossfadeActive.value = false
+    crossfadeTimer = null
+  }, duration + 50)
+}
 
 watch([activeDisplayIndex, mixedPhotosToUse], ([newVal]) => {
   const activePhotoObj = mixedPhotosToUse.value[newVal]
@@ -742,9 +761,14 @@ watch([activeDisplayIndex, mixedPhotosToUse], ([newVal]) => {
     activeBuffer.value = 'A'
     opacityA.value = 1
     opacityB.value = 0
+    crossfadeActive.value = false
     return
   }
 
+  // Keep one layer fully visible and the other preloaded. Start the transition
+  // before swapping the active layer so the incoming Jorge frame fades in instead
+  // of appearing as a second, misaligned image.
+  beginCrossfade(currentSlideTransitionDuration.value)
   if (activeBuffer.value === 'A') {
     photoB.value = activePhotoObj
     slideBIndex.value = newVal
@@ -773,6 +797,11 @@ watch(() => props.trackIndex, (trackIndex, previousTrackIndex) => {
     slideAIndex.value = -1
     slideBIndex.value = -1
     activeBuffer.value = 'A'
+    if (crossfadeTimer) {
+      clearTimeout(crossfadeTimer)
+      crossfadeTimer = null
+    }
+    crossfadeActive.value = false
   }
 }, { immediate: true })
 
@@ -804,7 +833,7 @@ function photoObjectFit(photo: any) {
 }
 
 function photoObjectPosition(photo: any) {
-  return photo?.id === ghostsInTheMistOpeningSlide.photoId ? 'center top' : 'center'
+  return isWolvesExperience.value && photo?.id === ghostsInTheMistOpeningSlide.photoId ? 'center top' : 'center'
 }
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -820,7 +849,7 @@ function snapshotLaterTrackPhotos() {
   const remotePhotos = flickrPhotos.value
     .filter(photo => !trackZeroFlickrPhotoIds.has(photo.id))
     .map((photo) => {
-      const isFeaturedOpening = photo.id === ghostsInTheMistOpeningSlide.photoId
+      const isFeaturedOpening = isWolvesExperience.value && photo.id === ghostsInTheMistOpeningSlide.photoId
       return {
         id: photo.id,
         isLocal: false,
@@ -841,8 +870,12 @@ function snapshotLaterTrackPhotos() {
     return
   }
 
-  const featuredOpening = galleryCandidates.find(photo => photo.id === ghostsInTheMistOpeningSlide.photoId)
-  const shufflePool = galleryCandidates.filter(photo => photo.id !== ghostsInTheMistOpeningSlide.photoId)
+  const featuredOpening = isWolvesExperience.value
+    ? galleryCandidates.find(photo => photo.id === ghostsInTheMistOpeningSlide.photoId)
+    : undefined
+  const shufflePool = isWolvesExperience.value
+    ? galleryCandidates.filter(photo => photo.id !== ghostsInTheMistOpeningSlide.photoId)
+    : galleryCandidates
   if (shuffledLaterTrackPhotos.value.length === 0) {
     shuffledLaterTrackPhotos.value = shuffleWolvesGalleryPhotos(shufflePool)
   }
@@ -857,7 +890,9 @@ function snapshotLaterTrackPhotos() {
   const displayedPhotoIds = new Set([photoA.value?.id, photoB.value?.id])
   const availablePhotos = shuffledLaterTrackPhotos.value
     .filter(photo => !shownLaterTrackPhotoIds.has(photo.id) && !displayedPhotoIds.has(photo.id))
-  laterTrackPhotos.value = props.trackIndex === ghostsInTheMistOpeningSlide.trackIndex && featuredOpening
+  laterTrackPhotos.value = isWolvesExperience.value
+    && props.trackIndex === ghostsInTheMistOpeningSlide.trackIndex
+    && featuredOpening
     ? [featuredOpening, ...availablePhotos]
     : availablePhotos
 }
@@ -959,6 +994,9 @@ onBeforeUnmount(() => {
   if (duskTimer) {
     clearInterval(duskTimer)
   }
+  if (crossfadeTimer) {
+    clearTimeout(crossfadeTimer)
+  }
 })
 </script>
 
@@ -977,8 +1015,8 @@ onBeforeUnmount(() => {
             <div
               class="flickr-photo-layer"
               :style="{
-                opacity: opacityA,
-                transition: `opacity ${currentSlideTransitionDuration}ms linear`,
+                opacity: activeBuffer === 'A' ? 1 : 0,
+                transition: crossfadeActive ? `opacity ${currentSlideTransitionDuration}ms linear` : 'none',
                 zIndex: activeBuffer === 'A' ? 2 : 1,
               }"
             >
@@ -1013,8 +1051,8 @@ onBeforeUnmount(() => {
             <div
               class="flickr-photo-layer"
               :style="{
-                opacity: opacityB,
-                transition: `opacity ${currentSlideTransitionDuration}ms linear`,
+                opacity: activeBuffer === 'B' ? 1 : 0,
+                transition: crossfadeActive ? `opacity ${currentSlideTransitionDuration}ms linear` : 'none',
                 zIndex: activeBuffer === 'B' ? 2 : 1,
               }"
             >
@@ -1052,10 +1090,10 @@ onBeforeUnmount(() => {
               class="wallpaper-theater-caption"
               :class="{
                 'is-title-only': activePhoto.theaterTitleOnly,
-                'is-featured-opening': activePhoto.id === ghostsInTheMistOpeningSlide.photoId,
+                'is-featured-opening': isWolvesExperience && activePhoto.id === ghostsInTheMistOpeningSlide.photoId,
               }"
             >
-              <template v-if="activePhoto.id === ghostsInTheMistOpeningSlide.photoId">
+              <template v-if="isWolvesExperience && activePhoto.id === ghostsInTheMistOpeningSlide.photoId">
                 <div class="theater-guardian-header" aria-hidden="true">
                   <div class="theater-guardian-horizon theater-guardian-horizon-left" />
                   <svg class="theater-guardian-crest" viewBox="0 0 100 100">
@@ -1086,7 +1124,7 @@ onBeforeUnmount(() => {
               </p>
               <template v-if="activePhoto.description">
                 <p
-                  v-for="(paragraph, pIdx) in (activePhoto.id === ghostsInTheMistOpeningSlide.photoId
+                  v-for="(paragraph, pIdx) in (isWolvesExperience && activePhoto.id === ghostsInTheMistOpeningSlide.photoId
                     ? featuredOpeningQuotePart
                     : activePhoto.description).split('\n\n')"
                   :key="pIdx"
@@ -1508,6 +1546,7 @@ onBeforeUnmount(() => {
   transition: opacity 3s linear;
   will-change: opacity;
   transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .night-overlay {
@@ -1522,6 +1561,7 @@ onBeforeUnmount(() => {
   transition: opacity 150ms linear;
   will-change: opacity;
   transform: translateZ(0);
+  backface-visibility: hidden;
 
   &.is-night {
     opacity: 1;
@@ -1759,6 +1799,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   will-change: opacity;
   transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .flickr-img {

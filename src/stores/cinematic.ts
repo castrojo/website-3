@@ -215,6 +215,8 @@ export function resolveOverallRatioTarget(ratio: number): OverallTimelineTarget 
 export const useCinematicStore = defineStore('cinematic', {
   state: () => ({
     phase: 'lobby' as CinematicPhase,
+    /** Stable manifest identity used by experience-specific presentation rules. */
+    experienceId: WOLVES_EXPERIENCE.id,
     /** Segments of the active experience (defaults to the Wolves cinematic). */
     segments: WOLVES_EXPERIENCE.segments as ExperienceSegment[],
     segmentIndex: 0,
@@ -228,6 +230,8 @@ export const useCinematicStore = defineStore('cinematic', {
     completedElapsed: 0,
     playing: false,
     crossfading: false,
+    /** Whether the authored segment-transition overlay should appear for this experience. */
+    showTransitionOverlay: true,
     /**
      * When the authored intro overlay is on stage it owns playback; this override
      * feeds the hero widget its display metadata and transport gating instead of
@@ -323,6 +327,7 @@ export const useCinematicStore = defineStore('cinematic', {
       introIncluded = manifest.includeIntro === true
       rebuildTimelines()
       this.segments = manifest.segments
+      this.experienceId = manifest.id
       this.phase = 'lobby'
       this.segmentIndex = 0
       this.segmentElapsed = 0
@@ -331,6 +336,7 @@ export const useCinematicStore = defineStore('cinematic', {
       this.completedElapsed = 0
       this.playing = false
       this.crossfading = false
+      this.showTransitionOverlay = manifest.id === WOLVES_EXPERIENCE.id
       this.displayOverride = null
     },
     /** Lobby exit: the authored Destiny intro overlay plays first. */

@@ -351,23 +351,50 @@ try {
     await page.waitForTimeout(250)
   }
 
+  await seekStage(247.592)
+  assert('4:08 holds the prior lore record until the slide cut', await page.locator('.conversation-title').textContent(), 'The Artifact')
+  const slideBeforeFourOhEight = await page.locator('.flickr-photo-layer').evaluateAll((layers) =>
+    layers.find(layer => getComputedStyle(layer).zIndex === '2')?.querySelector('img')?.getAttribute('src'),
+  )
+  assertTruthy('4:08 has a slide before the synchronized handoff', slideBeforeFourOhEight)
+  await seekStage(247.596)
+  assert('4:08 switches lore on the slide cut', await page.locator('.conversation-title').last().textContent(), 'The Children')
+  assertTruthy(
+    '4:08 switches the slideshow with the lore handoff',
+    await page.locator('.flickr-photo-layer').evaluateAll(
+      (layers, previousSlide) =>
+        layers.find(layer => getComputedStyle(layer).zIndex === '2')?.querySelector('img')?.getAttribute('src') !== previousSlide,
+      slideBeforeFourOhEight,
+    ),
+  )
+  await captureStage(page, 'track-zero-408-handoff')
+
   await seekStage(365.05)
   const statusbarBounds = await page.evaluate(() => {
     const stage = document.querySelector('.wc-stage')
     const frame = document.querySelector('.wc-stage-nameplate')
     const nameplate = document.querySelector('.wc-stage-nameplate .wc-nameplate')
+    const viewer = document.querySelector('.wc-trackzero-viewer')
     const stageRect = stage?.getBoundingClientRect()
     const frameRect = frame?.getBoundingClientRect()
     const nameplateRect = nameplate?.getBoundingClientRect()
+    const viewerRect = viewer?.getBoundingClientRect()
     return {
       stageWidth: stageRect?.width ?? 0,
       frameLeft: frameRect?.left ?? 0,
       nameplateWidth: nameplateRect?.width ?? 0,
+      nameplateBottom: nameplateRect?.bottom ?? 0,
+      viewerTop: viewerRect?.top ?? 0,
     }
   })
   assertTruthy(
     'Track 0 statusbar spans the viewer width',
     Math.abs(statusbarBounds.nameplateWidth - (statusbarBounds.stageWidth - statusbarBounds.frameLeft * 2)) < 2,
+  )
+  assert(
+    'Track 0 viewer begins below the top status bar',
+    statusbarBounds.nameplateBottom <= statusbarBounds.viewerTop,
+    true,
   )
 
   const incomingSignals = readFileSync('src/data/wolves-incoming-signal.txt', 'utf8')
@@ -586,13 +613,18 @@ try {
   const warningNameplateBounds = await page.locator('.wc-stage-nameplate .wc-nameplate').evaluate((nameplate) => {
     const label = nameplate.querySelector('.wc-nameplate-label')
     const rect = nameplate.getBoundingClientRect()
+    const labelRect = label?.getBoundingClientRect()
     return {
       withinViewport: rect.left >= 0 && rect.right <= window.innerWidth,
-      labelWraps: Boolean(label && label.scrollWidth <= label.clientWidth + 1),
+      labelWithinPlate: Boolean(labelRect && labelRect.right <= rect.right),
+      labelOverflow: label ? getComputedStyle(label).overflow : '',
+      labelTextOverflow: label ? getComputedStyle(label).textOverflow : '',
     }
   })
   assert('ImagePullBackOff nameplate stays inside the viewport', warningNameplateBounds.withinViewport, true)
-  assert('ImagePullBackOff label wraps instead of overflowing', warningNameplateBounds.labelWraps, true)
+  assert('ImagePullBackOff label stays within its status bar', warningNameplateBounds.labelWithinPlate, true)
+  assert('ImagePullBackOff label clips within its status bar', warningNameplateBounds.labelOverflow, 'hidden')
+  assert('ImagePullBackOff label uses an ellipsis when clipped', warningNameplateBounds.labelTextOverflow, 'ellipsis')
   assert('Lower thesis remains separate during the warning', await page.locator('.wc-thesis').count(), 0)
   await captureStage(page, 'track-zero-community-warning')
 

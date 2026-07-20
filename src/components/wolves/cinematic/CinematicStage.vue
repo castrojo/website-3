@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useDualBufferPlayer } from '@/composables/useDualBufferPlayer'
 import { getWolvesHudLabel } from '@/data/wolves-thesis-sequence'
-import { useCinematicStore } from '@/stores/cinematic'
+import { useCinematicStore, WOLVES_EXPERIENCE } from '@/stores/cinematic'
 import CinematicCaptions from './CinematicCaptions.vue'
 import CinematicTransition from './CinematicTransition.vue'
 import Nameplate from './Nameplate.vue'
@@ -16,6 +16,7 @@ const hostB = ref<HTMLElement | null>(null)
 const player = useDualBufferPlayer({ hostA, hostB })
 
 const isTrackZero = computed(() => store.segment.trackZeroExperience === true)
+const isWolvesExperience = computed(() => store.experienceId === WOLVES_EXPERIENCE.id)
 
 // The plate is the single title placard on every segment. During the seven-days
 // segment the time-varying incoming signal is the large label and the track title
@@ -42,11 +43,8 @@ defineExpose({
 
 <template>
   <div class="wc-stage">
-    <!--
-      The visual crossfade is pure CSS: `activeSide` flips the opacity of the two
-      layers, transitioned over the segment's crossfade window. The inactive layer
-      keeps preloading beneath at opacity 0 / pointer-events none.
-    -->
+    <!-- Both mounted instances are compact, invisible audio transports. `activeSide`
+         still drives the audio handoff; the theater layer owns all visible content. -->
     <div
       class="wc-layer"
       :class="{ 'wc-layer--active': player.activeSide.value === 'a' }"
@@ -62,36 +60,11 @@ defineExpose({
       <div ref="hostB" class="wc-iframe-host" />
     </div>
 
-    <!--
-      Transparent shield over both iframes: blocks every YouTube-native interaction
-      (title link, watch-later, pause overlays) and redirects clicks to the app's
-      own play/pause so the experience never leaves the cinematic frame.
-    -->
-    <button
-      class="wc-shield"
-      type="button"
-      :aria-label="store.playing ? 'Pause' : 'Play'"
-      @click="player.togglePlay"
-    />
-
-    <!--
-      YouTube paints its own chrome (video title, related videos, logo) whenever a
-      video is paused; controls=0 cannot remove it. This veil covers the frame in
-      any non-playing state so that chrome is never visible.
-    -->
-    <Transition name="wc-veil">
-      <div v-if="!store.playing" class="wc-veil">
-        <button class="wc-control wc-veil-play" type="button" aria-label="Play" @click="player.togglePlay">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-        </button>
-      </div>
-    </Transition>
-
     <!-- Authored theater layer over the audio-source video: the 7 Days grid
          (slideshow + lore + thesis) and the later-part CNCF galleries. -->
-    <TheaterExperience />
+    <TheaterExperience v-if="isWolvesExperience" />
 
-    <WolvesOrgAds />
+    <WolvesOrgAds v-if="isWolvesExperience" />
 
     <div class="wc-stage-nameplate">
       <Nameplate :detail="plateDetail" :label="plateLabel" :slow-fade="isTrackZero" />
@@ -113,59 +86,26 @@ defineExpose({
 }
 
 .wc-layer {
+  // Cinematic content owns the visible theater; these YouTube instances are
+  // audio transports only. Keep them mounted and playing, but out of the
+  // viewport so native chrome can never expand into the composition.
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transition-property: opacity;
-  transition-timing-function: ease;
-}
-
-.wc-layer--active {
-  opacity: 1;
 }
 
 .wc-iframe-host,
 .wc-iframe-host :deep(iframe) {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 2px;
+  height: 2px;
   border: 0;
-}
-
-.wc-shield {
-  position: absolute;
-  inset: 0;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-}
-
-.wc-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 35;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgb(8 9 12 / 92%);
-}
-
-.wc-veil-play {
-  width: 6.4rem;
-  height: 6.4rem;
-}
-
-.wc-veil-enter-active,
-.wc-veil-leave-active {
-  transition: opacity 0.25s ease;
-}
-
-.wc-veil-enter-from,
-.wc-veil-leave-to {
-  opacity: 0;
 }
 
 .wc-stage-nameplate {

@@ -85,7 +85,12 @@ onBeforeUnmount(() => window.clearInterval(avatarTimer))
       </Transition>
     </span>
     <span class="wc-nameplate-text">
-      <span class="wc-nameplate-detail wc-label">{{ detail }}</span>
+      <span
+        class="wc-nameplate-detail wc-label"
+        :class="{ 'wc-nameplate-detail--compact': detail === 'Seven Days to the Wolves' }"
+      >
+        {{ detail }}
+      </span>
       <Transition v-if="slowFade" name="wc-nameplate-label" mode="out-in">
         <span :key="label" class="wc-nameplate-label">
           <template v-for="(part, index) in labelParts(label)" :key="index">
@@ -153,6 +158,11 @@ onBeforeUnmount(() => window.clearInterval(avatarTimer))
 .wc-nameplate-avatar-enter-from,
 .wc-nameplate-avatar-leave-to {
   opacity: 0;
+}
+
+.wc-nameplate-detail--compact {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
 }
 
 .wc-nameplate-label {
